@@ -1,16 +1,19 @@
 import os
 
 from data.file_reader import FileReader
-from environment.devices.mobile_sink import MobileSink
-from environment.utils.position import Position
 
 
 def main():
-    ms = MobileSink(id=1, position=Position(0, 0))
-    run_all_solution()
+    run_solution(id=1)
 
 
-def run_all_solution():
+def run_solution(id: int) -> None:
+    file = FileReader(path='resources/matlab_output/')
+    environment = file.load_environment(solution_id=id)
+    environment.run('plots/plot-' + str(0))
+
+
+def run_all_solution() -> None:
     file = FileReader(path='resources/matlab_output/')
     for i in range(len(os.listdir('resources/matlab_output/solutions'))):
         environment = file.load_environment(solution_id=i + 1)

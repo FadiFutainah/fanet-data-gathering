@@ -1,8 +1,9 @@
 import random
 
+import matplotlib.pyplot as plt
+
 from environment.devices.mobile_sink import MobileSink
 from environment.environment import Environment
-import matplotlib.pyplot as plt
 
 
 class PlotEnvironment(Environment):
@@ -21,8 +22,8 @@ class PlotEnvironment(Environment):
         ys = map(lambda item: item.y, items)
         self.ax.plot(list(xs), list(ys), shape, markersize=size)
 
-    def draw_mobile_sink_rvps(self, mobile_sink: MobileSink, color: str, shape: str):
-        for rvp in mobile_sink.rvps:
+    def draw_mobile_sink_way_points(self, mobile_sink: MobileSink, color: str, shape: str):
+        for rvp in mobile_sink.way_points:
             self.ax.plot([mobile_sink.position.x, rvp.x], [mobile_sink.position.y, rvp.y], color + shape)
 
     def draw_circle(self, mobile_sink: MobileSink, color: str):
@@ -39,12 +40,13 @@ class PlotEnvironment(Environment):
         #              verticalalignment='top', bbox=props)
         for mobile_sink in self.mobile_sinks:
             color = self.random_color()
-            # self.draw_items(items=mobile_sink.rvps, shape=color + '^', size=9)
-            # self.draw_mobile_sink_rvps(mobile_sink=mobile_sink, color=color, shape=shape)
+            # self.draw_items(items=mobile_sink.way_points, shape=color + '^', size=9)
+            # self.draw_mobile_sink_way_points(mobile_sink=mobile_sink, color=color, shape=shape)
             self.ax.plot(mobile_sink.position.x, mobile_sink.position.y, color + '^', markersize=11)
-            self.draw_items(items=[mobile_sink.position, *mobile_sink.rvps], shape=color + '--.', size=8)
+            self.draw_items(items=[mobile_sink.position, *mobile_sink.way_points], shape=color + '--.', size=8)
             self.draw_circle(mobile_sink=mobile_sink, color=color)
         self.draw_devices(devices=self.sensors, shape='.r', size=7)
         self.draw_devices(devices=self.base_stations, shape='p', size=20, alpha=0.8)
         plt.grid()
-        plt.savefig(name + '.png')
+        # plt.savefig(name + '.png')
+        plt.show()

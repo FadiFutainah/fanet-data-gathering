@@ -37,14 +37,14 @@ class FileReader:
         directory = self.path + 'solutions/solution-' + str(solution_id) + '/'
         for file in os.listdir(directory):
             data = pd.read_csv(directory + file)
-            rvps = []
+            way_points = []
             for index, row in data.iterrows():
                 if row['x'] == -1 or row['y'] == -1:
                     continue
-                rvps.append(Position(x=row['x'], y=row['y']))
-            if len(rvps) == 0:
+                way_points.append(Position(x=row['x'], y=row['y']))
+            if len(way_points) == 0:
                 continue
-            mobile_sink = MobileSink(id=1, position=rvps[0], rvps=rvps[1:])
+            mobile_sink = MobileSink(id=1, position=way_points[0], way_points=way_points[1:])
             mobile_sinks.append(mobile_sink)
         return mobile_sinks
 

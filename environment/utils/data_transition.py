@@ -1,6 +1,9 @@
-class Delivery:
-    def __init__(self, destination_id: int, destination_type: str, number_of_packets: int) -> None:
-        self.destination_id = destination_id
-        self.destination_type = destination_type
+from environment.devices.device import Device
+
+
+class DataTransition:
+    def __init__(self, source: Device, destination: Device, number_of_packets: int, created_time: int) -> None:
+        self.source = source
+        self.destination = destination
+        self.created_time = created_time
         self.number_of_packets = number_of_packets
-        
