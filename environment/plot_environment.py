@@ -1,5 +1,6 @@
 import random
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 from environment.devices.mobile_sink import MobileSink
@@ -10,6 +11,7 @@ class PlotEnvironment(Environment):
     def __init__(self, sensors: list, mobile_sinks: list, base_stations: list, height: float, width: float):
         super().__init__(sensors, mobile_sinks, base_stations, height, width)
         self.colors = ['b', 'g', 'c', 'm', 'y']
+        matplotlib.use('TkAgg')
         self.fig, self.ax = plt.subplots()
 
     def draw_devices(self, devices: list, shape: str, size: int, alpha: float = 1) -> None:

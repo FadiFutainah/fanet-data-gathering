@@ -1,4 +1,9 @@
+import copy
+
+from environment.devices.mobile_sink import MobileSink
+from environment.devices.sensor import Sensor
 from environment.environment_builder import EnvironmentBuilder
+from environment.utils.data_transition import DataTransition
 
 
 class Environment(EnvironmentBuilder):
@@ -15,30 +20,38 @@ class Environment(EnvironmentBuilder):
         self.data_transitions = []
 
     def number_of_received_packets(self) -> int:
-        all_received_data = 0
-        for base_station in self.base_stations:
-            all_received_data += base_station.collected_data_size
+        all_received_data = sum(e.collected_data_size for e in self.base_stations)
         return int(all_received_data / self.average_packet_size)
 
-    def number_of_collected_data(self) -> int:
-        all_collected_data = 0
-        for mobile_sink in self.mobile_sinks:
-            all_collected_data += mobile_sink.number_of_collected_data_packets()
-        return all_collected_data
-
     def calculate_pdr(self) -> float:
-        return self.number_of_received_packets() / self.number_of_collected_data()
+        return self.number_of_received_packets() / self.number_of_collected_data_packets()
 
-    def reset(self):
+    def reset(self) -> None:
         pass
 
     def number_of_collected_data_packets(self) -> int:
-        packets_number = 0
-        for data_transition in self.data_transitions:
-            packets_number += data_transition.number_of_packets
-        return packets_number
+        return sum(e.number_of_packets for e in self.data_transitions if isinstance(e.source, Sensor))
 
-    def get_initial_state(self, mobile_sink_index):
+    def get_current_state(self, mobile_sink_index) -> (MobileSink, list, list):
         # self.rest()
         neighboring_mobile_sinks = self.mobile_sinks[:, mobile_sink_index] + self.mobile_sinks[mobile_sink_index + 1, :]
-        return self.mobile_sinks[mobile_sink_index], neighboring_mobile_sinks
+        return self.mobile_sinks[mobile_sink_index], neighboring_mobile_sinks, self.data_transitions
+
+    def transmit_data(self, data_transition: DataTransition):
+        data_transition.source.send_data(data_size=data_transition.data_size)
+        data_transition.destination.receive_data(data_size=data_transition.data_size)
+        if isinstance(data_transition.source, MobileSink):
+            return self.get_current_state(mobile_sink_index=data_transition.source.id)
+        return None
+
+    def is_completed(self) -> bool:
+        return not any(not sensor.is_empty() for sensor in self.sensors)
+
+    def adjust_collection_rate(self):
+        pass
+
+    def collect_data(self):
+        pass
+
+    def choose_collection_area(self):
+        pass

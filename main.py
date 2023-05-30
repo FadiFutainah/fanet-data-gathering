@@ -10,7 +10,7 @@ def main():
 def run_solution(id: int) -> None:
     file = FileReader(path='resources/matlab_output/')
     environment = file.load_environment(solution_id=id)
-    environment.run('plots/plot-' + str(0))
+    environment.run('plots/plot-' + str(id))
 
 
 def run_all_solution() -> None:
