@@ -1,19 +1,19 @@
+from environment.devices.device import Device
 from environment.utils.position import Position
 
 
-class Sensor:
-    def __init__(self, id: int, position: Position, energy: float = 100, buffer_size: int = 100,
-                 average_packet_size: int = 100,
-                 packet_life_time: int = 100) -> None:
-        self.id = id
-        self.position = position
-        self.energy = energy
-        self.buffer_size = buffer_size
-        self.average_packet_size = average_packet_size
-        self.packet_life_time = packet_life_time
+class Sensor(Device):
+    def __init__(self, id: int, position: Position, memory_size: int = 100) -> None:
+        super().__init__(id, position)
+        self.memory_size = memory_size
 
-    def gather_data(self):
+        self.collected_data_size = self.memory_size
+
+    def gather_data(self) -> None:
         pass
 
-    def transmit_data(self):
+    def transmit_data(self) -> None:
         pass
+
+    def is_empty(self) -> bool:
+        return self.collected_data_size == 0
