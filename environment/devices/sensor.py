@@ -7,12 +7,13 @@ class Sensor(Device):
         super().__init__(id, position)
         self.memory_size = memory_size
 
+        # this is only temporary for the first version of the experiment
         self.collected_data_size = self.memory_size
 
     def gather_data(self) -> None:
         pass
 
-    def transmit_data(self) -> None:
+    def send_data(self, data_size: int) -> None:
         pass
 
     def is_empty(self) -> bool:

@@ -39,8 +39,3 @@ class MobileSink(Device):
 
     def get_available_memory(self) -> int:
         return self.memory_size - self.collected_data_size
-
-    def adjust_collection_rate(self):
-        pass
-
-
