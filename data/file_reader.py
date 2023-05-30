@@ -48,12 +48,10 @@ class FileReader:
             mobile_sinks.append(mobile_sink)
         return mobile_sinks
 
-    def load_environment(self, solution_id: int) -> PlotEnvironment:
+    def load_environment(self, solution_id: int, height: int = 1000, width: int = 1000) -> PlotEnvironment:
         sensors = self.load_sensors()
         mobile_sinks = self.load_mobile_sinks(solution_id=solution_id)
         base_stations = self.load_base_stations()
-        height = 1000
-        width = 1000
         environment = PlotEnvironment(sensors=sensors, mobile_sinks=mobile_sinks, base_stations=base_stations,
                                       height=height, width=width)
         return environment

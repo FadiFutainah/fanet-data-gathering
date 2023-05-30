@@ -7,5 +7,5 @@ class BaseStation(Device):
         super().__init__(id, position)
         self.collected_data_size = collected_data_size
 
-    def receive_data(self, data_size: int):
+    def receive_data(self, data_size: int) -> None:
         self.collected_data_size += data_size

@@ -1,5 +1,7 @@
 import copy
 
+from matplotlib import pyplot as plt
+
 from environment.devices.mobile_sink import MobileSink
 from environment.devices.sensor import Sensor
 from environment.environment_builder import EnvironmentBuilder
@@ -18,6 +20,10 @@ class Environment(EnvironmentBuilder):
         self.average_packet_size = average_packet_size
 
         self.data_transitions = []
+
+    @staticmethod
+    def save_on_file(name: str):
+        plt.savefig(name + '.png')
 
     def number_of_received_packets(self) -> int:
         all_received_data = sum(e.collected_data_size for e in self.base_stations)

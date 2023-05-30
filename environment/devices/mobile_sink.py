@@ -15,13 +15,15 @@ class MobileSink(Device):
         self.memory_size = memory_size
         self.coverage_radius = coverage_radius
 
-        self.current_way_point = 0
+        self.current_way_point = -1
         self.collected_data_size = 0
 
-    def move(self, x: int, y: int):
+    def move(self, x: int, y: int) -> None:
         pass
 
-    def hop(self):
+    def hop(self) -> None:
+        if self.current_way_point + 1 > len(self.way_points):
+            return
         self.current_way_point += 1
         next_pos = self.way_points[self.current_way_point]
         self.position.locate(next_pos.x, next_pos.y)
