@@ -1,5 +1,3 @@
-import copy
-
 from matplotlib import pyplot as plt
 
 from environment.devices.mobile_sink import MobileSink

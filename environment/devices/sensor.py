@@ -6,8 +6,10 @@ from environment.utils.position import Position
 
 class Sensor(Device):
     def __init__(self, id: int, position: Position, memory_size: int = 100) -> None:
-        super().__init__(id, position, memory_size)
-        self.memory_size = memory_size
+        super().__init__(id, position, memory_size, memory_size)
 
     def is_empty(self) -> bool:
-        return self.collected_data_size == 0
+        if self.collected_data_size == 0:
+            logging.warning(f'{type(self).__name__} {self.id} is empty!!')
+            return True
+        return False
