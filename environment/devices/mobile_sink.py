@@ -1,3 +1,5 @@
+import logging
+
 from environment.devices.device import Device
 from environment.utils.position import Position
 
@@ -7,22 +9,22 @@ class MobileSink(Device):
     The same as UAV, drone.
     """
 
-    def __init__(self, id: int, way_points: list, position: Position, energy: float = 100, coverage_radius: float = 100,
-                 memory_size: int = 100) -> None:
-        super().__init__(id, position)
+    def __init__(self, id: int, way_points: list, position: Position, energy: float = 1000,
+                 coverage_radius: float = 200, memory_size: int = 1000) -> None:
+        super().__init__(id, position, collected_data_size=0)
         self.energy = energy
         self.way_points = way_points
         self.memory_size = memory_size
         self.coverage_radius = coverage_radius
 
         self.current_way_point = -1
-        self.collected_data_size = 0
 
     def move(self, x: int, y: int) -> None:
         pass
 
     def hop(self) -> None:
-        if self.current_way_point + 1 > len(self.way_points):
+        if self.current_way_point + 1 >= len(self.way_points):
+            print("The hop is out of the waypoints range")
             return
         self.current_way_point += 1
         next_pos = self.way_points[self.current_way_point]
@@ -31,7 +33,7 @@ class MobileSink(Device):
     def collect_data(self, data_size: int) -> None:
         data = self.collected_data_size + data_size
         if data > self.memory_size:
-            print("The mobile sink number {0} has memory overflow!!".format(str(self.id)))
+            print(f"The mobile sink number {str(self.id)} has memory overflow!!")
         else:
             self.collected_data_size = data
 
