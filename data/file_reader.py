@@ -5,15 +5,15 @@ import pandas as pd
 from environment.devices.base_stations import BaseStation
 from environment.devices.mobile_sink import MobileSink
 from environment.devices.sensor import Sensor
-from environment.plot_environment import PlotEnvironment
+from environment.environment import Environment
 from environment.utils.position import Position
 
 
 class FileReader:
-    def __init__(self, path: str):
+    def __init__(self, path: str) -> None:
         self.path = path
 
-    def read_csv_data(self, path):
+    def read_csv_data(self, path) -> any:
         return pd.read_csv(self.path + path)
 
     def load_sensors(self) -> list:
@@ -24,7 +24,7 @@ class FileReader:
             sensors.append(sensor)
         return sensors
 
-    def load_base_stations(self):
+    def load_base_stations(self) -> list:
         base_stations = []
         data = self.read_csv_data(path='base_stations/base_stations.csv')
         for index, row in data.iterrows():
@@ -48,10 +48,9 @@ class FileReader:
             mobile_sinks.append(mobile_sink)
         return mobile_sinks
 
-    def load_environment(self, solution_id: int, height: int = 1000, width: int = 1000) -> PlotEnvironment:
+    def load_environment(self, solution_id: int, environment, height: int = 1000, width: int = 1000) -> Environment:
         sensors = self.load_sensors()
         mobile_sinks = self.load_mobile_sinks(solution_id=solution_id)
         base_stations = self.load_base_stations()
-        environment = PlotEnvironment(sensors=sensors, mobile_sinks=mobile_sinks, base_stations=base_stations,
-                                      height=height, width=width)
-        return environment
+        return environment(sensors=sensors, mobile_sinks=mobile_sinks, base_stations=base_stations, height=height,
+                           width=width)

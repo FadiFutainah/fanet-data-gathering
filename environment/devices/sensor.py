@@ -10,6 +10,6 @@ class Sensor(Device):
 
     def is_empty(self) -> bool:
         if self.collected_data_size == 0:
-            logging.warning(f'{type(self).__name__} {self.id} is empty!!')
+            logging.warning(f'{self} is empty!!')
             return True
         return False

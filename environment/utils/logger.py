@@ -14,5 +14,5 @@ def call_with_measure_time(function, *args, **kwargs) -> float:
     start = time.perf_counter()
     function(*args, **kwargs)
     end = time.perf_counter()
-    logging.info(f'time taken {end - start}')
+    logging.info(f'{function.__name__} takes {end - start} seconds')
     return end - start

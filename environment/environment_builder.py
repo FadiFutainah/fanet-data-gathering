@@ -4,3 +4,6 @@ class EnvironmentBuilder:
 
     def run(self) -> None:
         pass
+
+    def render(self) -> None:
+        pass

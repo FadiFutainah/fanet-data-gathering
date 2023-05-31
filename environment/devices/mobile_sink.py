@@ -25,9 +25,12 @@ class MobileSink(Device):
         self.position.locate(x, y)
 
     def hop(self) -> None:
-        if self.current_way_point + 1 >= len(self.way_points):
+        if self.has_reached():
             logging.warning(f'The mobile sink {self.id} has reached the last way point')
             return
         self.current_way_point += 1
         next_pos = self.way_points[self.current_way_point]
         self.move(next_pos.x, next_pos.y)
+
+    def has_reached(self) -> bool:
+        return self.current_way_point == len(self.way_points) - 1

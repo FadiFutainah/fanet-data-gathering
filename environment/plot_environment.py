@@ -22,6 +22,10 @@ class PlotEnvironment(Environment):
         self.circles = []
 
     @staticmethod
+    def save_on_file(name: str):
+        plt.savefig(name + '.png')
+
+    @staticmethod
     def get_sensor_color(sensor: Sensor) -> str:
         if sensor.is_empty():
             return 'darkgray'

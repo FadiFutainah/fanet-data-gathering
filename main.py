@@ -1,20 +1,22 @@
-import logging
 import os
 
 from data.file_reader import FileReader
+from environment.devices.sensor import Sensor
+from environment.plot_environment import PlotEnvironment
 from environment.utils.logger import configure_logger
+from environment.utils.position import Position
 
 
 def run_solution(id: int) -> None:
     file = FileReader(path='resources/matlab_output/')
-    environment = file.load_environment(solution_id=id)
+    environment = file.load_environment(solution_id=id, environment=PlotEnvironment)
     environment.render()
 
 
 def run_all_solution() -> None:
     file = FileReader(path='resources/matlab_output/')
     for i in range(len(os.listdir('resources/matlab_output/solutions'))):
-        environment = file.load_environment(solution_id=i + 1)
+        environment = file.load_environment(solution_id=i + 1, environment=PlotEnvironment)
         environment.save_on_file('plots/plot-' + str(id))
         environment.render()
 
