@@ -9,6 +9,7 @@ def run_solution(id: int) -> None:
     file = FileReader(path='resources/matlab_output/')
     environment = file.load_environment(solution_id=id, environment=PlotEnvironment)
     environment.render()
+    file.write_data_on_csv(environment)
 
 
 def run_all_solution() -> None:

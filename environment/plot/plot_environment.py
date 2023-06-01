@@ -89,22 +89,16 @@ class PlotEnvironment(Environment):
             c = self.draw_circle(self.mobile_sinks[i], self.mobile_sinks_plots[i].color)
             self.mobile_sinks_plots[i] = MobileSinkPlot(position=p, range=c, color=self.mobile_sinks_plots[i].color)
 
-    # def reset(self) -> None:
-    #     super().reset()
-    # keyboard.wait('n')
-    # logging.info(f'{self.mobile_sinks[0].position}')
-    # logging.info(f'{self.mobile_sinks_plots[0].mobile_sink}')
-    # if self.has_moves():
-    #     self.next_time_step()
-    # else:
-    #     self.reset()
-
     def render(self) -> None:
         self.run()
         plt.grid()
         while self.has_moves():
             self.next_time_step()
         self.next_time_step()
-        self.show_results()
+        self.transmit_data(self.mobile_sinks[0], self.mobile_sinks[1], self.mobile_sinks[0].collected_data_size)
+        for mobile_sink in self.mobile_sinks[1:]:
+            self.transmit_data(mobile_sink, self.base_stations[0], mobile_sink.collected_data_size)
+        self.initial_state.get_results()
+        self.get_results()
         logging.info('the simulation ended')
-        plt.show()
+        # plt.show()

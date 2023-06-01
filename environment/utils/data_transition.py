@@ -9,8 +9,8 @@ class DataTransition:
         self.data_size = data_size
         self.destination = destination
         self.created_time = created_time
-        logging.info(f'data transition: at {created_time} '
-                     f'from {type(source).__name__}{source.id} to {type(destination).__name__}{destination.id} '
+        logging.info(f'completed transition: at {created_time} '
+                     f'from {source} to {destination} '
                      f'with {data_size} packets ')
 
     def __str__(self):
