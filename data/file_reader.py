@@ -7,7 +7,6 @@ from environment.devices.base_stations import BaseStation
 from environment.devices.mobile_sink import MobileSink
 from environment.devices.sensor import Sensor
 from environment.environment import Environment
-from environment.utils.data_transition import DataTransition
 from environment.utils.position import Position
 
 
@@ -38,7 +37,8 @@ class FileReader:
         data = {
             'energy left': [e.energy for e in mobile_sinks],
             'coverage radius': [e.coverage_radius for e in mobile_sinks],
-            'collected data size': [e.current_data for e in mobile_sinks],
+            'current data size': [e.current_data for e in mobile_sinks],
+            'collected data size': [e.collected_data for e in mobile_sinks],
             'memory size': [e.memory_size for e in mobile_sinks],
         }
         return pd.DataFrame(data)
@@ -46,7 +46,8 @@ class FileReader:
     @staticmethod
     def get_sensors_data_frame(sensors: list) -> DataFrame:
         data = {
-            'collected data size': [e.current_data for e in sensors],
+            'collected data size': [e.collected_data for e in sensors],
+            'current data size': [e.current_data for e in sensors],
             'memory size': [e.memory_size for e in sensors],
         }
         return pd.DataFrame(data)
@@ -54,7 +55,8 @@ class FileReader:
     @staticmethod
     def get_base_stations_data_frame(base_stations: list) -> DataFrame:
         data = {
-            'collected data size': [e.current_data for e in base_stations],
+            'collected data size': [e.collected_data for e in base_stations],
+            'current data size': [e.current_data for e in base_stations],
             'memory size': [e.memory_size for e in base_stations],
         }
         return pd.DataFrame(data)
@@ -62,8 +64,8 @@ class FileReader:
     @staticmethod
     def get_data_transitions_data_frame(data_transitions: list) -> DataFrame:
         data = {
-            'data size': [e.data_size for e in data_transitions],
             'source': [str(e.source) for e in data_transitions],
+            'data size': [e.data_size for e in data_transitions],
             'destination': [str(e.destination) for e in data_transitions],
             'created time (time step)': [e.created_time for e in data_transitions],
         }

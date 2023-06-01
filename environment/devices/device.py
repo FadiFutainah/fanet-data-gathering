@@ -4,11 +4,12 @@ from environment.utils.position import Position
 
 
 class Device:
-    def __init__(self, id: int, position: Position, memory_size: int, current_data: int) -> None:
+    def __init__(self, id: int, position: Position, memory_size: int, current_data: int, collected_data: int) -> None:
         self.id = id
         self.position = position
         self.memory_size = memory_size
         self.current_data = current_data
+        self.collected_data = collected_data
         logging.info(f'{type(self).__name__} created at pos: {position}')
 
     def __str__(self) -> str:
@@ -27,8 +28,10 @@ class Device:
         if self.get_available_memory() < data_size:
             logging.warning(f'{self} doesn\'t have enough memory')
             self.current_data = self.memory_size
+            self.collected_data += self.get_available_memory()
             return self.get_available_memory()
         self.current_data += data_size
+        self.collected_data += data_size
         return data_size
 
     def get_available_memory(self) -> int:
