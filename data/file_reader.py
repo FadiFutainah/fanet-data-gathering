@@ -13,7 +13,7 @@ class FileReader:
     def __init__(self, path: str) -> None:
         self.path = path
 
-    def read_csv_data(self, path) -> any:
+    def read_csv_data(self, path):
         return pd.read_csv(self.path + path)
 
     def load_sensors(self) -> list:

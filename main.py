@@ -1,10 +1,9 @@
 import os
 
 from data.file_reader import FileReader
-from environment.devices.sensor import Sensor
-from environment.plot_environment import PlotEnvironment
+from environment.environment import Environment
+from environment.plot.plot_environment import PlotEnvironment
 from environment.utils.logger import configure_logger
-from environment.utils.position import Position
 
 
 def run_solution(id: int) -> None:
@@ -23,7 +22,7 @@ def run_all_solution() -> None:
 
 def main():
     configure_logger()
-    run_solution(id=101)
+    run_solution(id=17)
 
 
 if __name__ == '__main__':

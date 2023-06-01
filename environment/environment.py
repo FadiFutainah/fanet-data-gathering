@@ -32,6 +32,7 @@ class Environment(EnvironmentBuilder):
         return self.data_received / self.number_of_collected_packets()
 
     def reset(self) -> None:
+        logging.info(f'reset environment')
         self.time_step = 0
         self.data_transitions.clear()
         self.sensors = deepcopy(self.initial_state.sensors)
@@ -58,8 +59,8 @@ class Environment(EnvironmentBuilder):
             self.data_received += data_size
         self.data_transitions.append(DataTransition(source, destination, data_size, created_time=self.time_step))
 
-    def no_more_moves(self) -> bool:
-        return all(mobile_sink.has_reached() for mobile_sink in self.mobile_sinks)
+    def has_moves(self) -> bool:
+        return any(not mobile_sink.has_reached() for mobile_sink in self.mobile_sinks)
 
     def is_completed(self) -> bool:
         return self.data_received == self.initial_state.data_left
