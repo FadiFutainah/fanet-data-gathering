@@ -105,5 +105,6 @@ class PlotEnvironment(Environment):
         while self.has_moves():
             self.next_time_step()
         self.next_time_step()
+        self.show_results()
         logging.info('the simulation ended')
         plt.show()

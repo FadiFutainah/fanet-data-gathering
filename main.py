@@ -1,7 +1,6 @@
 import os
 
 from data.file_reader import FileReader
-from environment.environment import Environment
 from environment.plot.plot_environment import PlotEnvironment
 from environment.utils.logger import configure_logger
 
@@ -21,8 +20,8 @@ def run_all_solution() -> None:
 
 
 def main():
-    configure_logger()
-    run_solution(id=17)
+    configure_logger(write_on_file=True)
+    run_solution(id=101)
 
 
 if __name__ == '__main__':

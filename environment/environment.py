@@ -73,5 +73,11 @@ class Environment(EnvironmentBuilder):
             if mobile_sink.position.distance_from(sensor.position) <= mobile_sink.coverage_radius:
                 self.transmit_data(sensor, mobile_sink, sensor.memory_size)
 
+    def show_results(self):
+        for mobile_sink in self.mobile_sinks:
+            logging.info(f'{mobile_sink} energy: {mobile_sink.energy}')
+        for transition in self.data_transitions:
+            logging.info(f'{transition}')
+
     def choose_collection_area(self):
         pass

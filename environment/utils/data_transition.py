@@ -12,3 +12,6 @@ class DataTransition:
         logging.info(f'data transition: at {created_time} '
                      f'from {type(source).__name__}{source.id} to {type(destination).__name__}{destination.id} '
                      f'with {data_size} packets ')
+
+    def __str__(self):
+        return f'at time step {self.created_time}: {self.source} -> {self.destination}: size {self.data_size}'

@@ -18,7 +18,6 @@ class MobileSink(Device):
 
         self.current_way_point = -1
         self.energy_loss_per_hop = 100
-        self._x = 2
 
     def move(self, x: int, y: int) -> None:
         self.energy -= self.energy_loss_per_hop
