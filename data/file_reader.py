@@ -38,7 +38,7 @@ class FileReader:
         data = {
             'energy left': [e.energy for e in mobile_sinks],
             'coverage radius': [e.coverage_radius for e in mobile_sinks],
-            'collected data size': [e.collected_data_size for e in mobile_sinks],
+            'collected data size': [e.current_data for e in mobile_sinks],
             'memory size': [e.memory_size for e in mobile_sinks],
         }
         return pd.DataFrame(data)
@@ -46,7 +46,7 @@ class FileReader:
     @staticmethod
     def get_sensors_data_frame(sensors: list) -> DataFrame:
         data = {
-            'collected data size': [e.collected_data_size for e in sensors],
+            'collected data size': [e.current_data for e in sensors],
             'memory size': [e.memory_size for e in sensors],
         }
         return pd.DataFrame(data)
@@ -54,7 +54,7 @@ class FileReader:
     @staticmethod
     def get_base_stations_data_frame(base_stations: list) -> DataFrame:
         data = {
-            'collected data size': [e.collected_data_size for e in base_stations],
+            'collected data size': [e.current_data for e in base_stations],
             'memory size': [e.memory_size for e in base_stations],
         }
         return pd.DataFrame(data)

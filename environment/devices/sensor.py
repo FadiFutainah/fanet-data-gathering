@@ -9,6 +9,6 @@ class Sensor(Device):
         super().__init__(id, position, memory_size, memory_size)
 
     def is_empty(self) -> bool:
-        if self.collected_data_size == 0:
+        if self.current_data == 0:
             return True
         return False

@@ -11,7 +11,7 @@ class MobileSink(Device):
 
     def __init__(self, id: int, way_points: list, position: Position, energy: float = 1000,
                  coverage_radius: float = 200, memory_size: int = 10000) -> None:
-        super().__init__(id, position, memory_size, collected_data_size=0)
+        super().__init__(id, position, memory_size, current_data=0)
         self.energy = energy
         self.way_points = way_points
         self.coverage_radius = coverage_radius

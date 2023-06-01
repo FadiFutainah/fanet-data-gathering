@@ -95,9 +95,9 @@ class PlotEnvironment(Environment):
         while self.has_moves():
             self.next_time_step()
         self.next_time_step()
-        self.transmit_data(self.mobile_sinks[0], self.mobile_sinks[1], self.mobile_sinks[0].collected_data_size)
+        self.transmit_data(self.mobile_sinks[0], self.mobile_sinks[1], self.mobile_sinks[0].current_data)
         for mobile_sink in self.mobile_sinks[1:]:
-            self.transmit_data(mobile_sink, self.base_stations[0], mobile_sink.collected_data_size)
+            self.transmit_data(mobile_sink, self.base_stations[0], mobile_sink.current_data)
         self.initial_state.get_results()
         self.get_results()
         logging.info('the simulation ended')

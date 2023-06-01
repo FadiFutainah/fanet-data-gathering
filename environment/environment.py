@@ -21,7 +21,7 @@ class Environment(EnvironmentBuilder):
         self.time_step = 0
         self.data_received = 0
         self.data_transitions = []
-        self.data_left = sum(sensor.collected_data_size for sensor in self.sensors)
+        self.data_left = sum(sensor.current_data for sensor in self.sensors)
 
         self.initial_state = deepcopy(self)
 
