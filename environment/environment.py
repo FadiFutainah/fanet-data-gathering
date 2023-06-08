@@ -6,7 +6,7 @@ from environment.devices.device import Device
 from environment.devices.mobile_sink import MobileSink
 from environment.devices.sensor import Sensor
 from environment.environment_builder import EnvironmentBuilder
-from environment.utils.data_transition import DataTransition
+from environment.data_transition import DataTransition
 
 
 class Environment(EnvironmentBuilder):
@@ -95,3 +95,31 @@ class Environment(EnvironmentBuilder):
 
     def choose_collection_area(self):
         pass
+
+    def breadth_first_search(self):
+        pass
+
+    def calculate_sensors_heatmap(self) -> list:
+        maximum_value = max(sensor.current_data for sensor in self.sensors)
+        minimum_value = min(sensor.current_data for sensor in self.sensors)
+        value_range = maximum_value - minimum_value
+        heatmap = []
+        for sensor in self.sensors:
+            heatmap.append(sensor.current_data / value_range)
+        return heatmap
+
+    def calculate_sensors_data_fairness(self) -> float:
+        maximum_value = max(sensor.current_data for sensor in self.sensors)
+        minimum_value = min(sensor.current_data for sensor in self.sensors)
+        median = (maximum_value - minimum_value) / 2
+        average = sum(sensor.current_data for sensor in self.sensors) / len(self.sensors)
+        return abs(average - median)
+
+    def get_heatmap_history(self):
+        pass
+
+    def calculate_data_transitions_variance(self) -> float:
+        pass
+
+    def calculate_data_transition_deviation(self) -> float:
+        return self.calculate_data_transitions_variance() ** 0.5

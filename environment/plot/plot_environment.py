@@ -1,6 +1,7 @@
 import logging
 import random
 
+import keyboard
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -76,7 +77,7 @@ class PlotEnvironment(Environment):
     def next_time_step(self):
         self.time_step += 1
         logging.info(f'time step {self.time_step}: ')
-        plt.pause(interval=0.7)
+        plt.pause(interval=1)
         for i in range(len(self.mobile_sinks)):
             self.collect_data(self.mobile_sinks[i])
             self.remove_sensors()
@@ -88,6 +89,13 @@ class PlotEnvironment(Environment):
                               self.mobile_sinks_plots[i].color + 'd', markersize=15, alpha=0.7)
             c = self.draw_circle(self.mobile_sinks[i], self.mobile_sinks_plots[i].color)
             self.mobile_sinks_plots[i] = MobileSinkPlot(position=p, range=c, color=self.mobile_sinks_plots[i].color)
+
+    def render_on_keyboard(self) -> None:
+        self.run()
+        plt.grid()
+        while True:
+            self.next_time_step()
+            keyboard.wait('n')
 
     def render(self) -> None:
         self.run()
@@ -101,4 +109,4 @@ class PlotEnvironment(Environment):
         self.initial_state.get_results()
         self.get_results()
         logging.info('the simulation ended')
-        # plt.show()
+        plt.show()

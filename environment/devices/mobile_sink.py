@@ -9,15 +9,18 @@ class MobileSink(Device):
     The same as UAV, drone.
     """
 
-    def __init__(self, id: int, way_points: list, position: Position, energy: float = 888,
-                 coverage_radius: float = 160, memory_size: int = 9999, collected_data: int = 0) -> None:
+    def __init__(self, id: int, way_points: list, position: Position, energy: int, coverage_radius: int,
+                 memory_size: int, speed: int, collecting_data_rate: int, collected_data: int = 0) -> None:
         super().__init__(id, position, memory_size, current_data=0, collected_data=collected_data)
         self.energy = energy
         self.way_points = way_points
         self.coverage_radius = coverage_radius
+        self.collecting_data_rate = collecting_data_rate
+        self.speed = speed
 
         self.current_way_point = -1
         self.energy_loss_per_hop = 100
+        self.way_points_collection_rates = []
 
     def move(self, x: int, y: int) -> None:
         self.energy -= self.energy_loss_per_hop
