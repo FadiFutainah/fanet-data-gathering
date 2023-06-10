@@ -34,7 +34,6 @@ class FileManager:
             'id': [e.id for e in mobile_sinks],
             'energy left': [e.energy for e in mobile_sinks],
             'coverage radius': [e.coverage_radius for e in mobile_sinks],
-            'speed': [e.speed for e in mobile_sinks],
             'collecting data rate': [e.collecting_data_rate for e in mobile_sinks],
             'current data size': [e.current_data for e in mobile_sinks],
             'collected data size': [e.collected_data for e in mobile_sinks],

@@ -2,7 +2,6 @@ import os
 
 from data.file_manager import FileManager
 from environment.plot.plot_environment import PlotEnvironment
-from environment.utils.connection_protocol import ConnectionProtocol
 from environment.utils.logger import configure_logger
 
 

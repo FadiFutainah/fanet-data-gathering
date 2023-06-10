@@ -1,7 +1,7 @@
 import logging
 
 from environment.devices.device import Device
-from environment.utils.connection_protocol import ConnectionProtocol
+from environment.connection_protocol import ConnectionProtocol
 
 
 class DataTransition:

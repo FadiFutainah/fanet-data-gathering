@@ -1,16 +1,21 @@
 import logging
+from dataclasses import dataclass, field
 
-from environment.utils.position import Position
+from environment.utils.vector import Vector
 
 
+@dataclass(order=True)
 class Device:
-    def __init__(self, id: int, position: Position, memory_size: int, current_data: int, collected_data: int) -> None:
-        self.id = id
-        self.position = position
-        self.memory_size = memory_size
-        self.current_data = current_data
-        self.collected_data = collected_data
-        logging.info(f'{type(self).__name__} created at pos: {position}')
+    id: int
+    position: Vector
+    velocity: Vector
+    acceleration: Vector
+    memory_size: int
+    current_data: int
+    collected_data: int
+
+    def __post_init__(self):
+        logging.info(f'{type(self).__name__} created at pos: {self.position}')
 
     def __str__(self) -> str:
         return f'{type(self).__name__}{self.id}'
@@ -42,3 +47,10 @@ class Device:
 
     def has_memory(self, data_size: int = 1):
         return self.get_available_memory() - data_size >= 0
+
+    def move(self, delta_t: Vector) -> None:
+        self.velocity = self.velocity + self.acceleration / t_vector
+        self.position = self.position + self.velocity / t_vector
+
+    def next_step(self):
+        pass

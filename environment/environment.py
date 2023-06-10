@@ -19,11 +19,29 @@ class Environment(EnvironmentBuilder):
         self.base_stations = base_stations
 
         self.time_step = 0
+        self.environment_speed_rate = 1
         self.data_received = 0
         self.data_transitions = []
         self.data_left = sum(sensor.current_data for sensor in self.sensors)
 
         self.initial_state = deepcopy(self)
+
+    def run_sensors(self):
+        for sensor in self.sensors:
+            sensor.next_step()
+
+    def run_base_station(self):
+        pass
+
+    def run_mobile_sinks(self):
+        for mobile_sink in self.mobile_sinks:
+            mobile_sink.next_step()
+
+    def run_data(self):
+        pass
+
+    def run(self):
+        self.time_step += self.environment_speed_rate
 
     def number_of_collected_packets(self) -> int:
         return sum(e.data_size for e in self.data_transitions if isinstance(e.source, Sensor))
@@ -123,3 +141,6 @@ class Environment(EnvironmentBuilder):
 
     def calculate_data_transition_deviation(self) -> float:
         return self.calculate_data_transitions_variance() ** 0.5
+
+    def get_neighbours(self, mobile_sink: MobileSink):
+        pass

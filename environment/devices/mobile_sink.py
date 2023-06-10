@@ -1,7 +1,7 @@
 import logging
 
 from environment.devices.device import Device
-from environment.utils.position import Position
+from environment.utils.vector import Vector
 
 
 class MobileSink(Device):
@@ -9,22 +9,29 @@ class MobileSink(Device):
     The same as UAV, drone.
     """
 
-    def __init__(self, id: int, way_points: list, position: Position, energy: int, coverage_radius: int,
-                 memory_size: int, speed: int, collecting_data_rate: int, collected_data: int = 0) -> None:
+    def __init__(self, id: int, way_points: list, position: Vector, energy: int, coverage_radius: int,
+                 memory_size: int, velocity: Vector, acceleration: Vector, collecting_data_rate: int,
+                 collected_data: int = 0) -> None:
         super().__init__(id, position, memory_size, current_data=0, collected_data=collected_data)
         self.energy = energy
         self.way_points = way_points
         self.coverage_radius = coverage_radius
         self.collecting_data_rate = collecting_data_rate
-        self.speed = speed
-
+        self.velocity = velocity
+        self.acceleration = acceleration
         self.current_way_point = -1
-        self.energy_loss_per_hop = 100
+        self.energy_loss_per_step = 10
         self.way_points_collection_rates = []
 
-    def move(self, x: int, y: int) -> None:
-        self.energy -= self.energy_loss_per_hop
-        self.position.locate(x, y)
+    def next_step(self, delta_t: int = 1) -> None:
+        if self.has_reached():
+            logging.warning(f'{self} has reached the last way point')
+            return
+        if self.energy - self.energy_loss_per_step < 0:
+            logging.error(f'{self} has no more energy')
+            return
+        self.energy -= self.energy_loss_per_step
+        self.move(delta_t=Vector(delta_t, delta_t, delta_t))
 
     def hop(self) -> None:
         if self.has_reached():
