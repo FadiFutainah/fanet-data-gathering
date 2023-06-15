@@ -1,32 +1,20 @@
 import logging
 from dataclasses import dataclass, field
-from queue import PriorityQueue
 
 from typing import List
 
 import numpy as np
 
 from environment.core.physical_object import PhysicalObject
-from environment.networking.data_packets import DataPackets
+from environment.networking.memory import Memory
 
 
 @dataclass
 class Device(PhysicalObject):
     id: int
-    buffer_size: int
-    """ number of packets that could be in the buffer """
-    memory_size: int
-    """ number of packets that could be in the device memory """
-    buffer_io_speed: int
-    """ number of packets that could transferred in and out of the buffer in one timestep """
-    num_of_current_packets: int
-    """ the number of current data packets """
-    current_data: List[DataPackets]
-    """ the current data packets ordered(hashed) by created time """
+    buffer: Memory
+    memory: Memory
     num_of_collected_packets: int
-    """ the collected data packets ordered(hashed) by created time """
-    data_buffer_queue: PriorityQueue[DataPackets] = field(init=False)
-    """ the data packets in the queue ordered(hashed) by created time """
     connected_devices: List[int] = field(init=False, default=List[int])
     """ the ids of the connected devices """
 
@@ -63,18 +51,6 @@ class Device(PhysicalObject):
         index = self.connected_devices.searchsorted(v=id)
         np.insert(self.connected_devices, index, id)
         logging.info(f'connection completed between {self} and device_id: {id}')
-
-    def get_available_memory(self) -> int:
-        return self.memory_size - self.num_of_current_packets
-
-    def get_available_buffer(self) -> int:
-        return self.buffer_size - self.
-
-    def has_data(self, num_of_packets: int = 1) -> bool:
-        return self.num_of_current_packets - num_of_packets >= 0
-
-    def has_memory(self, num_of_packets: int = 1) -> bool:
-        return self.get_available_memory() - num_of_packets >= 0
 
     def step(self) -> None:
         pass

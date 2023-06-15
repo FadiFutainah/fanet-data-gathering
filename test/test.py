@@ -1,3 +1,4 @@
+from queue import PriorityQueue
 from typing import Generator, Any
 
 from simpy import Environment, Event
@@ -24,9 +25,9 @@ def controller_run(env: Environment):
 env = Environment()
 env.process(controller_run(env))
 
-for i in range(5):
-    env.run(until=i + 1)
-    # env.render()
+# for i in range(5):
+#     env.run(until=i + 1)
+#     env.render()
 
 
 def do_task():
@@ -60,5 +61,10 @@ def real_run():
     env.run(until=999)
 
 
-run_environment()
-real_run()
+q = PriorityQueue()
+q.put(3)
+q.put(1)
+q.put(2)
+print(q.get())
+print(q.get())
+print(q.get())
