@@ -10,25 +10,25 @@ from environment.networking.data_packets import DataPackets
 class Memory:
     size: int
     io_speed: int
-    num_of_packets: int
+    current_size: int
     current_data: PriorityQueue[DataPackets] = PriorityQueue()
 
     def get_available(self) -> int:
-        return self.size - self.num_of_packets
+        return self.size - self.current_size
 
-    def has_data(self, num_of_packets: int = 1) -> bool:
-        return self.num_of_packets - num_of_packets >= 0
+    def has_data(self, data_size: int = 1) -> bool:
+        return self.current_size - data_size >= 0
 
-    def has_memory(self, num_of_packets: int = 1) -> bool:
-        return self.get_available() - num_of_packets >= 0
+    def has_memory(self, data_size: int = 1) -> bool:
+        return self.get_available() - data_size >= 0
 
     def get_prior_packets(self) -> DataPackets:
-        data = self.current_data.get()
-        self.num_of_packets -= data.num_of_packets
-        return data
+        data_packets = self.current_data.get()
+        self.current_size -= data_packets.num_of_packets * data_packets.packet_size
+        return data_packets
 
     def add_packets(self, data_packets: DataPackets) -> None:
-        self.num_of_packets += data_packets.num_of_packets
+        self.current_size += data_packets.num_of_packets * data_packets.packet_size
         self.current_data.put(data_packets)
 
     def get_all_data(self) -> List[DataPackets]:
@@ -50,14 +50,31 @@ class Memory:
                 self.add_packets(prior_packets)
         return data
 
-    def store_data(self, data_packets: List[DataPackets]) -> None:
+    def remove_packets(self, data_size) -> None:
+        while not self.current_data.empty():
+            prior_packets = self.current_data.queue[0]
+            data_size -= prior_packets.get_size()
+            if data_size == 0:
+                self.current_data.get()
+            if data_size < 0:
+                prior_packets.remove(prior_packets.get_size() - data_size)
+            self.current_data.get()
+
+    def store_data(self, data_packets: List[DataPackets], overwrite: bool = False) -> None:
         data_size = sum(data_packet.get_size() for data_packet in data_packets)
         if not self.has_memory(data_size):
             logging.error(f'no available memory for {data_size}')
-            return
+            if not overwrite:
+                return
+            self.remove_packets(data_size - self.get_available())
         for data_packet in data_packets:
             self.add_packets(data_packet)
 
-    def remove_outdated_packets(self, current_time) -> None:
-        while not self.current_data.empty() and self.current_data.queue[0].life_time <= current_time:
+    def remove_outdated_packets(self) -> None:
+        while not self.current_data.empty() and self.current_data.queue[0].life_time <= 0:
             self.get_prior_packets()
+
+    def time_forward(self, time: int) -> None:
+        for packets in self.current_data.queue:
+            packets.life_time -= time
+        self.remove_outdated_packets()

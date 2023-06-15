@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass, field
 
 from typing import Tuple
@@ -29,3 +30,6 @@ class DataPackets:
             self.num_of_packets -= num_of_packets
             return DataPackets(self.life_time, self.packet_size, self.created_time, num_of_packets), 0
         return self, (self.num_of_packets - num_of_packets) * self.packet_size
+
+    def remove(self, data_size: int) -> None:
+        self.num_of_packets = math.ceil(data_size / self.packet_size)
