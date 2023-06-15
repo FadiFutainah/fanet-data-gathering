@@ -56,4 +56,8 @@ class Memory:
             logging.error(f'no available memory for {data_size}')
             return
         for data_packet in data_packets:
-            self.current_data.put(data_packet)
+            self.add_packets(data_packet)
+
+    def remove_outdated_packets(self, current_time) -> None:
+        while not self.current_data.empty() and self.current_data.queue[0].life_time <= current_time:
+            self.get_prior_packets()
