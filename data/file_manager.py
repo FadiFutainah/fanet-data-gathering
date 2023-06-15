@@ -3,11 +3,10 @@ import os
 import pandas as pd
 from pandas import DataFrame
 
-from environment.devices.base_stations import BaseStation
-from environment.devices.mobile_sink import MobileSink
+from environment.devices.base_station import BaseStation
+from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
-from environment.environment import Environment
-from environment.utils.position import Position
+from environment.core.environment import Environment
 
 
 class FileManager:
@@ -20,7 +19,7 @@ class FileManager:
         data = {
             'time steps': [environment.time_step],
             'number of sensors': [len(environment.sensors)],
-            'number of mobile sinks': [len(environment.mobile_sinks)],
+            'number of mobile sinks': [len(environment.uavs)],
             'number of base stations': [len(environment.base_stations)],
             'data left': [environment.data_left],
             'data received': [environment.data_received],
@@ -45,7 +44,7 @@ class FileManager:
     def get_sensors_data_frame(sensors: list) -> DataFrame:
         data = {
             'id': [e.id for e in sensors],
-            'data collecting rate': [e.data_collecting_rate for e in sensors],
+            'data collecting rate': [e.max_data_collection_rate for e in sensors],
             'collected data size': [e.collected_data for e in sensors],
             'current data size': [e.current_data for e in sensors],
             'memory size': [e.memory_size for e in sensors],
@@ -79,7 +78,7 @@ class FileManager:
 
     def write_data_on_csv(self, environment: Environment) -> None:
         self.write_episode_data(environment)
-        self.get_mobile_sinks_data_frame(environment.mobile_sinks).to_csv('output/mobile_sinks.csv')
+        self.get_mobile_sinks_data_frame(environment.uavs).to_csv('output/mobile_sinks.csv')
         self.get_sensors_data_frame(environment.sensors).to_csv('output/sensors.csv')
         self.get_data_transitions_data_frame(environment.data_transitions).to_csv('output/data_transitions.csv')
         self.get_base_stations_data_frame(environment.base_stations).to_csv('output/base_stations.csv')
@@ -112,7 +111,7 @@ class FileManager:
                 way_points.append(Position(x=row['x'], y=row['y']))
             if len(way_points) == 0:
                 continue
-            mobile_sink = MobileSink(id=i + 1, position=way_points[0], way_points=way_points[1:])
+            mobile_sink = UAV(id=i + 1, position=way_points[0], way_points=way_points[1:])
             mobile_sinks.append(mobile_sink)
         return mobile_sinks
 
