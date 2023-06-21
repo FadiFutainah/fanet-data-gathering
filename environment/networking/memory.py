@@ -28,6 +28,9 @@ class Memory:
         return data_packets
 
     def add_packets(self, data_packets: DataPackets) -> None:
+        if not self.has_memory(data_packets.get_size()):
+            logging.error(f'no available memory in {self}')
+            return
         self.current_size += data_packets.num_of_packets * data_packets.packet_size
         self.current_data.put(data_packets)
 
@@ -74,7 +77,7 @@ class Memory:
         while not self.current_data.empty() and self.current_data.queue[0].life_time <= 0:
             self.get_prior_packets()
 
-    def time_forward(self, time: int) -> None:
+    def decrease_packets_life_time(self, time: int) -> None:
         for packets in self.current_data.queue:
             packets.life_time -= time
         self.remove_outdated_packets()
