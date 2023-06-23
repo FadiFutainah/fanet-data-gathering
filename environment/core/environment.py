@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
 from environment.devices.device import Device
+from environment.networking.data_packets import remove_form_packets_list, DataPackets
 from environment.networking.data_transition import DataTransition
 from environment.devices.base_station import BaseStation
 from environment.utils.vector import Vector
@@ -16,8 +17,8 @@ from environment.utils.vector import Vector
 
 @dataclass
 class Environment:
-    width: float
-    height: float
+    land_width: float
+    land_height: float
     num_of_areas: int
     maximum_delay: int
     uavs: List[UAV] = List[UAV]
@@ -28,22 +29,12 @@ class Environment:
     initial_state: 'Environment' = field(init=False)
     environment_speed_rate: int = field(init=False, default=1)
     sensors_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
+    base_stations_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
 
     def __post_init__(self) -> None:
         self.sensors_data_transitions = {}
         self.initial_state = deepcopy(self)
         self.divide_to_areas()
-
-    @staticmethod
-    def get_available_data_to_send(source: Device, destination: Device, data_size: int) -> int:
-        source_data, destination_data = data_size, data_size
-        if not source.has_data(data_size):
-            logging.warning(f'{source} has less collected data than {data_size}')
-            source_data = source.current_data
-        if not destination.has_memory(data_size):
-            logging.warning(f'{destination} doesn\'t have enough memory for {data_size}')
-            destination_data = destination.get_available_memory()
-        return min(source_data, destination_data)
 
     def divide_to_areas(self) -> None:
         # TODO: should to be implemented using Kd -tree
@@ -54,70 +45,58 @@ class Environment:
     def get_area_index(self, position: Vector) -> int:
         # TODO: should to be implemented using Kd -tree
         areas_in_dimension = self.num_of_areas ** 0.5
-        x_id = position.x // self.width // areas_in_dimension
-        y_id = position.y // self.height // areas_in_dimension
+        x_id = position.x // self.land_width // areas_in_dimension
+        y_id = position.y // self.land_height // areas_in_dimension
         return int(y_id * 4 + x_id)
 
-    def collect_from_sensor(self, source: Sensor, uav: UAV, data_size: int) -> DataTransition:
-        if not uav.is_connected_to(source.id):
-            uav.connect_to(source.id)
-            data_size -= uav.protocol.initialization_data_size
-        data_size -= uav.position.distance_from(source.position) * uav.slow_down_by_distance_unit
-        data_size = self.get_available_data_to_send(source, uav, data_size)
-        error = uav.protocol.calculate_error()
-        self.data_loss += error
-        source.send_data(data_size=data_size)
-        data_size -= error
-        uav.receive_data(data_size=data_size)
-        return DataTransition(source, data_size, uav, uav.protocol)
+    @staticmethod
+    def connect_two_devices(device1: Device, device2: Device) -> int:
+        """
+        Returns the amount of data that is used to establish the connection
+        """
+        data_size = 0
+        if not device1.is_connected_to(device2.id):
+            device1.connect_to(device2.id)
+            device2.connect_to(device1.id)
+            data_size = device1.protocol.initialization_data_size
+        return data_size
 
-    def create_uav_transmission(self, uav1: UAV, uav2: UAV, data_size: int) -> DataTransition:
-        data_size = min(uav2.network_bandwidth, data_size)
-        if not uav2.is_connected_to(uav1.id):
-            uav2.connect_to(uav1.id)
-            data_size -= uav1.protocol.initialization_data_size
-        data_size -= uav1.position.distance_from(uav2.position) * uav2.slow_down_by_distance_unit
-        data_size = self.get_available_data_to_send(uav1, uav2, data_size)
-        error = uav1.protocol.calculate_error()
+    def get_packets_after_error(self, device1: Device, device2: Device, data_packets: List[DataPackets]):
+        error = device1.protocol.calculate_error() + device2.protocol.calculate_error()
         self.data_loss += error
-        uav1.send_data(data_size=data_size)
-        data_size -= error
-        uav2.receive_data(data_size=data_size)
-        transition = DataTransition(uav1, data_size, uav2, uav1.protocol)
-        self.add_uav_transition(transition)
-        return transition
+        return remove_form_packets_list(data_packets, error)
 
-    def send_to_base_station(self, uav, data_size: int, base_station: BaseStation):
-        if not uav.is_connected_to(base_station.id):
-            uav.connect_to(base_station.id)
-            data_size -= uav.protocol.initialization_data_size
-        data_size -= uav.position.distance_from(base_station.position) * uav.slow_down_by_distance_unit
-        data_size = self.get_available_data_to_send(uav, base_station, data_size)
-        error = uav.protocol.calculate_error()
-        self.data_loss += error
-        uav.send_data(data_size=data_size)
-        data_size -= error
-        base_station.receive_data(data_size=data_size)
-        transition = DataTransition(uav, data_size, base_station, uav.protocol)
-        self.add_uav_transition(transition)
-        return transition
+    def transfer_data(self, source: Device, destination: Device, data_size: int) -> DataTransition:
+        self.connect_two_devices(source, destination)
+        data_size = min(data_size, destination.buffer.get_available())
+        data_size = min(data_size, source.buffer.current_size)
+        data_packets = source.buffer.fetch_data(data_size)
+        destination.buffer.store_data(self.get_packets_after_error(destination, source, data_packets))
+        return DataTransition(source, data_packets, destination, destination.protocol)
 
     def calculate_data_forwarding_reward(self):
         pass
 
-    def calculate_delay(self):
-        pass
+    def calculate_e2e_delay(self) -> float:
+        sum_of_delays = 0
+        ns = 0
+        """ the number of successfully received packets """
+
+        for t, data_transitions in self.base_stations_data_transitions:
+            for data_transition in data_transitions:
+                for data_packets in data_transition.data:
+                    sum_of_delays += (t - data_packets.packet_size) * data_packets.num_of_packets
+                    ns += data_packets.num_of_packets
+        return sum_of_delays / ns
 
     def calculate_delay_penalty(self):
-        self.calculate_delay()
+        pass
 
     def run_sensors(self) -> None:
-        for sensor in self.sensors:
-            sensor.step()
+        pass
 
     def run_base_stations(self) -> None:
-        for base_station in self.base_stations:
-            base_station.step()
+        pass
 
     def calculate_data_collection_reward(self, uav: UAV) -> float:
         alpha, beta = 1, 1
@@ -132,14 +111,17 @@ class Environment:
 
     def run_uavs(self) -> None:
         for uav in self.uavs:
-            if uav.energy <= 0:
-                return
-            uav.step()
             index = self.get_area_index(uav.position)
             if uav.areas_collection_rates[index] != 0:
                 self.collect_data(uav)
             else:
-                uav.move()
+                uav.move_to_next_position()
+
+    def run_connected_devices(self):
+        for sensor, uav, base_station in zip(self.sensors, self.uavs, self.base_stations):
+            uav.prepare_data_sending()
+            sensor.prepare_data_sending()
+            base_station.prepare_data_sending()
 
     def run_agent(self):
         pass
@@ -155,21 +137,23 @@ class Environment:
     def render(self) -> None:
         pass
 
-    def number_of_collected_packets(self) -> int:
-        return int(np.sum(sensor.collected_data for sensor in self.sensors))
+    def num_of_generated_packets(self) -> int:
+        return int(np.sum(sensor.num_of_collected_packets for sensor in self.sensors))
 
-    def number_of_received_packets(self) -> int:
-        return int(np.sum(base_station.collected_data for base_station in self.base_stations))
+    def num_of_received_packets(self) -> int:
+        return int(np.sum(base_station.num_of_collected_packets for base_station in self.base_stations))
 
     def calculate_pdr(self) -> float:
-        if self.number_of_collected_packets() == 0:
+        if self.num_of_generated_packets() == 0:
             return 0
-        return self.number_of_received_packets() / self.number_of_collected_packets()
+        return self.num_of_received_packets() / self.num_of_generated_packets()
 
     def reset(self) -> None:
         logging.info(f'reset environment to initial state')
         self.time_step = 0
+        self.data_loss = 0
         self.sensors_data_transitions.clear()
+        self.base_stations_data_transitions.clear()
         self.uavs = deepcopy(self.initial_state.uavs)
         self.sensors = deepcopy(self.initial_state.sensors)
         self.base_stations = deepcopy(self.initial_state.base_stations)
@@ -185,12 +169,6 @@ class Environment:
     def data_collection_state(self, uav_index: int) -> (UAV, List[UAV], Dict[int, List[DataTransition]]):
         return self.uavs[uav_index], self.get_neighbouring_uavs(uav_index), self.sensors_data_transitions
 
-    def has_moves(self) -> bool:
-        return any(not mobile_sink.has_reached() for mobile_sink in self.uavs)
-
-    def is_completed(self) -> bool:
-        return self.data_received == self.initial_state.data_left
-
     def get_sensors_in_range(self, uav: UAV) -> List[Sensor]:
         # TODO: should to be optimized using Kd -tree
         neighbours = []
@@ -200,15 +178,16 @@ class Environment:
         return neighbours
 
     def add_sensor_transition(self, transition: DataTransition) -> None:
-        self.sensors_data_transitions[self.time_step] = np.append(self.sensors_data_transitions[self.time_step],
-                                                                  [transition])
+        self.sensors_data_transitions[self.time_step].append(transition)
 
     def collect_data(self, uav: UAV) -> None:
         index = self.get_area_index(uav.position)
         sensors_in_range = self.get_sensors_in_range(uav)
-        data_to_collect = int(np.sum(e.data_size for e in sensors_in_range))
-        data_to_collect = min(data_to_collect, uav.network_bandwidth)
+        available_data = int(np.sum(e.num_of_collected_packets for e in sensors_in_range))
+        data_to_collect = min(available_data, uav.areas_collection_rates[index])
+        data_to_collect = min(data_to_collect, uav.available_bandwidth)
         data_sent = 0
+
         collect_from_sensor = data_to_collect // len(sensors_in_range)
         for sensor in self.get_sensors_in_range(uav):
             transition = self.collect_from_sensor(sensor, uav, collect_from_sensor)
@@ -226,12 +205,12 @@ class Environment:
         logging.info(f'{len(self.sensors)} sensor')
         logging.info(f'{len(self.uavs)} mobile sink')
         logging.info(f'{len(self.base_stations)} base station')
-        logging.info(f'data left: {self.data_left}')
-        logging.info(f'data received: {self.data_received}')
         logging.info(f'pdr: {self.calculate_pdr()}')
         for mobile_sink in self.uavs:
             logging.info(f'{mobile_sink} energy: {mobile_sink.energy}')
-        for transition in self.data_transitions:
+        for transition in self.sensors_data_transitions:
+            logging.info(f'{transition}')
+        for transition in self.base_stations_data_transitions:
             logging.info(f'{transition}')
 
     def choose_collection_area(self):
@@ -241,19 +220,19 @@ class Environment:
         pass
 
     def calculate_sensors_heatmap(self) -> list:
-        maximum_value = max(sensor.current_data for sensor in self.sensors)
-        minimum_value = min(sensor.current_data for sensor in self.sensors)
+        maximum_value = max(sensor.num_of_collected_packets for sensor in self.sensors)
+        minimum_value = min(sensor.num_of_collected_packets for sensor in self.sensors)
         value_range = maximum_value - minimum_value
         heatmap = []
         for sensor in self.sensors:
-            heatmap.append(sensor.current_data / value_range)
+            heatmap.append(sensor.num_of_collected_packets / value_range)
         return heatmap
 
     def calculate_sensors_data_fairness(self) -> float:
-        maximum_value = max(sensor.current_data for sensor in self.sensors)
-        minimum_value = min(sensor.current_data for sensor in self.sensors)
+        maximum_value = max(sensor.num_of_collected_packets for sensor in self.sensors)
+        minimum_value = min(sensor.num_of_collected_packets for sensor in self.sensors)
         median = (maximum_value - minimum_value) / 2
-        average = sum(sensor.current_data for sensor in self.sensors) / len(self.sensors)
+        average = sum(sensor.num_of_collected_packets for sensor in self.sensors) / len(self.sensors)
         return abs(average - median)
 
     def get_heatmap_history(self):

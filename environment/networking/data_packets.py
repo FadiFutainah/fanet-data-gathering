@@ -1,7 +1,19 @@
 import math
 from dataclasses import dataclass, field
 
-from typing import Tuple
+from typing import Tuple, List
+
+
+def remove_form_packets_list(data_packets: List['DataPackets'], data_size: int) -> List['DataPackets']:
+    # TODO: Apply sorted on created time
+    for data_packet in data_packets:
+        data_loss = min(data_size, data_packet.get_size())
+        data_size -= data_loss
+        data_packet.remove(data_loss)
+        if data_size <= 0:
+            break
+    data_packets = [packet for packet in data_packets if packet.get_size() <= 0]
+    return data_packets
 
 
 @dataclass(order=True)

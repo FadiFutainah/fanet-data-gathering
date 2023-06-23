@@ -22,8 +22,8 @@ class PlotEnvironment(Environment):
         self.init_plot()
 
     def init_plot(self) -> None:
-        plt.xlim(-50, self.width + 50)
-        plt.ylim(-50, self.height + 50)
+        plt.xlim(-50, self.land_width + 50)
+        plt.ylim(-50, self.land_height + 50)
 
     @staticmethod
     def save_on_file(name: str) -> None:

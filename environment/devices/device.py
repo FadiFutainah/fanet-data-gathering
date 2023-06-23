@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 from typing import List
 
 from environment.core.physical_object import PhysicalObject
+from environment.networking.connection_protocol import ConnectionProtocol
 from environment.networking.data_packets import DataPackets
-from environment.networking.memory import Memory
+from environment.devices.memory import Memory
 
 import numpy as np
 
@@ -16,6 +17,7 @@ class Device(PhysicalObject):
     buffer: Memory
     memory: Memory
     num_of_collected_packets: int
+    protocol: ConnectionProtocol
     connected_devices: np.ndarray[int] = field(init=False, default=np.array([]))
     """ the ids of the connected devices """
 
@@ -45,8 +47,24 @@ class Device(PhysicalObject):
 
     def connect_to(self, id: int):
         if self.is_connected_to(id):
-            logging.error(f'self{self} is already connected to device {id}')
+            logging.error(f'{self} is already connected to device {id}')
             return
         index = self.connected_devices.searchsorted(v=id)
         np.insert(self.connected_devices, index, id)
         logging.info(f'connection has been established between {self} and device {id}')
+
+    def disconnect_from(self, id: int):
+        if not self.is_connected_to(id):
+            logging.error(f'{self} is not connected to device {id}')
+            return
+        index = self.connected_devices.searchsorted(v=id)
+        self.connected_devices = np.delete(self.connected_devices, index)
+        logging.info(f'{self} disconnected from device {id}')
+
+    def prepare_data_sending(self):
+        if len(self.connected_devices) > 0:
+            self.move_to_buffer_queue(self.buffer.io_speed)
+
+    # def fetch_data(self, data_size: int) -> List[DataPackets]:
+    #     self.move_from_buffer_queue(data_size)
+    #
