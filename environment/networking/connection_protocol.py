@@ -11,7 +11,6 @@ class ConnectionProtocol:
     to simulate the data encryption simply create a connection protocol with high connection_slow_down value.
     all the variables are number refers to the number of data packets.
     """
-    latency: int
     data_loss: int
     data_loss_rate: int
     initialization_data_size: int
