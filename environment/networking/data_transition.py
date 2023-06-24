@@ -3,16 +3,17 @@ from dataclasses import dataclass, field
 from typing import List
 
 from environment.devices.device import Device
-from environment.networking.connection_protocol import ConnectionProtocol
 from environment.networking.data_packets import DataPackets
+from environment.networking.connection_protocol import ConnectionProtocol
 
 
 @dataclass
 class DataTransition:
     source: Device
-    data: List[DataPackets]
     destination: Device
+    data: List[DataPackets]
     protocol: ConnectionProtocol
+    error_loss: int
     size: int = field(init=False)
 
     def __post_init__(self):
