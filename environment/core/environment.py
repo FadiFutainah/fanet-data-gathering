@@ -19,7 +19,6 @@ from environment.utils.vector import Vector
 class Environment:
     land_width: float
     land_height: float
-    num_of_areas: int
     maximum_delay: int
     uavs: List[UAV] = List[UAV]
     sensors: List[Sensor] = List[Sensor]
@@ -34,20 +33,13 @@ class Environment:
     def __post_init__(self) -> None:
         self.sensors_data_transitions = {}
         self.initial_state = deepcopy(self)
-        self.divide_to_areas()
 
-    def divide_to_areas(self) -> None:
-        # TODO: should to be implemented using Kd -tree
-        self.num_of_areas = 16
-        for uav in self.uavs:
-            uav.areas_collection_rates = np.zeros(self.num_of_areas)
+    def divide_to_areas(self):
+        pass
 
-    def get_area_index(self, position: Vector) -> int:
-        # TODO: should to be implemented using Kd -tree
-        areas_in_dimension = self.num_of_areas ** 0.5
-        x_id = position.x // self.land_width // areas_in_dimension
-        y_id = position.y // self.land_height // areas_in_dimension
-        return int(y_id * 4 + x_id)
+    @staticmethod
+    def get_area_id(uav: UAV) -> Vector:
+        return uav.way_points[uav.current_way_point]
 
     @staticmethod
     def connect_two_devices(device1: Device, device2: Device) -> int:
