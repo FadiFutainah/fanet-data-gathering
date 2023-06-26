@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass, field
 
 from environment.devices.device import Device
-from environment.networking.data_packets import DataPackets
+from environment.networking.data_packet import DataPacket
 
 
 @dataclass
@@ -13,7 +13,7 @@ class Sensor(Device):
     """ number of lost packets due to overwrite the sensor data """
 
     def collect_data(self, life_time: int, packet_size: int, current_time: int) -> None:
-        data_packets = DataPackets(life_time, packet_size, current_time, self.data_collecting_rate // packet_size)
+        data_packets = DataPacket(life_time, packet_size, current_time, self.data_collecting_rate // packet_size)
         if not self.memory.has_memory(data_packets.get_size()):
             overwritten_data = data_packets.get_size() - self.memory.get_available()
             self.data_loss += overwritten_data

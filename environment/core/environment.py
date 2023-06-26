@@ -7,12 +7,11 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from environment.devices.uav import UAV
+from environment.utils.vector import Vector
 from environment.devices.sensor import Sensor
 from environment.devices.device import Device
-from environment.networking.data_packets import remove_form_packets_list, DataPackets
-from environment.networking.data_transition import DataTransition
 from environment.devices.base_station import BaseStation
-from environment.utils.vector import Vector
+from environment.networking.data_transition import DataTransition
 
 
 @dataclass
@@ -34,29 +33,9 @@ class Environment:
         self.sensors_data_transitions = {}
         self.initial_state = deepcopy(self)
 
-    def divide_to_areas(self):
-        pass
-
     @staticmethod
     def get_area_id(uav: UAV) -> Vector:
         return uav.way_points[uav.current_way_point]
-
-    @staticmethod
-    def connect_two_devices(device1: Device, device2: Device) -> int:
-        """
-        Returns the amount of data that is used to establish the connection
-        """
-        data_size = 0
-        if not device1.is_connected_to(device2.id):
-            device1.connect_to(device2.id)
-            device2.connect_to(device1.id)
-            data_size = device1.protocol.initialization_data_size
-        return data_size
-
-    def get_packets_after_error(self, device1: Device, device2: Device, data_packets: List[DataPackets]):
-        error = device1.protocol.calculate_error() + device2.protocol.calculate_error()
-        self.data_loss += error
-        return remove_form_packets_list(data_packets, error)
 
     def transfer_data(self, source: Device, destination: Device, data_size: int) -> DataTransition:
         self.connect_two_devices(source, destination)
@@ -77,8 +56,8 @@ class Environment:
         for t, data_transitions in self.base_stations_data_transitions:
             for data_transition in data_transitions:
                 for data_packets in data_transition.data:
-                    sum_of_delays += (t - data_packets.packet_size) * data_packets.num_of_packets
-                    ns += data_packets.num_of_packets
+                    sum_of_delays += (t - data_packets.chunk_size) * data_packets.num_of_chunks
+                    ns += data_packets.num_of_chunks
         return sum_of_delays / ns
 
     def calculate_delay_penalty(self):
