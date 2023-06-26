@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from queue import PriorityQueue
 from typing import List
 
-from environment.networking.data_packet import DataPacket
+from environment.networking.data_packet_collection import DataPacketCollection
 
 
 @dataclass
@@ -11,7 +11,7 @@ class Memory:
     size: int
     io_speed: int
     current_size: int
-    current_data: PriorityQueue[DataPacket] = PriorityQueue()
+    current_data: PriorityQueue[DataPacketCollection] = PriorityQueue()
 
     def get_available(self) -> int:
         return self.size - self.current_size
@@ -22,54 +22,44 @@ class Memory:
     def has_memory(self, data_size: int = 1) -> bool:
         return self.get_available() - data_size >= 0
 
-    def get_prior_packets(self) -> DataPacket:
+    def get_prior_packets(self) -> DataPacketCollection:
         data_packets = self.current_data.get()
-        self.current_size -= data_packets.num_of_chunks * data_packets.chunk_size
+        self.current_size -= data_packets.num_of_packets * data_packets.packet_size
         return data_packets
 
-    def add_packets(self, data_packets: DataPacket) -> None:
+    def add_packets(self, data_packets: DataPacketCollection) -> None:
         if not self.has_memory(data_packets.get_size()):
             logging.error(f'no available memory in {self}')
             return
-        self.current_size += data_packets.num_of_chunks * data_packets.chunk_size
+        self.current_size += data_packets.num_of_packets * data_packets.packet_size
         self.current_data.put(data_packets)
 
-    def get_all_data(self) -> List[DataPacket]:
+    def get_all_data(self) -> List[DataPacketCollection]:
         data = []
         while not self.current_data.empty():
             data.append(self.get_prior_packets())
         return data
 
-    def fetch_data(self, data_size: int) -> List[DataPacket]:
+    def fetch_data(self, data_size: int) -> List[DataPacketCollection]:
         if not self.has_data(data_size):
             logging.error(f'no available data in {self}')
             return self.get_all_data()
         data = []
         while data_size > 0:
             prior_packets = self.get_prior_packets()
-            data_packets, data_size = prior_packets.get_data(data_size)
+            data_packets = prior_packets.remove(data_size)
             data.append(data_packets)
-            if prior_packets.num_of_chunks > 0:
+            if prior_packets.num_of_packets > 0:
                 self.add_packets(prior_packets)
         return data
 
-    def remove_packets(self, data_size) -> None:
-        while not self.current_data.empty():
-            prior_packets = self.current_data.queue[0]
-            data_size -= prior_packets.get_size()
-            if data_size == 0:
-                self.current_data.get()
-            if data_size < 0:
-                prior_packets.remove(prior_packets.get_size() - data_size)
-            self.current_data.get()
-
-    def store_data(self, data_packets: List[DataPacket], overwrite: bool = False) -> None:
-        data_size = sum(data_packet.get_size() for data_packet in data_packets)
+    def store_data(self, data_packets: List[DataPacketCollection], overwrite: bool = False) -> None:
+        data_size = DataPacketCollection.get_packets_list_size(data_packets)
         if not self.has_memory(data_size):
             logging.error(f'no available memory for {data_size}')
             if not overwrite:
                 return
-            self.remove_packets(data_size - self.get_available())
+            self.fetch_data(data_size - self.get_available())
         for data_packet in data_packets:
             self.add_packets(data_packet)
 

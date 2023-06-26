@@ -1,6 +1,3 @@
-from typing import List
-
-from simpy import Environment
 from dataclasses import dataclass
 
 from environment.utils.vector import Vector

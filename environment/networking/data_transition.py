@@ -13,7 +13,7 @@ class DataTransition:
     destination: Device
     data: List[DataPacketCollection]
     protocol: ConnectionProtocol
-    error_loss: int
+    data_loss: int
     size: int = field(init=False)
 
     def __post_init__(self):
