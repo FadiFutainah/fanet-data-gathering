@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from environment.devices.device import Device
 from environment.networking.connection_protocol import ConnectionProtocol
-from environment.networking.data_packet import DataPacket
+from environment.networking.data_packet_collection import DataPacketCollection
 from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
 
@@ -14,14 +14,15 @@ class Connection:
     device2: Device
     protocol: ConnectionProtocol
     speed: int = field(default=0)
-    initialization_data: int = field(init=False, default=0)
+    initialization_data_sent: int = field(init=False, default=0)
 
     def is_initialized(self) -> bool:
-        return self.initialization_data == self.protocol.initialization_data_size
+        return self.initialization_data_sent == self.protocol.initialization_data_size
 
-    def get_packets_after_error(self, data_packets: List[DataPacket]) -> Tuple[List[DataPacket], int]:
-        error = self.protocol.calculate_error()
-        return DataPacket.remove_form_packets_list(data_packets, error), error
+    def get_packets_after_error(self, data_packets: List[DataPacketCollection]) \
+            -> Tuple[List[DataPacketCollection], int]:
+        error = self.protocol.calculate_data_loss(DataPacketCollection.get_packets_list_size(data_packets))
+        return DataPacketCollection.remove_form_packets_list(data_packets, error), error
 
     def get_devices_roles(self, transfer_type: TransferType) -> Tuple[Device, Device]:
         if transfer_type == TransferType.RECEIVE:
@@ -30,8 +31,8 @@ class Connection:
             return self.device2, self.device1
 
     def initialize(self, data_size: int) -> int:
-        data = max(0, data_size - self.initialization_data)
-        self.initialization_data += data
+        data = max(0, data_size - self.initialization_data_sent)
+        self.initialization_data_sent += data
         data_size = data_size - data
         return data_size
 

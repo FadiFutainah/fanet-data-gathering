@@ -5,22 +5,23 @@ from typing import List
 
 
 @dataclass(order=True)
-class DataPacket:
+class DataPacketCollection:
     life_time: int
     """ refer to the life time of the packet inside the buffer """
-    chunk_size: int
+    packet_size: int
     created_time: int
-    num_of_chunks: int
+    num_of_packets: int
     sort_index: int = field(init=False, repr=False)
 
     def __post_init__(self):
         self.sort_index = self.created_time
 
     def get_size(self):
-        return self.chunk_size * self.num_of_chunks
+        return self.packet_size * self.num_of_packets
 
     @staticmethod
-    def remove_form_packets_list(data_packets: List['DataPacket'], data_size: int) -> List['DataPacket']:
+    def remove_form_packets_list(data_packets: List['DataPacketCollection'], data_size: int) \
+            -> List['DataPacketCollection']:
         returned_data = []
         to_remove = []
         for packet in data_packets:
@@ -35,7 +36,11 @@ class DataPacket:
             data_packets.remove(data)
         return returned_data
 
-    def remove(self, data_size: int) -> 'DataPacket':
-        removed_chunks = self.num_of_chunks - math.ceil(data_size / self.chunk_size)
-        self.num_of_chunks = max(0, self.num_of_chunks - removed_chunks)
-        return DataPacket(self.life_time, self.chunk_size, self.created_time, removed_chunks)
+    @staticmethod
+    def get_packets_list_size(data_packets: List['DataPacketCollection']) -> int:
+        return sum([packet.get_size() for packet in data_packets])
+
+    def remove(self, data_size: int) -> 'DataPacketCollection':
+        removed_packets = self.num_of_packets - math.ceil(data_size / self.packet_size)
+        self.num_of_packets = max(0, self.num_of_packets - removed_packets)
+        return DataPacketCollection(self.life_time, self.packet_size, self.created_time, removed_packets)

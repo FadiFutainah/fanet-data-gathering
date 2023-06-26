@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Callable
 
 from environment.devices.device import Device
 from environment.networking.connection import Connection
@@ -16,12 +16,10 @@ class WiFiNetwork:
     protocol: ConnectionProtocol
     connections: List[Connection]
 
-    def run(self) -> None:
+    def update_connections_distances(self) -> None:
         for connection in self.connections:
-            if self.source.position.distance_from(connection.destination.position) > self.coverage_radius:
-                self.remove_connection(connection.destination.id)
-            else:
-                connection.run()
+            if self.source.position.distance_from(connection.device2.position) > self.coverage_radius:
+                self.disconnect_from(connection.device2.id)
 
     def is_connected_to(self, id: int) -> bool:
         return self.get_connection_by_id(id) is not None
@@ -33,42 +31,32 @@ class WiFiNetwork:
 
     def get_connection_by_id(self, id: int) -> Optional[Connection]:
         for connection in self.connections:
-            if connection.destination.id == id:
+            if connection.device2.id == id:
                 return connection
         return None
 
-    def get_connection(self, connection: Connection) -> Optional[Connection]:
-        for c1 in self.connections:
-            if c1.destination.id == id:
-                return connection
-        return None
+    def update_connections(self, action: Callable, connection: Connection) -> None:
+        action(connection)
+        self.update_connections_speed()
 
     def add_connection(self, connection: Connection) -> None:
-        found = self.get_connection(connection)
-        if found is not None:
+        if self.get_connection_by_id(connection.device2.id) is not None:
             logging.warning(f'{self} is already connected to device {id}')
             return
-        self.connections.append(connection)
-        self.update_connections_speed()
+        self.update_connections(self.connections.append, connection)
         logging.info(f'connection has been established between {self} and device {id}')
 
-    def remove_connection(self, id: int) -> None:
+    def disconnect_from(self, id: int) -> None:
         connection = self.get_connection_by_id(id)
         if connection is None:
             logging.error(f'{self} is not connected to device {id}')
             return
-        self.connections.remove(connection)
-        self.update_connections_speed()
+        self.update_connections(self.connections.remove, connection)
         logging.info(f'{self} disconnected from device {id}')
 
     def transfer_data(self, destination: Device, data_size: int, transfer_type: TransferType) -> DataTransition:
         connection = self.get_connection_by_id(destination.id)
         if not self.is_connected_to(destination.id):
-            connection = Connection(destination=destination, protocol=self.protocol)
+            connection = Connection(self.source, destination, self.protocol)
             self.add_connection(connection)
-        source = self.source
-        if transfer_type == TransferType.SEND:
-            connection.get_data()
-        elif transfer_type == TransferType.RECEIVE:
-            source = destination
-        return DataTransition(source, data_packets, destination, destination.protocol)
+        return connection.run(data_size, transfer_type)

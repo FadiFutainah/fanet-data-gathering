@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from environment.devices.device import Device
-from environment.networking.data_packet import DataPacket
+from environment.networking.data_packet_collection import DataPacketCollection
 from environment.networking.connection_protocol import ConnectionProtocol
 
 
@@ -11,7 +11,7 @@ from environment.networking.connection_protocol import ConnectionProtocol
 class DataTransition:
     source: Device
     destination: Device
-    data: List[DataPacket]
+    data: List[DataPacketCollection]
     protocol: ConnectionProtocol
     error_loss: int
     size: int = field(init=False)
