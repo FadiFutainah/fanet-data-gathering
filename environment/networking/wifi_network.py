@@ -1,5 +1,5 @@
 import logging
-from dataclasses import field
+from dataclasses import field, dataclass
 from typing import List, Optional, Callable
 
 from environment.devices.device import Device
@@ -9,12 +9,13 @@ from environment.networking.data_transition import DataTransition
 from environment.networking.connection_protocol import ConnectionProtocol
 
 
+@dataclass
 class WiFiNetwork:
     bandwidth: int
-    source: Device
     coverage_radius: int
     max_num_of_devices: int
     protocol: ConnectionProtocol
+    source: Device = field(init=False)
     connections: List[Connection] = field(default_factory=List[Connection])
 
     def update_connections_distances(self) -> None:
