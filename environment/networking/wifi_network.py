@@ -1,4 +1,5 @@
 import logging
+from dataclasses import field
 from typing import List, Optional, Callable
 
 from environment.devices.device import Device
@@ -14,7 +15,7 @@ class WiFiNetwork:
     coverage_radius: int
     max_num_of_devices: int
     protocol: ConnectionProtocol
-    connections: List[Connection]
+    connections: List[Connection] = field(default_factory=List[Connection])
 
     def update_connections_distances(self) -> None:
         for connection in self.connections:

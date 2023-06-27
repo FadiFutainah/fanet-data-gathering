@@ -10,7 +10,7 @@ from environment.networking.data_packet_collection import DataPacketCollection
 class Memory:
     size: int
     io_speed: int
-    current_size: int
+    current_size: int = 0
     current_data: PriorityQueue[DataPacketCollection] = PriorityQueue()
 
     def get_available(self) -> int:

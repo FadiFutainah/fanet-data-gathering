@@ -1,4 +1,6 @@
 import os
+from dataclasses import dataclass
+from typing import Tuple, Any, List
 
 import pandas as pd
 from pandas import DataFrame
@@ -9,10 +11,23 @@ from environment.devices.sensor import Sensor
 from environment.core.environment import Environment
 
 
+@dataclass
 class FileManager:
-    def __init__(self, input_dir: str, output_dir: str) -> None:
-        self.input_path = f'data/input/{input_dir}/'
-        self.output_path = f'data/output/{output_dir}/'
+    solution_id: int
+
+    def __post_init__(self):
+        self.input_dir = f'data/input/sample_{self.solution_id}/'
+        self.output_dir = f'data/output/sample_{self.solution_id}/'
+
+    def read_table(self, path: str, keys: List[str]) -> Any:
+        data = pd.read_csv(self.input_dir + path)
+        table = []
+        for index, row in data.iterrows():
+            data_row = []
+            for key in keys:
+                data_row.append(row[key])
+            table.append(data_row)
+        return table
 
     @staticmethod
     def get_episode_data_frame(environment: Environment) -> DataFrame:
@@ -99,8 +114,9 @@ class FileManager:
             base_stations.append(base_station)
         return base_stations
 
-    def load_mobile_sinks(self, solution_id: int) -> list:
-        mobile_sinks = []
+    def load_uavs(self) -> List[UAV]:
+        uavs = []
+
         directory = self.path + 'solutions/solution-' + str(solution_id) + '/'
         for i, file in enumerate(os.listdir(directory)):
             data = pd.read_csv(directory + file)
@@ -115,9 +131,13 @@ class FileManager:
             mobile_sinks.append(mobile_sink)
         return mobile_sinks
 
-    def load_environment(self, solution_id: int, environment, height: int = 1000, width: int = 1000) -> Environment:
+    def load_basic_variables(self) -> Tuple[int, int, int, int]:
+        table = self.read_table(path='environment_basics.csv', keys=['height', 'width', 'max delay', 'speed rate'])
+        return table[0][0], table[0][1], table[0][2], table[0][3]
+
+    def load_environment(self) -> Environment:
+        height, width, max_delay, speed_rate = self.load_basic_variables()
+        uavs = self.load_uavs()
         sensors = self.load_sensors()
-        mobile_sinks = self.load_mobile_sinks(solution_id=solution_id)
         base_stations = self.load_base_stations()
-        return environment(sensors=sensors, mobile_sinks=mobile_sinks, base_stations=base_stations, height=height,
-                           width=width)
+        return Environment(width, height, max_delay, speed_rate, uavs, sensors, base_stations)

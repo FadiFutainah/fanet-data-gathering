@@ -15,8 +15,8 @@ class Device(PhysicalObject):
     id: int
     buffer: Memory
     memory: Memory
-    num_of_collected_packets: int
     network: WiFiNetwork
+    num_of_collected_packets: int
     """ the ids of the connected devices """
 
     def __post_init__(self) -> None:

@@ -16,11 +16,11 @@ from environment.networking.data_transition import DataTransition
 class Environment:
     land_width: float
     land_height: float
-    maximum_delay: int
+    max_delay: int
+    speed_rate: int = field(default=1)
     uavs: List[UAV] = List[UAV]
     sensors: List[Sensor] = List[Sensor]
     base_stations: List[BaseStation] = List[BaseStation]
-    environment_speed_rate: int = field(default=1)
     time_step: int = field(init=False, default=0)
     data_loss: int = field(init=False, default=0)
     initial_state: 'Environment' = field(init=False)
@@ -97,7 +97,7 @@ class Environment:
         pass
 
     def run(self) -> None:
-        self.time_step += self.environment_speed_rate
+        self.time_step += self.speed_rate
         logging.info(f'time step {self.time_step}:')
         self.run_uavs()
         self.run_sensors()
