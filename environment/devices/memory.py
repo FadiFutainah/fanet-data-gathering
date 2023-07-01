@@ -1,5 +1,6 @@
 import logging
-from dataclasses import dataclass
+from copy import copy, deepcopy
+from dataclasses import dataclass, field
 from queue import PriorityQueue
 from typing import List
 
@@ -11,7 +12,12 @@ class Memory:
     size: int
     io_speed: int
     current_size: int = 0
-    current_data: PriorityQueue[DataPacketCollection] = PriorityQueue()
+    current_data: PriorityQueue = field(default_factory=PriorityQueue, init=False)
+
+    def __deepcopy__(self, memodict={}):
+        copyobj = copy(self)
+        copyobj.current_data = PriorityQueue()
+        return copyobj
 
     def get_available(self) -> int:
         return self.size - self.current_size
@@ -39,6 +45,13 @@ class Memory:
         while not self.current_data.empty():
             data.append(self.get_prior_packets())
         return data
+
+    def read_data(self) -> List[DataPacketCollection]:
+        data = copy(self.current_data)
+        data_list = []
+        while not data.empty():
+            data_list.append(data.get())
+        return data_list
 
     def fetch_data(self, data_size: int) -> List[DataPacketCollection]:
         if not self.has_data(data_size):
