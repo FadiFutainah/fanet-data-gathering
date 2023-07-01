@@ -1,29 +1,33 @@
-import logging
-import random
+from dataclasses import dataclass, field
+from typing import List, Any
 
-import keyboard
 import matplotlib
 import matplotlib.pyplot as plt
 
+from environment.devices.device import Device
 from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
 from environment.core.environment import Environment
-from environment.plot.mobile_sink_plot import MobileSinkPlot
+from environment.plot.uav_render_object import UavRenderObject
 
 
-class PlotEnvironment(Environment):
-    def __init__(self, sensors: list, uavs: list, base_stations: list, height: float, width: float) -> None:
-        super().__init__(sensors, uavs, base_stations, height, width)
+@dataclass
+class PlotEnvironment:
+    env: Environment
+    uav_render_object_list: List = field(init=False)
+    sensors_render_objects: Any = field(init=False)
+
+    def __post_init__(self) -> None:
         matplotlib.use('TkAgg')
         self.fig, self.ax = plt.subplots(figsize=(10, 10))
-        self.colors = ['g', 'c', 'm', 'y']
-        self.mobile_sinks_plots = []
-        self.sensors_plots = None
         self.init_plot()
+        self.uav_render_object_list = []
+        for _ in self.env.uavs:
+            self.uav_render_object_list.append(UavRenderObject())
 
     def init_plot(self) -> None:
-        plt.xlim(-50, self.land_width + 50)
-        plt.ylim(-50, self.land_height + 50)
+        plt.xlim(-50, self.env.land_width + 50)
+        plt.ylim(-50, self.env.land_height + 50)
 
     @staticmethod
     def save_on_file(name: str) -> None:
@@ -31,82 +35,56 @@ class PlotEnvironment(Environment):
 
     @staticmethod
     def get_sensor_color(sensor: Sensor) -> str:
-        if sensor.is_empty():
-            return 'darkgray'
-        return 'red'
+        if sensor.memory.has_data():
+            return 'red'
+        return 'darkgray'
 
-    def draw_devices(self, devices: list, shape: str, size: int, colors: list, alpha: float = 1):
+    def draw_devices(self, devices: List[Device], shape: str, size: int, colors: List[str], alpha: float = 1):
         xs = [device.position.x for device in devices]
         ys = [device.position.y for device in devices]
         return self.ax.scatter(xs, ys, s=[size] * len(devices), c=colors, alpha=alpha, marker=shape)
 
     def draw_sensors(self):
-        sensors_colors = [self.get_sensor_color(sensor=sensor) for sensor in self.sensors]
-        return self.draw_devices(devices=self.sensors, shape='.', size=135, alpha=0.6, colors=sensors_colors)
+        sensors_colors = [self.get_sensor_color(sensor=sensor) for sensor in self.env.sensors]
+        return self.draw_devices(devices=self.env.sensors, shape='.', size=135, alpha=0.6, colors=sensors_colors)
 
     def draw_base_stations(self):
-        base_stations_colors = ['b'] * len(self.base_stations)
-        self.draw_devices(devices=self.base_stations, shape='^', size=600, alpha=0.4, colors=base_stations_colors)
+        base_stations_colors = ['b'] * len(self.env.base_stations)
+        self.draw_devices(devices=self.env.base_stations, shape='^', size=600, alpha=0.4, colors=base_stations_colors)
 
-    def draw_mobile_sink(self, mobile_sink: UAV):
-        color = random.choice(self.colors)
-        p, = self.ax.plot(mobile_sink.position.x, mobile_sink.position.y, color + 'd', markersize=15, alpha=0.7)
-        c = self.draw_circle(mobile_sink=mobile_sink, color=color)
-        self.mobile_sinks_plots.append(MobileSinkPlot(position=p, range=c, color=color))
-        self.draw_items(items=[mobile_sink.position, *mobile_sink.way_points], shape=color + '--o', size=6)
+    def draw_uav(self, uav: UAV, index: int) -> None:
+        render_object = self.uav_render_object_list[index]
+        p, = self.ax.plot(uav.position.x, uav.position.y, render_object.color + 'd', markersize=15, alpha=0.7)
+        c = self.draw_circle(uav=uav, color=render_object.color)
+        self.uav_render_object_list[index].update(position=p, range=c)
+        self.draw_items(items=[uav.position, *uav.way_points], shape=render_object.color + '--o', size=6)
 
     def remove_sensors(self):
-        self.sensors_plots.remove()
+        self.sensors_render_objects.remove()
 
     def draw_items(self, items: list, shape, size: int) -> None:
         xs = [item.x for item in items]
         ys = [item.y for item in items]
         self.ax.plot(xs, ys, shape, markersize=size)
 
-    def draw_circle(self, mobile_sink: UAV, color: str):
-        radius = plt.Circle((mobile_sink.position.x, mobile_sink.position.y), mobile_sink.coverage_radius, color=color,
-                            alpha=0.2)
+    def draw_circle(self, uav: UAV, color: str):
+        radius = plt.Circle((uav.position.x, uav.position.y), uav.network.coverage_radius, color=color, alpha=0.2)
         return self.ax.add_patch(radius)
 
-    def run(self) -> None:
-        for mobile_sink in self.uavs:
-            self.draw_mobile_sink(mobile_sink)
-        self.sensors_plots = self.draw_sensors()
+    def draw_all(self) -> None:
+        for index, uav in enumerate(self.env.uavs):
+            self.draw_uav(uav, index)
+        self.sensors_render_objects = self.draw_sensors()
         self.draw_base_stations()
 
-    def next_time_step(self):
-        self.time_step += 1
-        logging.info(f'time step {self.time_step}: ')
-        plt.pause(interval=1)
-        for i in range(len(self.uavs)):
-            self.collect_data(self.uavs[i])
-            self.remove_sensors()
-            self.sensors_plots = self.draw_sensors()
-            self.mobile_sinks_plots[i].range.remove()
-            self.mobile_sinks_plots[i].position.remove()
-            self.uavs[i].hop()
-            p, = self.ax.plot(self.uavs[i].position.x, self.uavs[i].position.y,
-                              self.mobile_sinks_plots[i].color + 'd', markersize=15, alpha=0.7)
-            c = self.draw_circle(self.uavs[i], self.mobile_sinks_plots[i].color)
-            self.mobile_sinks_plots[i] = MobileSinkPlot(position=p, range=c, color=self.mobile_sinks_plots[i].color)
-
-    def render_on_keyboard(self) -> None:
-        self.run()
-        plt.grid()
-        while True:
-            self.next_time_step()
-            keyboard.wait('n')
+    def remove_all(self) -> None:
+        self.remove_sensors()
+        for i in range(len(self.env.uavs)):
+            self.uav_render_object_list[i].range.remove()
+            self.uav_render_object_list[i].position.remove()
 
     def render(self) -> None:
-        self.run()
+        self.draw_all()
         plt.grid()
-        while self.has_moves():
-            self.next_time_step()
-        self.next_time_step()
-        self.transmit_data(self.uavs[0], self.uavs[1], self.uavs[0].current_data)
-        for mobile_sink in self.uavs[1:]:
-            self.transmit_data(mobile_sink, self.base_stations[0], mobile_sink.current_data)
-        self.initial_state.get_results()
-        self.get_results()
-        logging.info('the simulation ended')
         plt.show()
+        self.remove_all()

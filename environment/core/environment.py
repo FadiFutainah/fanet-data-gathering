@@ -16,14 +16,12 @@ from environment.networking.data_transition import DataTransition
 class Environment:
     land_width: float
     land_height: float
-    max_delay: int
     speed_rate: int = field(default=1)
     uavs: List[UAV] = List[UAV]
     sensors: List[Sensor] = List[Sensor]
     base_stations: List[BaseStation] = List[BaseStation]
     time_step: int = field(init=False, default=0)
     data_loss: int = field(init=False, default=0)
-    initial_state: 'Environment' = field(init=False)
     uav_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
     sensors_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
     base_stations_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
@@ -36,48 +34,54 @@ class Environment:
         self.divide_to_areas()
 
     def divide_to_areas(self):
-        for uav in self.uavs:
-            for _ in uav.way_points:
-                uav.add_area(0)
+        pass
 
     @staticmethod
     def get_area_index(uav: UAV) -> int:
         return uav.current_way_point
 
-    def calculate_data_forwarding_reward(self):
-        pass
-
-    def calculate_e2e_delay(self) -> float:
+    def calculate_e2e_delay(self, uav_index: int = -1) -> float:
+        """
+        Parameters
+        ----------
+        uav_id if uav_index is not passed then the method returns the overall end-to-end delay for all uavs
+        Returns the end-to-end delay for the successfully received packets to the base stations
+        -------
+        """
         sum_of_delays = 0
         ns = 0
-        """ the number of successfully received packets """
-
-        for time_step, data_transitions in self.base_stations_data_transitions:
-            for data_transition in data_transitions:
-                for data_packets in data_transition.data:
-                    sum_of_delays += (time_step - data_packets.packet_size) * data_packets.num_of_packets
-                    ns += data_packets.num_of_packets
+        """ number of received packets """
+        received_data = []
+        uav = self.uavs[uav_index]
+        for base_station in self.base_stations:
+            received_data.append(base_station.read_data())
+        for packet_collection_list in received_data:
+            for packet_collection in packet_collection_list:
+                if uav.id == -1 or uav.id == packet_collection.uav_id:
+                    sum_of_delays = packet_collection.get_e2e_delay()
+                    ns += packet_collection.num_of_packets
         return sum_of_delays / ns
 
-    def calculate_delay_penalty(self):
-        pass
+    def calculate_consumed_energy(self, uav_index: int = -1) -> float:
+        """
+        Parameters
+        ----------
+        uav_id if uav_index is not passed then the method returns the overall consumed energy for all uavs
+        Returns the consumed energy in the current time step
+        -------
+        """
+        if uav_index != -1:
+            return self.uavs[uav_index].energy - self.initial_state.uavs[uav_index].energy
+        consumed_energy = 0
+        for start, end in zip(self.initial_state.uavs, self.uavs):
+            consumed_energy += end.energy - start.energy
+        return consumed_energy
 
     def run_sensors(self) -> None:
         pass
 
     def run_base_stations(self) -> None:
         pass
-
-    def calculate_data_collection_reward(self, uav: UAV) -> float:
-        alpha, beta = 1, 1
-        data = List[int]
-        for key, value in self.sensors_data_transitions:
-            np.append(data, [e.data_size for e in value])
-        reward = alpha * uav.energy + beta * np.var(data)
-        return reward
-
-    def data_forwarding_state(self, uav_index: int):
-        return self.uavs[uav_index], self.get_neighbouring_uavs(uav_index),
 
     def run_uavs(self) -> None:
         for uav in self.uavs:
@@ -93,16 +97,12 @@ class Environment:
             sensor.prepare_data_sending()
             base_station.prepare_data_sending()
 
-    def run_agent(self):
-        pass
-
     def run(self) -> None:
         self.time_step += self.speed_rate
         logging.info(f'time step {self.time_step}:')
         self.run_uavs()
         self.run_sensors()
         self.run_base_stations()
-        self.run_agent()
 
     def render(self) -> None:
         pass
@@ -119,7 +119,7 @@ class Environment:
         return self.num_of_received_packets() / self.num_of_generated_packets()
 
     def reset(self) -> None:
-        logging.info(f'reset environment to initial state')
+        logging.info(f'\n== == == == == == ==\nreset environment to initial state\n== == == == == == ==\n')
         self.time_step = 0
         self.data_loss = 0
         self.sensors_data_transitions.clear()
@@ -128,22 +128,18 @@ class Environment:
         self.sensors = deepcopy(self.initial_state.sensors)
         self.base_stations = deepcopy(self.initial_state.base_stations)
 
-    def get_neighbouring_uavs(self, uav_index):
-        other_uavs = self.uavs[:, uav_index] + self.uavs[uav_index + 1, :]
+    def get_neighbouring_uavs(self, uav_index) -> List[UAV]:
         neighbours = []
-        for uav in other_uavs:
-            if self.uavs[uav_index].in_range(uav):
-                np.append(neighbours, [uav])
+        for i, uav in enumerate(self.uavs):
+            if i != uav_index and self.uavs[uav_index].in_range(uav):
+                neighbours.append(uav)
         return neighbours
-
-    def data_collection_state(self, uav_index: int) -> (UAV, List[UAV], Dict[int, List[DataTransition]]):
-        return self.uavs[uav_index], self.get_neighbouring_uavs(uav_index), self.sensors_data_transitions
 
     def get_sensors_in_range(self, uav: UAV) -> List[Sensor]:
         neighbours = []
         for sensor in self.sensors:
             if uav.in_range(sensor):
-                np.append(neighbours, [sensor])
+                neighbours.append(sensor)
         return neighbours
 
     def add_sensor_transition(self, transition: DataTransition) -> None:

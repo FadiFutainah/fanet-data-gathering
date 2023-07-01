@@ -12,6 +12,9 @@ class DataPacketCollection:
     created_time: int
     num_of_packets: int
     sort_index: int = field(init=False, repr=False)
+    arrived_time: int = field(init=False)
+    uav_id: int = field(init=False)
+    """ refer to the first uav that collected this packet """
 
     def __post_init__(self):
         self.sort_index = self.created_time
@@ -44,3 +47,9 @@ class DataPacketCollection:
         removed_packets = self.num_of_packets - math.ceil(data_size / self.packet_size)
         self.num_of_packets = max(0, self.num_of_packets - removed_packets)
         return DataPacketCollection(self.life_time, self.packet_size, self.created_time, removed_packets)
+
+    def arrive(self, time_step: int) -> None:
+        self.arrived_time = time_step
+
+    def get_e2e_delay(self) -> int:
+        return self.arrived_time - self.created_time

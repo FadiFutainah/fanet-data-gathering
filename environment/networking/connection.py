@@ -40,9 +40,9 @@ class Connection:
         sender, receiver = self.get_devices_roles(transfer_type)
         if not self.is_initialized():
             data_size = self.initialize(data_size)
-        data_size = min(data_size, receiver.buffer.get_available())
-        data_size = min(data_size, sender.buffer.current_size)
-        data_packets = sender.buffer.fetch_data(data_size)
+        data_size = min(data_size, receiver.get_available_to_receive())
+        data_size = min(data_size, sender.get_available_to_send())
+        data_packets = sender.fetch_data(data_size)
         data_packets, error_loss = self.get_packets_after_error(data_packets)
         receiver.buffer.store_data(data_packets)
         return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)

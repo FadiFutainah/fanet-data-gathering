@@ -1,18 +1,26 @@
+from queue import PriorityQueue
+from copy import copy, deepcopy
 from typing import List
 
 
 class Obj:
-    pass
+    def __init__(self):
+        self.cnt = 1
+
+    def pp(self):
+        self.cnt += 1
 
 
 data = [Obj(), Obj(), Obj()]
+
+data2 = deepcopy(data)
 
 
 def fun(li: List[Obj]):
     obb = li[1]
     li.remove(obb)
 
+# fun(data)
 
-fun(data)
-
-print(len(data))
+# print(data)
+# print(data2)
