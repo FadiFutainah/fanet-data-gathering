@@ -1,7 +1,10 @@
+import logging
 import math
 from dataclasses import dataclass
 
 from environment.agent.agent import Agent
+from environment.devices.uav import UAV
+from environment.networking.transfer_type import TransferType
 
 
 @dataclass
@@ -40,4 +43,16 @@ class DataForwardingAgent(Agent):
         return pdr_penalty - energy_penalty - queue_length_penalty - delay_penalty
 
     def get_state(self):
-        return self.env.uavs[self.uav_index], self.env.get_neighbouring_uavs(self.uav_index)
+        return self.uav, self.env.get_neighbouring_uavs(self.uav_index)
+
+    def send_to_base_station(self) -> None:
+        for base_station in self.env.base_stations:
+            if self.uav.in_range(base_station):
+                self.uav.transfer_data(base_station, self.uav.memory.current_size, TransferType.SEND)
+
+    def send_to_uav(self, uav: UAV, data_size: int) -> None:
+        uavs = self.env.get_neighbouring_uavs(self.uav_index)
+        if uav in uavs:
+            self.uav.transfer_data(uav, data_size, TransferType.SEND)
+        else:
+            logging.error(f'the {uav} is not in the {self.uav} range')

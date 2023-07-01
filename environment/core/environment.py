@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -10,6 +10,7 @@ from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
 from environment.devices.base_station import BaseStation
 from environment.networking.data_transition import DataTransition
+from environment.networking.transfer_type import TransferType
 
 
 @dataclass
@@ -20,6 +21,7 @@ class Environment:
     uavs: List[UAV] = List[UAV]
     sensors: List[Sensor] = List[Sensor]
     base_stations: List[BaseStation] = List[BaseStation]
+    run_until: int = field(default=100)
     time_step: int = field(init=False, default=0)
     data_loss: int = field(init=False, default=0)
     uav_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
@@ -78,10 +80,8 @@ class Environment:
         return consumed_energy
 
     def run_sensors(self) -> None:
-        pass
-
-    def run_base_stations(self) -> None:
-        pass
+        for sensor in self.sensors:
+            sensor.collect_data(current_time=self.time_step)
 
     def run_uavs(self) -> None:
         for uav in self.uavs:
@@ -89,6 +89,7 @@ class Environment:
             if uav.areas_collection_rates[index] != 0:
                 self.collect_data(uav)
             else:
+                uav.update_velocity()
                 uav.move_to_next_position()
 
     def run_connected_devices(self):
@@ -102,10 +103,9 @@ class Environment:
         logging.info(f'time step {self.time_step}:')
         self.run_uavs()
         self.run_sensors()
-        self.run_base_stations()
 
-    def render(self) -> None:
-        pass
+    def has_ended(self) -> bool:
+        return self.time_step >= self.run_until
 
     def num_of_generated_packets(self) -> int:
         return int(np.sum(sensor.num_of_collected_packets for sensor in self.sensors))
@@ -150,16 +150,12 @@ class Environment:
         area_index = self.get_area_index(uav)
         collection_rate = uav.areas_collection_rates[area_index]
         for sensor in sensors_in_range:
-            data_transition = uav.receive_data(sensor, collection_rate)
+            data_transition = uav.transfer_data(sensor, collection_rate, TransferType.RECEIVE)
             self.add_sensor_transition(data_transition)
             self.data_loss += data_transition.data_loss
             uav.areas_collection_rates[area_index] = max(0, collection_rate - data_transition.size)
             if uav.areas_collection_rates[area_index] == 0:
                 break
-
-    @staticmethod
-    def adjust_collection_rate(uav: UAV, area: int, rate: int) -> None:
-        uav.areas_collection_rates[area] = rate
 
     def get_results(self):
         logging.info(f'the experiment took: {self.time_step}')
@@ -174,36 +170,27 @@ class Environment:
         for transition in self.base_stations_data_transitions:
             logging.info(f'{transition}')
 
-    def choose_collection_area(self):
-        pass
+    def get_collected_data_by_uav(self, uav: UAV) -> List[DataTransition]:
+        data = []
+        for key, transition_list in self.sensors_data_transitions:
+            for transition in transition_list:
+                if transition.destination == uav:
+                    data.append(transition)
+        return data
 
-    def bfs(self):
-        pass
-
-    def calculate_sensors_heatmap(self) -> list:
-        maximum_value = max(sensor.num_of_collected_packets for sensor in self.sensors)
-        minimum_value = min(sensor.num_of_collected_packets for sensor in self.sensors)
-        value_range = maximum_value - minimum_value
-        heatmap = []
-        for sensor in self.sensors:
-            heatmap.append(sensor.num_of_collected_packets / value_range)
-        return heatmap
+    def get_sensors_data_collection_heatmap(self) -> Tuple[Dict[Sensor, int], int]:
+        heatmap = {}
+        total_size = 0
+        for key, transition_list in self.sensors_data_transitions:
+            for transition in transition_list:
+                heatmap[transition.source] = heatmap.get(transition.source, 0) + transition.size
+                total_size += transition.size
+        return heatmap, total_size
 
     def calculate_sensors_data_fairness(self) -> float:
-        maximum_value = max(sensor.num_of_collected_packets for sensor in self.sensors)
-        minimum_value = min(sensor.num_of_collected_packets for sensor in self.sensors)
-        median = (maximum_value - minimum_value) / 2
-        average = sum(sensor.num_of_collected_packets for sensor in self.sensors) / len(self.sensors)
-        return abs(average - median)
-
-    def get_heatmap_history(self):
-        pass
-
-    def calculate_data_transitions_variance(self) -> float:
-        pass
-
-    def calculate_data_transition_deviation(self) -> float:
-        return self.calculate_data_transitions_variance() ** 0.5
-
-    def get_neighbours(self, mobile_sink: UAV):
-        pass
+        """ calculates the data fairness value, when the value is 0 then the data fairness is perfect """
+        data, s = self.get_sensors_data_collection_heatmap()
+        n = len(data.keys())
+        avg = s / n
+        data_fairness = sum(abs(avg - value) for key, value in data)
+        return data_fairness

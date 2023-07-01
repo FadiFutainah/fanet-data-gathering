@@ -1,4 +1,3 @@
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Tuple, Any, List
 
@@ -26,12 +25,12 @@ class FileManager:
     def read_table(self, path: str) -> Any:
         return pd.read_csv(self.input_dir + path)
 
-    def load_basic_variables(self) -> Tuple[int, int, int]:
+    def load_basic_variables(self) -> Tuple[int, int, int, int]:
         table = self.read_table(path='environment_basics.csv')
         data = []
         for index, row in table.iterrows():
-            data.append((row['width'], row['height'], row['speed rate']))
-        return data[0][0], data[0][1], data[0][2]
+            data.append((row['width'], row['height'], row['speed rate'], row['run until']))
+        return data[0][0], data[0][1], data[0][2], data[0][3]
 
     def load_sensors(self) -> List[Sensor]:
         sensors = []
@@ -50,7 +49,10 @@ class FileManager:
                                   row['network max devices'],
                                   protocol)
             data_collecting_rate = row['data collecting rate']
-            sensor = Sensor(position, velocity, acceleration, id, buffer, memory, network, 0, data_collecting_rate)
+            packet_life_time = row['packet life time']
+            packet_size = row['packet size']
+            sensor = Sensor(position, velocity, acceleration, id, buffer, buffer, memory, network, 0,
+                            data_collecting_rate, packet_size, packet_life_time)
             init_data_size = row['initial data size']
             num_of_packets = init_data_size / 30
             sensor.memory.store_data([DataPacketCollection(life_time=40, packet_size=30, created_time=0,
@@ -74,7 +76,7 @@ class FileManager:
             network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
                                   row['network max devices'],
                                   protocol)
-            base_station = BaseStation(position, velocity, acceleration, id, buffer, memory, network, 0)
+            base_station = BaseStation(position, velocity, acceleration, id, buffer, buffer, memory, network, 0)
             base_stations.append(base_station)
         return base_stations
 
@@ -95,7 +97,7 @@ class FileManager:
             network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
                                   row['network max devices'],
                                   protocol)
-            uav = UAV(position, velocity, acceleration, id, buffer, memory, network, 0, row['energy'], [], [])
+            uav = UAV(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, row['energy'], [], [])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
@@ -110,8 +112,8 @@ class FileManager:
         return uavs
 
     def load_environment(self) -> Environment:
-        height, width, speed_rate = self.load_basic_variables()
+        height, width, speed_rate, run_until = self.load_basic_variables()
         uavs = self.load_uavs()
         sensors = self.load_sensors()
         base_stations = self.load_base_stations()
-        return Environment(width, height, speed_rate, uavs, sensors, base_stations)
+        return Environment(width, height, speed_rate, uavs, sensors, base_stations, run_until)

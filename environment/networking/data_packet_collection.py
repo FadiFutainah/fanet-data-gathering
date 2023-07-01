@@ -12,8 +12,8 @@ class DataPacketCollection:
     created_time: int
     num_of_packets: int
     sort_index: int = field(init=False, repr=False)
-    arrived_time: int = field(init=False)
-    uav_id: int = field(init=False)
+    arrived_time: int = field(init=False, default=-1)
+    uav_id: int = field(init=False, default=-1)
     """ refer to the first uav that collected this packet """
 
     def __post_init__(self):
@@ -44,7 +44,7 @@ class DataPacketCollection:
         return sum([packet.get_size() for packet in data_packets])
 
     def remove(self, data_size: int) -> 'DataPacketCollection':
-        removed_packets = self.num_of_packets - math.ceil(data_size / self.packet_size)
+        removed_packets = math.ceil(data_size / self.packet_size)
         self.num_of_packets = max(0, self.num_of_packets - removed_packets)
         return DataPacketCollection(self.life_time, self.packet_size, self.created_time, removed_packets)
 

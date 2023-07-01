@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from environment.utils.vector import Vector
 
 
-@dataclass
+@dataclass(order=True)
 class PhysicalObject:
     position: Vector
     velocity: Vector

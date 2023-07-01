@@ -21,6 +21,9 @@ class DataCollectionAgent(Agent):
         reward = self.alpha * self.uav.energy + self.beta * np.var(data)
         return reward
 
-    def get_state(self) -> (UAV, List[UAV], Dict[int, List[DataTransition]]):
-        return self.env.uavs[self.uav_index], self.env.get_neighbouring_uavs(self.uav_index), \
-            self.env.sensors_data_transitions
+    def get_state(self) -> (UAV, List[DataTransition], List[UAV]):
+        return self.env.uavs[self.uav_index], self.env.get_collected_data_by_uav(self.uav), \
+            self.env.get_neighbouring_uavs(self.uav_index), self.env.get_sensors_data_collection_heatmap()
+
+    def adjust_collection_rate(self, area_index: int, value: int) -> None:
+        self.uav.areas_collection_rates[area_index] = value

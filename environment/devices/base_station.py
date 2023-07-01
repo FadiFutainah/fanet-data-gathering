@@ -3,6 +3,6 @@ from dataclasses import dataclass
 from environment.devices.device import Device
 
 
-@dataclass
+@dataclass(order=True)
 class BaseStation(Device):
     pass
