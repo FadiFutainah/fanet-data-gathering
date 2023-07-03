@@ -51,8 +51,9 @@ class FileManager:
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
             packet_size = row['packet size']
+            energy = row['energy']
             sensor = Sensor(position, velocity, acceleration, id, buffer, buffer, memory, network, 0,
-                            data_collecting_rate, packet_size, packet_life_time)
+                            data_collecting_rate, packet_size, packet_life_time, energy)
             init_data_size = row['initial data size']
             num_of_packets = init_data_size / 30
             sensor.memory.store_data([DataPacketCollection(life_time=40, packet_size=30, created_time=0,
@@ -76,7 +77,8 @@ class FileManager:
             network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
                                   row['network max devices'],
                                   protocol)
-            base_station = BaseStation(position, velocity, acceleration, id, buffer, buffer, memory, network, 0)
+            energy = row['energy']
+            base_station = BaseStation(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, energy)
             base_stations.append(base_station)
         return base_stations
 
@@ -97,7 +99,8 @@ class FileManager:
             network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
                                   row['network max devices'],
                                   protocol)
-            uav = UAV(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, row['energy'], [], [])
+            energy = row['energy']
+            uav = UAV(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, energy, [], [])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])

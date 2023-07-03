@@ -19,6 +19,7 @@ class Device(PhysicalObject):
     memory: Memory
     network: WiFiNetwork
     num_of_collected_packets: int
+    energy: float
 
     def __post_init__(self) -> None:
         logging.info(f'{type(self).__name__} created at pos: {self.position}')

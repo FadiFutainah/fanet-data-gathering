@@ -3,7 +3,7 @@ from environment.utils.logger import configure_logger
 
 
 def main():
-    configure_logger(write_on_file=False)
+    configure_logger(write_on_file=True)
     EnvironmentController.run_solution(id=0)
 
 

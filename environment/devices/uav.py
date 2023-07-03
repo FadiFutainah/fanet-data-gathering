@@ -12,7 +12,6 @@ class UAV(Device):
     """
     The same as Mobile Sink, drone.
     """
-    energy: float
     way_points: List[Vector]
     current_way_point: int = field(default=0, init=False)
     areas_collection_rates: List[int] = field(default=List[int])
