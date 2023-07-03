@@ -2,7 +2,7 @@ import logging
 import math
 from dataclasses import dataclass
 
-from environment.agent.agent import Agent
+from environment.agents.agent import Agent
 from environment.devices.uav import UAV
 from environment.networking.transfer_type import TransferType
 
@@ -43,7 +43,7 @@ class DataForwardingAgent(Agent):
         return pdr_penalty - energy_penalty - queue_length_penalty - delay_penalty
 
     def get_state(self):
-        return self.uav, self.env.get_neighbouring_uavs(self.uav_index)
+        return DataForwardingState(self.uav, self.env.get_neighbouring_uavs(self.uav_index))
 
     def send_to_base_station(self) -> None:
         for base_station in self.env.base_stations:

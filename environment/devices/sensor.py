@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass, field
 
 from environment.devices.device import Device

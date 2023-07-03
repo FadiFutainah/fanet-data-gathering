@@ -72,7 +72,7 @@ class Environment:
         Returns the consumed energy in the current time step
         -------
         """
-        if uav_index != -1:
+        if uav_index != -1: 
             return self.uavs[uav_index].energy - self.initial_state.uavs[uav_index].energy
         consumed_energy = 0
         for start, end in zip(self.initial_state.uavs, self.uavs):

@@ -22,7 +22,7 @@ class EnvironmentController:
             file = FileManager(i)
             environment = file.load_environment()
             plot = PlotEnvironment(env=environment)
-            plot.render()
+            plot.render(i)
 
     def init_agents(self):
         pass

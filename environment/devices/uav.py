@@ -16,6 +16,7 @@ class UAV(Device):
     way_points: List[Vector]
     current_way_point: int = field(default=0, init=False)
     areas_collection_rates: List[int] = field(default=List[int])
+    e_elec: int = 1
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
@@ -44,7 +45,7 @@ class UAV(Device):
 
     def get_collecting_data_energy(self, data_transition: DataTransition) -> float:
         k = data_transition.size
-        e_elec = 1
+        e_elec = self.e_elec
         distance_threshold = 30
         distance = data_transition.source.position.distance_from(data_transition.destination.position)
         power_amplifier_for_fs = 1

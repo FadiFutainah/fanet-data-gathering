@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 from typing import List, Any
 
@@ -94,7 +95,7 @@ class PlotEnvironment:
         if self.env.time_step != 0:
             self.remove_all()
         if self.env.has_ended():
-            print('--------------')
+            logging.info(f'ended at time step {i}')
             self.ani.event_source.stop()
             plt.close()
         self.draw_all()
