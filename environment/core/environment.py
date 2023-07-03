@@ -18,10 +18,16 @@ class Environment:
     land_width: float
     land_height: float
     speed_rate: int = field(default=1)
-    uavs: List[UAV] = List[UAV]
-    sensors: List[Sensor] = List[Sensor]
-    base_stations: List[BaseStation] = List[BaseStation]
-    run_until: int = field(default=100)
+    uavs: List[UAV] = field(default_factory=list)
+    sensors: List[Sensor] = field(default_factory=list)
+    base_stations: List[BaseStation] = field(default_factory=list)
+    run_until: int = 100
+    e_elec: int = 50
+    c: float = 1
+    delta: float = 1
+    distance_threshold: float = 1
+    power_amplifier_for_fs: float = 1
+    power_amplifier_for_amp: float = 1
     time_step: int = field(init=False, default=0)
     data_loss: int = field(init=False, default=0)
     uav_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
@@ -72,7 +78,7 @@ class Environment:
         Returns the consumed energy in the current time step
         -------
         """
-        if uav_index != -1: 
+        if uav_index != -1:
             return self.uavs[uav_index].energy - self.initial_state.uavs[uav_index].energy
         consumed_energy = 0
         for start, end in zip(self.initial_state.uavs, self.uavs):

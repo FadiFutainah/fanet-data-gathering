@@ -25,12 +25,14 @@ class FileManager:
     def read_table(self, path: str) -> Any:
         return pd.read_csv(self.input_dir + path)
 
-    def load_basic_variables(self) -> Tuple[int, int, int, int]:
+    def load_basic_variables(self) -> Tuple:
         table = self.read_table(path='environment_basics.csv')
         data = []
         for index, row in table.iterrows():
-            data.append((row['width'], row['height'], row['speed rate'], row['run until']))
-        return data[0][0], data[0][1], data[0][2], data[0][3]
+            data.append((row['width'], row['height'], row['speed rate'], row['run until'], row['E elec'], row['c'],
+                         row['delta'], row['distance threshold'], row['power amplifier for fs'],
+                         row['power amplifier for amp']))
+        return data[0]
 
     def load_sensors(self) -> List[Sensor]:
         sensors = []
@@ -115,8 +117,9 @@ class FileManager:
         return uavs
 
     def load_environment(self) -> Environment:
-        height, width, speed_rate, run_until = self.load_basic_variables()
+        height, width, speed_rate, run_until, e_elec, c, delta, \
+            distance_threshold, power_amplifier_for_fs, power_amplifier_for_amp = self.load_basic_variables()
         uavs = self.load_uavs()
         sensors = self.load_sensors()
         base_stations = self.load_base_stations()
-        return Environment(width, height, speed_rate, uavs, sensors, base_stations, run_until)
+        return Environment(width, height, speed_rate, uavs, sensors, base_stations, run_until, e_elec, c, delta)

@@ -3,6 +3,7 @@ import math
 from dataclasses import dataclass
 
 from environment.agents.agent import Agent
+from environment.agents.data_forwarding_state import DataForwardingState
 from environment.devices.uav import UAV
 from environment.networking.transfer_type import TransferType
 

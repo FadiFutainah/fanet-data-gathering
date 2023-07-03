@@ -6,6 +6,7 @@ from typing import List
 from environment.devices.physical_object import PhysicalObject
 from environment.networking.data_packet_collection import DataPacketCollection
 from environment.devices.memory import Memory
+from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
 
 from environment.networking.wifi_network import WiFiNetwork
@@ -69,3 +70,19 @@ class Device(PhysicalObject):
 
     def in_range(self, other: 'Device') -> bool:
         return self.position.distance_from(other.position) <= self.network.coverage_radius
+
+    def consume_energy(self) -> None:
+        pass
+
+    @staticmethod
+    def get_collecting_data_energy(e_elec, distance_threshold, power_amplifier_for_fs, power_amplifier_for_amp,
+                                   data_transition: DataTransition) -> float:
+        k = data_transition.size
+        distance = data_transition.source.position.distance_from(data_transition.destination.position)
+        if distance < distance_threshold:
+            e_t = k * (e_elec + power_amplifier_for_fs * (distance ** 2))
+        else:
+            e_t = k * (e_elec + power_amplifier_for_amp * (distance ** 4))
+        e_r = k * e_elec
+        energy = e_t + e_r
+        return energy

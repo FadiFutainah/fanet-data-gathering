@@ -1,0 +1,2 @@
+x,y,z,initial data size,x velocity,y velocity,z velocity,x acceleration,y acceleration,z acceleration,energy,data collecting rate,buffer size,buffer io speed,memory size,memory io speed,network bandwidth,network coverage radius,network max devices,network protocol data loss percentage,network protocol data loss probability,network protocol data init size,packet size,packet life time
+500,500,0.0,0,0,0,0,0,0,0,0,300,30,3000,300,0,0,0,0,0,0,10,100

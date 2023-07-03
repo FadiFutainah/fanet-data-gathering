@@ -13,8 +13,8 @@ class EnvironmentController:
         environment = file.load_environment()
         plot = PlotEnvironment(env=environment)
         while not environment.has_ended():
-            # environment.run()
-            plot.run()
+            environment.run()
+            # plot.run()
 
     @staticmethod
     def run_all_solution() -> None:
