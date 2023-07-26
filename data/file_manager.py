@@ -10,7 +10,7 @@ from environment.devices.memory import Memory
 from environment.devices.sensor import Sensor
 from environment.devices.uav import UAV
 from environment.networking.connection_protocol import ConnectionProtocol
-from environment.networking.data_packet_collection import PacketData
+from environment.networking.packet_data import PacketData
 from environment.networking.wifi_network import WiFiNetwork
 from environment.utils.vector import Vector
 

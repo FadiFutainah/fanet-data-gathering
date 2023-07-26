@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from environment.devices.physical_object import PhysicalObject
-from environment.networking.data_packet_collection import PacketData
+from environment.networking.packet_data import PacketData
 from environment.devices.memory import Memory
 from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
@@ -30,11 +30,11 @@ class Device(PhysicalObject):
 
     def move_to_buffer_queue(self, data_size: int) -> None:
         """ called before sending the data """
-        self.memory.move_to(self.sending_buffer, data_size)
+        self.memory.move_to(other=self.sending_buffer, data_size=data_size)
 
     def move_to_memory(self) -> None:
         """ called after receiving the data """
-        self.receiving_buffer.move_to(self.memory, self.receiving_buffer.io_speed)
+        self.receiving_buffer.move_to(other=self.memory, data_size=self.receiving_buffer.io_speed)
 
     def fetch_data(self, data_size: int) -> List[PacketData]:
         if not self.sending_buffer.has_data(data_size):

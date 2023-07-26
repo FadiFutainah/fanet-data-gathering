@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from environment.devices.device import Device
 from environment.networking.connection_protocol import ConnectionProtocol
-from environment.networking.data_packet_collection import PacketData
+from environment.networking.packet_data import PacketData
 from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
 

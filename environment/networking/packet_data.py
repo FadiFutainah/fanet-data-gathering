@@ -12,7 +12,7 @@ class PacketData:
     created_time: int
     num_of_packets: int
     sort_index: int = field(init=False, repr=False)
-    arrived_time: int = field(init=False, default=-1)
+    arrival_time: int = field(init=False, default=-1)
     uav_id: int = field(init=False, default=-1)
     """ refer to the first uav that collected this packet """
 
@@ -47,8 +47,8 @@ class PacketData:
         self.num_of_packets = max(0, self.num_of_packets - removed_packets)
         return PacketData(self.life_time, self.packet_size, self.created_time, removed_packets)
 
-    def arrive(self, time_step: int) -> None:
-        self.arrived_time = time_step
+    def update_arrival_time(self, time_step: int) -> None:
+        self.arrival_time = time_step
 
     def get_e2e_delay(self) -> int:
-        return self.arrived_time - self.created_time
+        return self.arrival_time - self.created_time

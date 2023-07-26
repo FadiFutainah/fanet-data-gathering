@@ -74,6 +74,10 @@ class Environment:
             consumed_energy += end.energy - start.energy
         return consumed_energy
 
+    def run_base_stations(self) -> None:
+        for base_station in self.base_stations:
+            base_station.update_packet_data_arrival_time(time_step=self.time_step)
+
     def run_sensors(self) -> None:
         for sensor in self.sensors:
             sensor.collect_data(current_time=self.time_step)

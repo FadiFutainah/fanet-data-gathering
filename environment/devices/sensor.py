@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from environment.devices.device import Device
-from environment.networking.data_packet_collection import PacketData
+from environment.networking.packet_data import PacketData
 
 
 @dataclass(order=True)

@@ -4,7 +4,7 @@ from copy import copy
 from dataclasses import dataclass, field
 from typing import List
 
-from environment.networking.data_packet_collection import PacketData
+from environment.networking.packet_data import PacketData
 
 
 @dataclass
@@ -65,6 +65,7 @@ class Memory:
             logging.error(f'no available memory for {data_size}')
             if not overwrite or data_size > self.size:
                 return
+            # this call is to remove the data from the memory
             self.fetch_data(data_size - self.get_available())
         for data_packet in data_packets:
             self.add_packets(data_packet)
