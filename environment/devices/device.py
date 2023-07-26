@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from environment.devices.physical_object import PhysicalObject
-from environment.networking.data_packet_collection import DataPacketCollection
+from environment.networking.data_packet_collection import PacketData
 from environment.devices.memory import Memory
 from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
@@ -36,14 +36,14 @@ class Device(PhysicalObject):
         """ called after receiving the data """
         self.receiving_buffer.move_to(self.memory, self.receiving_buffer.io_speed)
 
-    def fetch_data(self, data_size: int) -> List[DataPacketCollection]:
+    def fetch_data(self, data_size: int) -> List[PacketData]:
         if not self.sending_buffer.has_data(data_size):
             remaining_data = data_size - self.sending_buffer.current_size
             remaining_data = min(remaining_data, self.sending_buffer.io_speed)
             self.move_to_buffer_queue(remaining_data)
         return self.sending_buffer.fetch_data(data_size)
 
-    def store_data(self, data_packets: List[DataPacketCollection]) -> None:
+    def store_data(self, data_packets: List[PacketData]) -> None:
         return self.receiving_buffer.store_data(data_packets)
 
     def prepare_data_sending(self):
@@ -55,7 +55,7 @@ class Device(PhysicalObject):
         self.sending_buffer.decrease_packets_life_time(time)
         self.receiving_buffer.decrease_packets_life_time(time)
 
-    def read_data(self) -> List[DataPacketCollection]:
+    def read_data(self) -> List[PacketData]:
         return self.memory.read_data()
 
     def get_available_to_send(self) -> int:

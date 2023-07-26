@@ -5,7 +5,7 @@ from typing import List
 
 
 @dataclass(order=True)
-class DataPacketCollection:
+class PacketData:
     life_time: int
     """ refer to the life time of the packet inside the buffer """
     packet_size: int
@@ -23,8 +23,7 @@ class DataPacketCollection:
         return self.packet_size * self.num_of_packets
 
     @staticmethod
-    def remove_form_packets_list(data_packets: List['DataPacketCollection'], data_size: int) \
-            -> List['DataPacketCollection']:
+    def remove_form_packets_list(data_packets: List['PacketData'], data_size: int) -> List['PacketData']:
         returned_data = []
         to_remove = []
         for packet in data_packets:
@@ -40,13 +39,13 @@ class DataPacketCollection:
         return returned_data
 
     @staticmethod
-    def get_packets_list_size(data_packets: List['DataPacketCollection']) -> int:
+    def get_packets_list_size(data_packets: List['PacketData']) -> int:
         return sum([packet.get_size() for packet in data_packets])
 
-    def remove(self, data_size: int) -> 'DataPacketCollection':
+    def remove(self, data_size: int) -> 'PacketData':
         removed_packets = math.ceil(data_size / self.packet_size)
         self.num_of_packets = max(0, self.num_of_packets - removed_packets)
-        return DataPacketCollection(self.life_time, self.packet_size, self.created_time, removed_packets)
+        return PacketData(self.life_time, self.packet_size, self.created_time, removed_packets)
 
     def arrive(self, time_step: int) -> None:
         self.arrived_time = time_step

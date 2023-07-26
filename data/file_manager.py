@@ -10,7 +10,7 @@ from environment.devices.memory import Memory
 from environment.devices.sensor import Sensor
 from environment.devices.uav import UAV
 from environment.networking.connection_protocol import ConnectionProtocol
-from environment.networking.data_packet_collection import DataPacketCollection
+from environment.networking.data_packet_collection import PacketData
 from environment.networking.wifi_network import WiFiNetwork
 from environment.utils.vector import Vector
 
@@ -61,8 +61,8 @@ class FileManager:
                             data_collecting_rate, packet_size, packet_life_time, energy)
             init_data_size = row['initial data size']
             num_of_packets = init_data_size / 30
-            sensor.memory.store_data([DataPacketCollection(life_time=40, packet_size=30, created_time=0,
-                                                           num_of_packets=num_of_packets)])
+            sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
+                                                 num_of_packets=num_of_packets)])
             sensors.append(sensor)
         return sensors
 

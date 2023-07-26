@@ -4,7 +4,7 @@ from copy import copy
 from dataclasses import dataclass, field
 from typing import List
 
-from environment.networking.data_packet_collection import DataPacketCollection
+from environment.networking.data_packet_collection import PacketData
 
 
 @dataclass
@@ -27,25 +27,25 @@ class Memory:
     def has_memory(self, data_size: int = 1) -> bool:
         return self.get_available() - data_size >= 0
 
-    def get_prior_packets(self) -> DataPacketCollection:
+    def get_prior_packets(self) -> PacketData:
         data_packets = self.current_data.popleft()
         self.current_size -= data_packets.get_size()
         return data_packets
 
-    def add_packets(self, data_packets: DataPacketCollection) -> None:
+    def add_packets(self, data_packets: PacketData) -> None:
         self.current_size += data_packets.get_size()
         self.current_data.append(data_packets)
 
-    def get_all_data(self) -> List[DataPacketCollection]:
+    def get_all_data(self) -> List[PacketData]:
         self.current_size = 0
         data = list(self.current_data)
         self.current_data.clear()
         return data
 
-    def read_data(self) -> List[DataPacketCollection]:
+    def read_data(self) -> List[PacketData]:
         return list(copy(self.current_data))
 
-    def fetch_data(self, data_size: int) -> List[DataPacketCollection]:
+    def fetch_data(self, data_size: int) -> List[PacketData]:
         if not self.has_data(data_size):
             logging.error(f'no available data in {self}')
             return self.get_all_data()
@@ -59,8 +59,8 @@ class Memory:
                 self.add_packets(prior_packets)
         return data
 
-    def store_data(self, data_packets: List[DataPacketCollection], overwrite: bool = False) -> None:
-        data_size = DataPacketCollection.get_packets_list_size(data_packets)
+    def store_data(self, data_packets: List[PacketData], overwrite: bool = False) -> None:
+        data_size = PacketData.get_packets_list_size(data_packets)
         if not self.has_memory(data_size):
             logging.error(f'no available memory for {data_size}')
             if not overwrite or data_size > self.size:

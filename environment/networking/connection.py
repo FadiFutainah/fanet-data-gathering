@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from environment.devices.device import Device
 from environment.networking.connection_protocol import ConnectionProtocol
-from environment.networking.data_packet_collection import DataPacketCollection
+from environment.networking.data_packet_collection import PacketData
 from environment.networking.data_transition import DataTransition
 from environment.networking.transfer_type import TransferType
 
@@ -19,10 +19,10 @@ class Connection:
     def is_initialized(self) -> bool:
         return self.initialization_data_sent == self.protocol.initialization_data_size
 
-    def get_packets_after_error(self, data_packets: List[DataPacketCollection]) \
-            -> Tuple[List[DataPacketCollection], int]:
-        error = self.protocol.calculate_data_loss(DataPacketCollection.get_packets_list_size(data_packets))
-        return DataPacketCollection.remove_form_packets_list(data_packets, error), error
+    def get_packets_after_error(self, data_packets: List[PacketData]) \
+            -> Tuple[List[PacketData], int]:
+        error = self.protocol.calculate_data_loss(PacketData.get_packets_list_size(data_packets))
+        return PacketData.remove_form_packets_list(data_packets, error), error
 
     def get_devices_roles(self, transfer_type: TransferType) -> Tuple[Device, Device]:
         if transfer_type == TransferType.RECEIVE:
