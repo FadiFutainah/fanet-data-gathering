@@ -6,6 +6,7 @@ import numpy as np
 from copy import deepcopy
 from dataclasses import dataclass, field
 
+from environment.core.energy_model import EnergyModel
 from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
 from environment.devices.base_station import BaseStation
@@ -17,17 +18,12 @@ from environment.networking.transfer_type import TransferType
 class Environment:
     land_width: float
     land_height: float
+    energy_model: EnergyModel
     speed_rate: int = field(default=1)
     uavs: List[UAV] = field(default_factory=list)
     sensors: List[Sensor] = field(default_factory=list)
     base_stations: List[BaseStation] = field(default_factory=list)
     run_until: int = 100
-    e_elec: int = 50
-    c: float = 1
-    delta: float = 1
-    distance_threshold: float = 1
-    power_amplifier_for_fs: float = 1
-    power_amplifier_for_amp: float = 1
     time_step: int = field(init=False, default=0)
     data_loss: int = field(init=False, default=0)
     uav_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
@@ -39,10 +35,6 @@ class Environment:
         self.sensors_data_transitions = {}
         self.base_stations_data_transitions = {}
         self.initial_state = deepcopy(self)
-        self.divide_to_areas()
-
-    def divide_to_areas(self):
-        pass
 
     @staticmethod
     def get_area_index(uav: UAV) -> int:
@@ -50,11 +42,8 @@ class Environment:
 
     def calculate_e2e_delay(self, uav_index: int = -1) -> float:
         """
-        Parameters
-        ----------
-        uav_id if uav_index is not passed then the method returns the overall end-to-end delay for all uavs
+        if uav_index is not passed then the method returns the overall end-to-end delay for all uavs
         Returns the end-to-end delay for the successfully received packets to the base stations
-        -------
         """
         sum_of_delays = 0
         ns = 0

@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Tuple, Any, List
+from typing import Any, List, Tuple
 
 import pandas as pd
 
+from environment.core.energy_model import EnergyModel
+from environment.core.environment import Environment
 from environment.devices.base_station import BaseStation
 from environment.devices.memory import Memory
-from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
-from environment.core.environment import Environment
+from environment.devices.uav import UAV
 from environment.networking.connection_protocol import ConnectionProtocol
 from environment.networking.data_packet_collection import DataPacketCollection
 from environment.networking.wifi_network import WiFiNetwork
@@ -29,9 +30,12 @@ class FileManager:
         table = self.read_table(path='environment_basics.csv')
         data = []
         for index, row in table.iterrows():
-            data.append((row['width'], row['height'], row['speed rate'], row['run until'], row['E elec'], row['c'],
-                         row['delta'], row['distance threshold'], row['power amplifier for fs'],
-                         row['power amplifier for amp']))
+            energy_model = EnergyModel(e_elec=row['E elec'], c=row['c'], delta=row['delta'],
+                                       distance_threshold=row['distance threshold'],
+                                       power_amplifier_for_fs=row['power amplifier for fs'],
+                                       power_amplifier_for_amp=row['power amplifier for amp'])
+            data.append((row['width'], row['height'], row['speed rate'],
+                         row['run until'], energy_model))
         return data[0]
 
     def load_sensors(self) -> List[Sensor]:
@@ -48,8 +52,7 @@ class FileManager:
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
             network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
-                                  row['network max devices'],
-                                  protocol)
+                                  row['network max devices'], protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
             packet_size = row['packet size']
@@ -117,9 +120,9 @@ class FileManager:
         return uavs
 
     def load_environment(self) -> Environment:
-        height, width, speed_rate, run_until, e_elec, c, delta, \
-            distance_threshold, power_amplifier_for_fs, power_amplifier_for_amp = self.load_basic_variables()
+        height, width, speed_rate, run_until, energy_model = self.load_basic_variables()
         uavs = self.load_uavs()
         sensors = self.load_sensors()
         base_stations = self.load_base_stations()
-        return Environment(width, height, speed_rate, uavs, sensors, base_stations, run_until, e_elec, c, delta)
+        return Environment(land_height=height, land_width=width, speed_rate=speed_rate, uavs=uavs, sensors=sensors,
+                           base_stations=base_stations, run_until=run_until, energy_model=energy_model)

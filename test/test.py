@@ -1,25 +1,20 @@
 from copy import deepcopy
 from typing import List
 
+import pandas as pd
 
-class Obj:
-    def __init__(self):
-        self.cnt = 1
+# from matplotlib 
 
-    def pp(self):
-        self.cnt += 1
+data = pd.read_csv('rewards.csv')
+rewards = []
+# print(data.columns)
+for column in data.columns:
+    rewards.append(column)
+        
+episodes = range(len(rewards))
 
+import matplotlib.pyplot as plt
 
-data = [Obj(), Obj(), Obj()]
-
-data2 = deepcopy(data)
-
-
-def fun(li: List[Obj]):
-    obb = li[1]
-    li.remove(obb)
-
-# fun(data)
-
-# print(data)
-# print(data2)
+print(rewards)
+# plt.plot(episodes, rewards)
+# plt.show()
