@@ -40,23 +40,14 @@ class Environment:
     def get_area_index(uav: UAV) -> int:
         return uav.current_way_point
 
-    def calculate_e2e_delay(self, uav_index: int = -1) -> float:
-        """
-        if uav_index is not passed then the method returns the overall end-to-end delay for all uavs
-        Returns the end-to-end delay for the successfully received packets to the base stations
-        """
+    def calculate_e2e_delay(self, uav_index: int) -> float:
         sum_of_delays = 0
         ns = 0
         """ number of received packets """
-        received_data = []
         uav = self.uavs[uav_index]
         for base_station in self.base_stations:
-            received_data.append(base_station.read_data())
-        for packet_collection_list in received_data:
-            for packet_collection in packet_collection_list:
-                if uav.id == -1 or uav.id == packet_collection.uav_id:
-                    sum_of_delays = packet_collection.get_e2e_delay()
-                    ns += packet_collection.num_of_packets
+            received_data = base_station.read_data()
+            sum_of_delays = sum(data.get_e2e_delay() for data in received_data if data.uav_id == uav.id)
         return sum_of_delays / ns
 
     def calculate_consumed_energy(self, uav_index: int = -1) -> float:
