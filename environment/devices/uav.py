@@ -11,9 +11,8 @@ class UAV(Device):
     way_points: List[Vector]
     current_way_point: int = field(default=0, init=False)
     areas_collection_rates: List[int] = field(default=List[int])
-    e_elec: int = 1
     data_to_forward: int = field(init=False, default=0)
-    forward_data_target: Device = field(init=False, default=-1)
+    forward_data_target: Device = field(init=False, default=None)
     started_forwarding: int = field(init=False)
     memory_checkpoint: int = field(init=False)
     consumed_energy: int = field(init=False, default=0)
@@ -63,6 +62,7 @@ class UAV(Device):
             self.busy = True
             self.forward_data_target.busy = True
             self.memory_checkpoint = self.memory.current_size
+            self.data_to_forward = min(self.memory.current_size, self.forward_data_target.memory.get_available())
         self.network.delete_all_connections()
         data_transition = super().send_to(self.forward_data_target, self.data_to_forward)
         self.data_to_forward -= (self.memory_checkpoint - self.memory.current_size)

@@ -71,13 +71,15 @@ class Environment:
             uav.run(time=self.time_step)
             index = self.get_area_index(uav)
             energy = 0
-            if uav.data_to_forward > 0:
+            if uav.forward_data_target is not None:
                 data_transition = uav.forward_data()
                 energy = self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
             elif uav.areas_collection_rates[index] > 0:
-                data_transition_list = self.collect_data(uav)
-                for data_transition in data_transition_list:
-                    energy += self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
+                if not uav.busy:
+                    data_transition_list = self.collect_data(uav)
+                    for data_transition in data_transition_list:
+                        energy += self.energy_model.get_collecting_data_energy(data_transition,
+                                                                               uav.network.coverage_radius)
             else:
                 if not uav.busy:
                     uav.update_velocity()
@@ -117,11 +119,19 @@ class Environment:
         self.sensors = deepcopy(self.initial_state.sensors)
         self.base_stations = deepcopy(self.initial_state.base_stations)
 
-    def get_neighbouring_uavs(self, uav_index) -> List[UAV]:
+    def get_uavs_in_range(self, uav_index) -> List[UAV]:
         neighbours = []
         for i, uav in enumerate(self.uavs):
             if i != uav_index and self.uavs[uav_index].in_range(uav):
                 neighbours.append(uav)
+        return neighbours
+
+    def get_base_stations_in_range(self, uav_index: int) -> List[BaseStation]:
+        uav = self.uavs[uav_index]
+        neighbours = []
+        for base_station in self.base_stations:
+            if uav.in_range(base_station):
+                neighbours.append(base_station)
         return neighbours
 
     def get_sensors_in_range(self, uav: UAV) -> List[Sensor]:

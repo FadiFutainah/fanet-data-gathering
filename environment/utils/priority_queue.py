@@ -11,6 +11,9 @@ class PriorityQueue:
     def __getitem__(self, index):
         return self.data[index]
 
+    def __len__(self):
+        return len(self.data)
+
     def push(self, item):
         heappush(self.data, item)
 
@@ -21,6 +24,3 @@ class PriorityQueue:
 
     def clear(self):
         self.data.clear()
-
-    def __len__(self):
-        return len(self.data)
