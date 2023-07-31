@@ -60,6 +60,8 @@ class UAV(Device):
     def forward_data(self):
         if self.started_forwarding:
             self.started_forwarding = False
+            self.busy = True
+            self.forward_data_target.busy = True
             self.memory_checkpoint = self.memory.current_size
         self.network.delete_all_connections()
         data_transition = super().send_to(self.forward_data_target, self.data_to_forward)
@@ -67,4 +69,6 @@ class UAV(Device):
         if self.data_to_forward <= 0:
             self.started_forwarding = True
             self.data_to_forward = 0
+            self.busy = False
+            self.forward_data_target.busy = False
         return data_transition

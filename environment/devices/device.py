@@ -1,7 +1,7 @@
 import logging
 
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from environment.devices.memory import Memory
 from environment.networking.packet_data import PacketData
@@ -20,6 +20,7 @@ class Device(PhysicalObject):
     network: WiFiNetwork
     num_of_collected_packets: int
     energy: float
+    busy: bool = field(init=False, default=False)
 
     def __post_init__(self) -> None:
         logging.info(f'{type(self).__name__} created at pos: {self.position}')

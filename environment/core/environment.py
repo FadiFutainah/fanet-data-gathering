@@ -79,8 +79,9 @@ class Environment:
                 for data_transition in data_transition_list:
                     energy += self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
             else:
-                uav.update_velocity()
-                uav.move_to_next_position()
+                if not uav.busy:
+                    uav.update_velocity()
+                    uav.move_to_next_position()
                 # energy = self.energy_model.get_transition_data_energy(uav)
             # print(uav.energy, energy)
             uav.consume_energy(energy)

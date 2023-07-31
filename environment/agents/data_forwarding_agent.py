@@ -57,3 +57,6 @@ class DataForwardingAgent(Agent):
             self.uav.transfer_data(uav, data_size, TransferType.SEND)
         else:
             logging.error(f'the {uav} is not in the {self.uav} range')
+
+    def get_available_actions(self):
+        pass
