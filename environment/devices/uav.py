@@ -8,13 +8,12 @@ from environment.utils.vector import Vector
 
 @dataclass(order=True)
 class UAV(Device):
-    """
-    The same as Mobile Sink, drone.
-    """
     way_points: List[Vector]
     current_way_point: int = field(default=0, init=False)
     areas_collection_rates: List[int] = field(default=List[int])
     e_elec: int = 1
+    data_to_forward: int = field(init=False, default=0)
+    forward_data_target: Device = field(init=False, default=-1)
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
@@ -35,3 +34,7 @@ class UAV(Device):
             i -= 1
         energy = total_distance * c + self.current_way_point * delta
         return energy
+
+    def forward_data(self):
+        self.network.delete_all_connections()
+        super().send_to(self.forward_data_target, self.data_to_forward)

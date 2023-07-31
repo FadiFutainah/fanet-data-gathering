@@ -92,7 +92,7 @@ class PlotEnvironment:
             self.uav_render_object_list[i].position.remove()
 
     def render(self, i) -> None:
-        if self.env.time_step != 0:
+        if self.env.time_step > 0:
             self.remove_all()
         if self.env.has_ended():
             logging.info(f'ended at time step {i}')

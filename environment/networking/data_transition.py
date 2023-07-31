@@ -2,15 +2,14 @@ import logging
 from dataclasses import dataclass, field
 from typing import List
 
-from environment.devices.device import Device
 from environment.networking.packet_data import PacketData
 from environment.networking.connection_protocol import ConnectionProtocol
 
 
 @dataclass
 class DataTransition:
-    source: Device
-    destination: Device
+    source: 'Device'
+    destination: 'Device'
     data: List[PacketData]
     protocol: ConnectionProtocol
     data_loss: int

@@ -11,10 +11,8 @@ class EnvironmentController:
     def run_solution(id: int) -> None:
         file = FileManager(id)
         environment = file.load_environment()
-        plot = PlotEnvironment(env=environment)
-        while not environment.has_ended():
-            environment.run()
-            # plot.run()
+        plot_environment = PlotEnvironment(env=environment)
+        plot_environment.run()
 
     @staticmethod
     def run_all_solution() -> None:

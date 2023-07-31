@@ -1,10 +1,10 @@
 import logging
-from collections import deque
 from copy import copy
 from dataclasses import dataclass, field
 from typing import List
 
 from environment.networking.packet_data import PacketData
+from environment.utils.priority_queue import PriorityQueue
 
 
 @dataclass
@@ -12,11 +12,10 @@ class Memory:
     size: int
     io_speed: int
     current_size: int = 0
-    current_data: deque = field(default_factory=deque, init=False)
+    current_data: PriorityQueue = field(default_factory=PriorityQueue, init=False)
 
     def move_to(self, other: 'Memory', data_size: int) -> None:
-        data_packets = self.fetch_data(data_size)
-        other.store_data(data_packets)
+        other.store_data(self.fetch_data(data_size))
 
     def get_available(self) -> int:
         return self.size - self.current_size
@@ -27,16 +26,17 @@ class Memory:
     def has_memory(self, data_size: int = 1) -> bool:
         return self.get_available() - data_size >= 0
 
-    def get_prior_packets(self) -> PacketData:
-        data_packets = self.current_data.popleft()
+    def pop_prior_packets(self) -> PacketData:
+        data_packets = self.current_data.pop()
         self.current_size -= data_packets.get_size()
         return data_packets
 
     def add_packets(self, data_packets: PacketData) -> None:
         self.current_size += data_packets.get_size()
-        self.current_data.append(data_packets)
+        data_packets.update_life_time()
+        self.current_data.push(data_packets)
 
-    def get_all_data(self) -> List[PacketData]:
+    def pop_all_data(self) -> List[PacketData]:
         self.current_size = 0
         data = list(self.current_data)
         self.current_data.clear()
@@ -47,16 +47,18 @@ class Memory:
 
     def fetch_data(self, data_size: int) -> List[PacketData]:
         if not self.has_data(data_size):
-            logging.error(f'no available data in {self}')
-            return self.get_all_data()
+            # logging.error(f' no available data in {self}')
+            return self.pop_all_data()
+        current_data_size = 0
         data = []
-        while data_size > 0:
-            prior_packets = self.get_prior_packets()
-            data_packets = prior_packets.remove(data_size)
-            data.append(data_packets)
-            data_size -= data_packets.get_size()
-            if prior_packets.num_of_packets > 0:
-                self.add_packets(prior_packets)
+        while len(self.current_data) > 0 and current_data_size < data_size:
+            packet_data: PacketData = self.current_data.pop()
+            current_data_size += packet_data.get_size()
+            if current_data_size > data_size:
+                data_difference = packet_data.pop(current_data_size - data_size)
+                self.current_data.push(data_difference)
+            data.append(packet_data)
+        self.current_size -= data_size
         return data
 
     def store_data(self, data_packets: List[PacketData], overwrite: bool = False) -> None:
@@ -71,10 +73,11 @@ class Memory:
             self.add_packets(data_packet)
 
     def remove_outdated_packets(self) -> None:
-        while len(self.current_data) == 0 and self.current_data[0].life_time <= 0:
-            self.get_prior_packets()
+        while len(self.current_data) > 0 and self.current_data[0].life_time <= 0:
+            self.pop_prior_packets()
 
     def decrease_packets_life_time(self, time: int = 1) -> None:
         for packets in self.current_data:
-            packets.life_time -= time
+            packets.life_time -= 1
+        # packets.life_time -= time
         self.remove_outdated_packets()

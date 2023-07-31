@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -11,7 +12,6 @@ from environment.devices.uav import UAV
 from environment.devices.sensor import Sensor
 from environment.devices.base_station import BaseStation
 from environment.networking.data_transition import DataTransition
-from environment.networking.transfer_type import TransferType
 
 
 @dataclass
@@ -31,9 +31,9 @@ class Environment:
     base_stations_data_transitions: Dict[int, List[DataTransition]] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.uav_data_transitions = {}
-        self.sensors_data_transitions = {}
-        self.base_stations_data_transitions = {}
+        self.uav_data_transitions = defaultdict(list)
+        self.sensors_data_transitions = defaultdict(list)
+        self.base_stations_data_transitions = defaultdict(list)
         self.initial_state = deepcopy(self)
 
     @staticmethod
@@ -50,49 +50,40 @@ class Environment:
             sum_of_delays = sum(data.get_e2e_delay() for data in received_data if data.uav_id == uav.id)
         return sum_of_delays / ns
 
-    def calculate_consumed_energy(self, uav_index: int = -1) -> float:
-        """
-        Parameters
-        ----------
-        uav_id if uav_index is not passed then the method returns the overall consumed energy for all uavs
-        Returns the consumed energy in the current time step
-        -------
-        """
-        if uav_index != -1:
-            return self.uavs[uav_index].energy - self.initial_state.uavs[uav_index].energy
-        consumed_energy = 0
-        for start, end in zip(self.initial_state.uavs, self.uavs):
-            consumed_energy += end.energy - start.energy
-        return consumed_energy
+    def calculate_overall_consumed_energy(self):
+        pass
+
+    def calculate_consumed_energy(self, uav_index: int) -> float:
+        return self.uavs[uav_index].energy - self.initial_state.uavs[uav_index].energy
 
     def run_base_stations(self) -> None:
         for base_station in self.base_stations:
-            base_station.update_packet_data_arrival_time(time_step=self.time_step)
+            base_station.run(time=self.time_step)
+            base_station.update_data_arrival_time(current_time=self.time_step)
 
     def run_sensors(self) -> None:
         for sensor in self.sensors:
+            sensor.run(time=self.time_step)
             sensor.collect_data(current_time=self.time_step)
 
     def run_uavs(self) -> None:
         for uav in self.uavs:
+            uav.run(time=self.time_step)
             index = self.get_area_index(uav)
-            if uav.areas_collection_rates[index] != 0:
+            if uav.data_to_forward > 0:
+                uav.forward_data()
+            elif uav.areas_collection_rates[index] > 0:
                 self.collect_data(uav)
             else:
                 uav.update_velocity()
                 uav.move_to_next_position()
 
-    def run_connected_devices(self):
-        for sensor, uav, base_station in zip(self.sensors, self.uavs, self.base_stations):
-            uav.prepare_data_sending()
-            sensor.prepare_data_sending()
-            base_station.prepare_data_sending()
-
     def run(self) -> None:
         self.time_step += self.speed_rate
         logging.info(f'time step {self.time_step}:')
-        self.run_uavs()
         self.run_sensors()
+        self.run_uavs()
+        self.run_base_stations()
 
     def has_ended(self) -> bool:
         return self.time_step >= self.run_until
@@ -138,12 +129,13 @@ class Environment:
     def collect_data(self, uav: UAV) -> None:
         sensors_in_range = self.get_sensors_in_range(uav)
         area_index = self.get_area_index(uav)
-        collection_rate = uav.areas_collection_rates[area_index]
+        uav.connect_to_all(sensors_in_range)
         for sensor in sensors_in_range:
-            data_transition = uav.transfer_data(sensor, collection_rate, TransferType.RECEIVE)
+            data_transition = uav.receive_from(sensor, uav.areas_collection_rates[area_index])
             self.add_sensor_transition(data_transition)
             self.data_loss += data_transition.data_loss
-            uav.areas_collection_rates[area_index] = max(0, collection_rate - data_transition.size)
+            uav.areas_collection_rates[area_index] -= data_transition.size
+            uav.areas_collection_rates[area_index] = max(0, uav.areas_collection_rates[area_index])
             if uav.areas_collection_rates[area_index] == 0:
                 break
 

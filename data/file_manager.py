@@ -47,22 +47,28 @@ class FileManager:
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
             buffer = Memory(row['buffer size'], row['buffer io speed'])
+            buffer = Memory(3000, 500)
             memory = Memory(row['memory size'], row['memory io speed'])
+            memory = Memory(5800, 400)
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
-                                  row['network max devices'], protocol)
+            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
+                                  coverage_radius=row['network coverage radius'], protocol=protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
+            packet_life_time = 60
             packet_size = row['packet size']
             energy = row['energy']
-            sensor = Sensor(position, velocity, acceleration, id, buffer, buffer, memory, network, 0,
-                            data_collecting_rate, packet_size, packet_life_time, energy)
+            sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
+                            sending_buffer=buffer, receiving_buffer=buffer,
+                            memory=memory, network=network, num_of_collected_packets=0,
+                            data_collecting_rate=data_collecting_rate, packet_size=packet_size,
+                            packet_life_time=packet_life_time, energy=energy)
             init_data_size = row['initial data size']
-            num_of_packets = init_data_size / 30
-            sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
-                                                 num_of_packets=num_of_packets)])
+            # num_of_packets = init_data_size / 30
+            # sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
+            #                                      num_of_packets=num_of_packets)])
             sensors.append(sensor)
         return sensors
 
@@ -75,15 +81,18 @@ class FileManager:
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
             buffer = Memory(row['buffer size'], row['buffer io speed'])
+            buffer = Memory(3000, 500)
             memory = Memory(row['memory size'], row['memory io speed'])
+            memory = Memory(30000, 400)
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
-                                  row['network max devices'],
-                                  protocol)
+            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
+                                  coverage_radius=row['network coverage radius'], protocol=protocol)
             energy = row['energy']
-            base_station = BaseStation(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, energy)
+            base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
+                                       sending_buffer=buffer, receiving_buffer=buffer, memory=memory, network=network,
+                                       energy=energy, num_of_collected_packets=0)
             base_stations.append(base_station)
         return base_stations
 
@@ -96,16 +105,19 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            buffer = Memory(row['buffer size'], row['buffer io speed'])
-            memory = Memory(row['memory size'], row['memory io speed'])
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(position, row['network bandwidth'], row['network coverage radius'],
-                                  row['network max devices'],
-                                  protocol)
+            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
+                                  coverage_radius=row['network coverage radius'], protocol=protocol)
+            buffer = Memory(row['buffer size'], row['buffer io speed'])
+            buffer = Memory(3000, 500)
+            memory = Memory(row['memory size'], row['memory io speed'])
+            memory = Memory(30000, 400)
             energy = row['energy']
-            uav = UAV(position, velocity, acceleration, id, buffer, buffer, memory, network, 0, energy, [], [])
+            uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id, sending_buffer=buffer,
+                      receiving_buffer=buffer, memory=memory, network=network, num_of_collected_packets=0,
+                      energy=energy, way_points=[], areas_collection_rates=[])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
