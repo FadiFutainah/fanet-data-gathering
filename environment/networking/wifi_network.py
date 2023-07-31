@@ -24,6 +24,8 @@ class WiFiNetwork:
         return self.get_connection(device) is not None
 
     def update_connections_speed(self):
+        if len(self.connections) == 0:
+            return
         new_speed = self.bandwidth // len(self.connections)
         for connection in self.connections:
             connection.speed = new_speed

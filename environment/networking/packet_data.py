@@ -1,4 +1,3 @@
-import math
 from dataclasses import dataclass, field
 
 from typing import List
@@ -29,8 +28,12 @@ class PacketData:
                 data_size -= packet.get_size()
                 packet_data_list.remove(packet)
             else:
-                data_size /= packet.num_of_packets
-                packet.packet_size -= data_size
+                try:
+                    data_size /= packet.num_of_packets
+                    packet.packet_size -= data_size
+                except RuntimeError:
+                    print('error<<>>>>>>>>>>>>>>>>>>>')
+                    print(data_size, packet.num_of_packets)
                 break
         return packet_data_list
 

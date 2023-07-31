@@ -14,6 +14,28 @@ class UAV(Device):
     e_elec: int = 1
     data_to_forward: int = field(init=False, default=0)
     forward_data_target: Device = field(init=False, default=-1)
+    started_forwarding: int = field(init=False)
+    memory_checkpoint: int = field(init=False)
+    consumed_energy: int = field(init=False, default=0)
+
+    def __post_init__(self):
+        self.started_forwarding = True
+        self.memory_checkpoint = 0
+
+    def calculate_full_distance(self):
+        distance = 0
+        for i in range(len(self.way_points) - 1):
+            p1 = self.way_points[i + 1]
+            p2 = self.way_points[i]
+            distance += p1.distance_from(p2)
+        return distance
+
+    def consume_energy(self, energy) -> None:
+        self.energy -= energy
+        self.consumed_energy += energy
+        if self.energy < 0:
+            self.energy = 0
+            logging.warning(f'{self} has no more energy to execute this action')
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
@@ -36,5 +58,13 @@ class UAV(Device):
         return energy
 
     def forward_data(self):
+        if self.started_forwarding:
+            self.started_forwarding = False
+            self.memory_checkpoint = self.memory.current_size
         self.network.delete_all_connections()
-        super().send_to(self.forward_data_target, self.data_to_forward)
+        data_transition = super().send_to(self.forward_data_target, self.data_to_forward)
+        self.data_to_forward -= (self.memory_checkpoint - self.memory.current_size)
+        if self.data_to_forward <= 0:
+            self.started_forwarding = True
+            self.data_to_forward = 0
+        return data_transition

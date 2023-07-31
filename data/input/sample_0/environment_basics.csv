@@ -1,2 +1,2 @@
 height,width,speed rate,E elec,run until,c,delta,distance threshold,power amplifier for fs,power amplifier for amp
-1000,1000,1,50,10,1,1,40,1,1
+1000,1000,1,50,50,1,1,0.9,1,1

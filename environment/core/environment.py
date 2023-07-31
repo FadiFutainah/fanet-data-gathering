@@ -70,13 +70,20 @@ class Environment:
         for uav in self.uavs:
             uav.run(time=self.time_step)
             index = self.get_area_index(uav)
+            energy = 0
             if uav.data_to_forward > 0:
-                uav.forward_data()
+                data_transition = uav.forward_data()
+                energy = self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
             elif uav.areas_collection_rates[index] > 0:
-                self.collect_data(uav)
+                data_transition_list = self.collect_data(uav)
+                for data_transition in data_transition_list:
+                    energy += self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
             else:
                 uav.update_velocity()
                 uav.move_to_next_position()
+                # energy = self.energy_model.get_transition_data_energy(uav)
+            # print(uav.energy, energy)
+            uav.consume_energy(energy)
 
     def run(self) -> None:
         self.time_step += self.speed_rate
@@ -126,18 +133,36 @@ class Environment:
     def add_sensor_transition(self, transition: DataTransition) -> None:
         self.sensors_data_transitions[self.time_step].append(transition)
 
-    def collect_data(self, uav: UAV) -> None:
+    def collect_data(self, uav: UAV) -> List[DataTransition]:
         sensors_in_range = self.get_sensors_in_range(uav)
         area_index = self.get_area_index(uav)
         uav.connect_to_all(sensors_in_range)
+        data_transition_list = []
         for sensor in sensors_in_range:
             data_transition = uav.receive_from(sensor, uav.areas_collection_rates[area_index])
+            data_transition_list.append(data_transition)
             self.add_sensor_transition(data_transition)
             self.data_loss += data_transition.data_loss
             uav.areas_collection_rates[area_index] -= data_transition.size
             uav.areas_collection_rates[area_index] = max(0, uav.areas_collection_rates[area_index])
             if uav.areas_collection_rates[area_index] == 0:
                 break
+        return data_transition_list
+
+    def get_transition_data_energy(self, uav: UAV) -> None:
+        pass
+
+    def get_collecting_data_energy(self, e_elec, distance_threshold, power_amplifier_for_fs, power_amplifier_for_amp,
+                                   data_transition: DataTransition) -> float:
+        k = data_transition.size
+        distance = data_transition.source.position.distance_from(data_transition.destination.position)
+        if distance < distance_threshold:
+            e_t = k * (e_elec + power_amplifier_for_fs * (distance ** 2))
+        else:
+            e_t = k * (e_elec + power_amplifier_for_amp * (distance ** 4))
+        e_r = k * e_elec
+        energy = e_t + e_r
+        return energy
 
     def get_results(self):
         logging.info(f'the experiment took: {self.time_step}')
