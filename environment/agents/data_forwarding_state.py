@@ -8,3 +8,6 @@ from environment.devices.uav import UAV
 class DataForwardingState:
     uav: UAV
     neighbouring_uavs: List[UAV]
+
+    def calculate_state_hash(self):
+        pass

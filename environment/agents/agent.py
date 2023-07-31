@@ -15,8 +15,11 @@ class Agent:
     def get_reward(self) -> float:
         pass
 
-    def get_state(self) -> Any:
+    def get_current_state(self) -> Any:
         pass
 
     def run(self) -> None:
         pass
+
+    def reset_environment(self):
+        self.env.reset()

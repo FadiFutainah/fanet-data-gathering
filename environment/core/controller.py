@@ -11,7 +11,6 @@ class EnvironmentController:
     def run_solution(id: int) -> None:
         file = FileManager(id)
         environment = file.load_environment()
-        environment.uavs[0].areas_collection_rates[0] = 10000
         plot_environment = PlotEnvironment(env=environment)
         plot_environment.run()
 

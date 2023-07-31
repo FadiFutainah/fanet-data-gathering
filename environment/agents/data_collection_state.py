@@ -12,3 +12,6 @@ class DataCollectionState:
     data_transition: List[DataTransition]
     neighbouring_uavs: List[UAV]
     sensors_heatmap: Tuple[Dict[Sensor, int], int]
+
+    def calculate_state_hash(self):
+        pass
