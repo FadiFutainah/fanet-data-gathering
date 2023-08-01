@@ -24,7 +24,24 @@ class DataCollectionState:
     sensors_heatmap: Tuple[Dict[Sensor, int], int]
 
     def calculate_state_hash(self):
-        pass
+        state = []
+        x = self.uav.position.x
+        y = self.uav.position.y
+        way_points = []
+        uavs_data = []
+        for uav in self.neighbouring_uavs:
+            data = [uav.position.x, uav.position.y, uav.energy, uav.num_of_collected_packets - uav.memory.current_size]
+            uavs_data.extend(data)
+        for point in self.uav.way_points:
+            way_points.append(point.x)
+            way_points.append(point.y)
+        state.append(x)
+        state.append(y)
+        state.extend(way_points)
+        state.append(self.uav.energy)
+        state.append(self.uav.num_of_collected_packets - self.uav.memory.current_size)
+        state.extend(uavs_data)
+        return [state]
 
 
 @dataclass

@@ -110,7 +110,7 @@ class Environment:
         return self.num_of_received_packets() / self.num_of_generated_packets()
 
     def reset(self) -> None:
-        logging.info(f'\n== == == == == == ==\nreset environment to initial state\n== == == == == == ==\n')
+        # logging.info(f'\n== == == == == == ==\n reset environment to initial state\n== == == == == == ==\n')
         self.time_step = 0
         self.data_loss = 0
         self.sensors_data_transitions.clear()
@@ -156,24 +156,13 @@ class Environment:
             self.data_loss += data_transition.data_loss
             uav.areas_collection_rates[area_index] -= data_transition.size
             uav.areas_collection_rates[area_index] = max(0, uav.areas_collection_rates[area_index])
+            uav.num_of_collected_packets += data_transition.size
             if uav.areas_collection_rates[area_index] == 0:
                 break
         return data_transition_list
 
     def get_transition_data_energy(self, uav: UAV) -> None:
         pass
-
-    def get_collecting_data_energy(self, e_elec, distance_threshold, power_amplifier_for_fs, power_amplifier_for_amp,
-                                   data_transition: DataTransition) -> float:
-        k = data_transition.size
-        distance = data_transition.source.position.distance_from(data_transition.destination.position)
-        if distance < distance_threshold:
-            e_t = k * (e_elec + power_amplifier_for_fs * (distance ** 2))
-        else:
-            e_t = k * (e_elec + power_amplifier_for_amp * (distance ** 4))
-        e_r = k * e_elec
-        energy = e_t + e_r
-        return energy
 
     def get_results(self):
         logging.info(f'the experiment took: {self.time_step}')

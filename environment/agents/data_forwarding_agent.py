@@ -16,7 +16,24 @@ class DataForwardingState:
     neighbouring_uavs: List[UAV]
 
     def calculate_state_hash(self):
-        pass
+        state = []
+        x = self.uav.position.x
+        y = self.uav.position.y
+        way_points = []
+        uav_positions = []
+        for uav in self.neighbouring_uavs:
+            uav_positions.append(uav.position.x)
+            uav_positions.append(uav.position.y)
+        for point in self.uav.way_points:
+            way_points.append(point.x)
+            way_points.append(point.y)
+        state.append(y)
+        state.append(x)
+        state.extend(way_points)
+        state.extend(uav_positions)
+        state.append(self.uav.energy)
+        state.append(self.uav.num_of_collected_packets - self.uav.memory.current_size)
+        return [state]
 
 
 @dataclass
