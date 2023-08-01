@@ -119,6 +119,11 @@ class Environment:
         self.sensors = deepcopy(self.initial_state.sensors)
         self.base_stations = deepcopy(self.initial_state.base_stations)
 
+    def reset_with_random_data_collection_rates(self):
+        self.reset()
+        for uav in self.uavs:
+            uav.generate_random_data_collection_rates()
+
     def get_uavs_in_range(self, uav_index) -> List[UAV]:
         neighbours = []
         for i, uav in enumerate(self.uavs):

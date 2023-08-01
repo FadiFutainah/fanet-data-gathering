@@ -1,4 +1,5 @@
 import logging
+import random
 from typing import List
 
 from dataclasses import dataclass, field
@@ -20,6 +21,13 @@ class UAV(Device):
     def __post_init__(self):
         self.started_forwarding = True
         self.memory_checkpoint = 0
+
+    def generate_random_data_collection_rates(self):
+        for _ in self.way_points:
+            collect_data = random.randint(0, 1)
+            collection_rate = random.randint(1, self.memory.size)
+            collection_rate *= collect_data
+            self.add_area(collection_rate)
 
     def calculate_full_distance(self):
         distance = 0

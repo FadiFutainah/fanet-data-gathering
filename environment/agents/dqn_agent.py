@@ -32,6 +32,9 @@ class DQNAgent(DataForwardingAgent):
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=self.alpha))
         return model
 
+    def reset_environment(self):
+        self.env.reset_with_random_data_collection_rates()
+
     def run(self):
         for episode in range(self.num_of_episodes):
             self.reset_environment()

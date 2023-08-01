@@ -16,7 +16,7 @@ class EnvironmentController:
 
     @staticmethod
     def run_all_solution() -> None:
-        for i in range(len(os.listdir('data/input'))):
+        for i in range(len(os.listdir('./data/input'))):
             file = FileManager(i)
             environment = file.load_environment()
             plot = PlotEnvironment(env=environment)
