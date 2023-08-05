@@ -1,4 +1,4 @@
-from environment.core.controller import EnvironmentController
+from src.environment.core.controller import EnvironmentController
 from src.data.logger import configure_logger
 
 
