@@ -1,25 +1,24 @@
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, List
 
 from environment.core.environment import Environment
 
 
 @dataclass
 class Agent:
-    num_of_episodes: int
     action_size: int
     state_size: int
-    max_steps: int
-    epsilon: float
-    epsilon_decay: float
-    epsilon_min: float
-    gamma: float
-    alpha: float
     env: Environment
     uav_index: int
+    steps: int = field(init=False)
+    episodes_rewards: List = field(init=False, default_factory=list)
 
     def __post_init__(self):
         self.uav = self.env.uavs[self.uav_index]
+        self.steps = 0
+
+    def step(self, encoded_action: int):
+        pass
 
     def get_reward(self) -> float:
         pass
@@ -28,6 +27,9 @@ class Agent:
         pass
 
     def run(self) -> None:
+        pass
+
+    def get_available_actions(self):
         pass
 
     def reset_environment(self):

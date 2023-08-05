@@ -1,11 +1,12 @@
 import logging
 import math
+from collections import deque
 
 from environment.agents.agent import Agent
 from environment.networking.transfer_type import TransferType
 
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Any
 
 from environment.devices.uav import UAV
 
@@ -15,7 +16,7 @@ class DataForwardingState:
     uav: UAV
     neighbouring_uavs: List[UAV]
 
-    def calculate_state_hash(self):
+    def get_state(self):
         state = []
         x = self.uav.position.x
         y = self.uav.position.y
@@ -45,6 +46,15 @@ class DataForwardingAction:
     0: base_station.
     1: uav.
     """
+
+    def encode_action(self):
+        return self.index * 10 + self.type
+
+    @staticmethod
+    def decode_action(encoded_action):
+        action_index = encoded_action // 10
+        action_type = encoded_action % 10
+        return DataForwardingAction(action_index, action_type)
 
 
 @dataclass
@@ -82,9 +92,13 @@ class DataForwardingAgent(Agent):
         pdr_penalty = pdr * self.beta
         return pdr_penalty - energy_penalty - queue_length_penalty - delay_penalty
 
+    def reset_environment(self):
+        self.env.reset()
+        return self.get_current_state()
+
     def get_current_state(self):
         state = DataForwardingState(self.uav, self.env.get_uavs_in_range(self.uav_index))
-        return state.calculate_state_hash()
+        return state.get_state()
 
     def send_to_base_station(self) -> None:
         for base_station in self.env.base_stations:
@@ -113,7 +127,8 @@ class DataForwardingAgent(Agent):
                 actions.append(DataForwardingAction(index=i, type=1))
         return actions
 
-    def get_next_state(self, action: DataForwardingAction):
+    def step(self, encoded_action: int):
+        action = DataForwardingAction.decode_action(encoded_action)
         uav = self.env.uavs[self.uav_index]
         if action.type == 0:
             target = self.env.base_stations[action.index]

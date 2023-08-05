@@ -96,7 +96,12 @@ class Environment:
         self.run_base_stations()
 
     def has_ended(self) -> bool:
-        return self.time_step >= self.run_until
+        all_reached = True
+        for uav in self.uavs:
+            if uav.busy or uav.current_way_point < len(uav.way_points) - 1:
+                all_reached = False
+                break
+        return self.time_step >= self.run_until or all_reached
 
     def num_of_generated_packets(self) -> int:
         return int(np.sum(sensor.num_of_collected_packets for sensor in self.sensors))
