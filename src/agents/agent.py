@@ -10,12 +10,12 @@ class Agent:
     state_size: int
     env: Environment
     uav_index: int
-    steps: int = field(init=False)
+    steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
+    uav: Any = field(init=False)
 
-    def __post_init__(self):
+    def init_uav(self):
         self.uav = self.env.uavs[self.uav_index]
-        self.steps = 0
 
     def step(self, encoded_action: int):
         pass

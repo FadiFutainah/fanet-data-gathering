@@ -1,32 +1,14 @@
-import os
+import argparse
 
-from src.data.logger import configure_logger
-from src.data.file_manager import FileManager
-from src.presentation.plot_environment import PlotEnvironment
-
-
-def run_solution(id: int) -> None:
-    file = FileManager(id)
-    environment = file.load_environment()
-    plot_environment = PlotEnvironment(env=environment)
-    plot_environment.run()
-
-
-def run_all_solution() -> None:
-    for i in range(len(os.listdir('./data/input'))):
-        file = FileManager(i)
-        environment = file.load_environment()
-        plot = PlotEnvironment(env=environment)
-        plot.render(i)
-
-
-def init_agents(self):
-    pass
+from src.environment.core.controller import run
 
 
 def main():
-    configure_logger(write_on_file=True)
-    run_solution(id=0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('solution', type=int)
+    parser.add_argument('run_type', type=str)
+    args = parser.parse_args()
+    run(solution_id=args.solution, run_type=args.run_type)
 
 
 if __name__ == '__main__':

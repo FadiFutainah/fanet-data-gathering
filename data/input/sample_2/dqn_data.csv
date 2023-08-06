@@ -1,0 +1,2 @@
+checkpoint_path,checkpoint_freq,state_dim,buffer_size,batch_size,tau,target_update_freq
+str,25,2,50,32,0.2,20

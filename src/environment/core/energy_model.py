@@ -12,7 +12,7 @@ class EnergyModel:
     distance_threshold: float = 1
     power_amplifier_for_fs: float = 1
     power_amplifier_for_amp: float = 1
-    scale: float = 0.0001
+    scale: float = 1
 
     def get_transition_data_energy(self, uav: UAV) -> float:
         return self.c * uav.calculate_full_distance() + self.delta

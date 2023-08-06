@@ -10,3 +10,6 @@ class RLAlgorithm:
     gamma: float
     epsilon_decay: float
     epsilon: float
+
+    def run(self):
+        pass
