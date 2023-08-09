@@ -43,7 +43,7 @@ class DataForwardingAction:
     """ 
     type possible values are:
     0: base_station.
-    1: uav.
+    1: uav. 
     """
 
     def encode_action(self):
