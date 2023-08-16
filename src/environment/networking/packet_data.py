@@ -29,7 +29,10 @@ class PacketData:
                 packet_data_list.remove(packet)
             else:
                 try:
-                    data_size /= packet.num_of_packets
+                    if packet.num_of_packets != 0:
+                        data_size /= packet.num_of_packets
+                    else:
+                        data_size = 0
                     packet.packet_size -= data_size
                 except RuntimeError:
                     print('error<<>>>>>>>>>>>>>>>>>>>')

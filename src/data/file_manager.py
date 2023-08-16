@@ -5,7 +5,7 @@ import pandas as pd
 
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
-from src.algorithms.dqn_agent import DQNAgent
+# from src.algorithms.dqn_agent import DQNAgent
 from src.environment.core.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
@@ -22,8 +22,8 @@ class FileManager:
     solution_id: int
 
     def __post_init__(self):
-        self.input_dir = f'data/input/sample_{self.solution_id}/'
-        self.output_dir = f'data/output/sample_{self.solution_id}/'
+        self.input_dir = f'data/input/test_sample_{self.solution_id}/'
+        self.output_dir = f'data/output/test_sample_{self.solution_id}/'
 
     def read_table(self, name: str) -> Any:
         if len(name) <= 4 or name[-4:] != '.csv':
@@ -139,6 +139,7 @@ class FileManager:
                 if uav.id == id:
                     found = uav
                     break
+
             found.way_points.append(position)
             found.areas_collection_rates.append(row['collection rate'])
         return uavs
@@ -182,11 +183,11 @@ class FileManager:
                                                     max_queue_length=max_queue_length, max_energy=max_energy,
                                                     max_delay=max_delay, state_size=state_size, action_size=action_size,
                                                     gamma_e=gamma_e, sigma_q=sigma_q, k=k, env=None)
-        dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
-                                 max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
-                                 epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
-                                 checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
-        return data_collection_agent, data_forwarding_agent, dqn_algorithm
+        # dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
+        #                          max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
+        #                          epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
+        #                          checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
+        return data_collection_agent, data_forwarding_agent, #dqn_algorithm
 
     def load_environment(self) -> Environment:
         height, width, speed_rate, run_until, energy_model = self.load_basic_variables()

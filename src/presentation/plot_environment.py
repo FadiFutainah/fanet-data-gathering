@@ -22,7 +22,7 @@ class PlotEnvironment:
     base_stations_render_objects: Any = field(init=False)
 
     def __post_init__(self) -> None:
-        # matplotlib.use('TkAgg')
+        matplotlib.use('TkAgg')
         self.fig, self.ax = plt.subplots(figsize=(10, 10))
         self.init_plot()
         self.uav_render_object_list = []

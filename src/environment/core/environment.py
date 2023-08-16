@@ -74,7 +74,7 @@ class Environment:
             if uav.forward_data_target is not None:
                 data_transition = uav.forward_data()
                 energy = self.energy_model.get_collecting_data_energy(data_transition, uav.network.coverage_radius)
-            elif uav.areas_collection_rates[index] > 0:
+            elif uav.areas_collection_rates[index] > 0 and len(self.get_sensors_in_range(uav)) > 0:
                 if not uav.busy:
                     data_transition_list = self.collect_data(uav)
                     for data_transition in data_transition_list:

@@ -77,6 +77,9 @@ class DataForwardingAgent(Agent):
     def get_energy_penalty(self, energy: float) -> float:
         return 1 / (1 + math.exp(-self.k * (energy - self.max_energy)))
 
+    def test(self):
+        pass
+
     def get_queue_penalty(self, queue_length: float) -> float:
         return 1 / (1 + math.exp(-self.k * (queue_length - self.max_queue_length)))
 
