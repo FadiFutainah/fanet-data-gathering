@@ -12,6 +12,7 @@ from src.environment.devices.sensor import Sensor
 from src.environment.core.environment import Environment
 from src.presentation.uav_render_object import UavRenderObject
 
+
 @dataclass
 class PlotEnvironment:
     env: Environment
