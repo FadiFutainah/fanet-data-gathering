@@ -1,11 +1,10 @@
-import pygame
 import sys
-
+import pygame
 import random
-
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('title', type=str, default='test_sample')
 parser.add_argument('num_of_uavs', type=int)
 parser.add_argument('num_of_sensors', type=int)
 parser.add_argument('width', type=int)
@@ -17,16 +16,16 @@ GRID_WIDTH = args.width * GRID_SIZE
 GRID_HEIGHT = args.height * GRID_SIZE
 NUM_OF_UAVS = args.num_of_uavs
 
-with open('data/generated/random_uavs', 'a') as f:
-    f.write('= = = = = = = = =\n')
+with open('data/generated/sensors', 'a') as f:
+    f.write(f'{args.title}\n')
+
+with open('data/generated/uavs', 'a') as f:
+    f.write(f'{args.title}\n')
 
 with open('data/generated/way_points', 'a') as f:
-    f.write('= = = = = = = = = =\n')
+    f.write(f'{args.title}\n')
 
-with open('data/generated/way_points', 'a') as f:
-    f.write('= = = = = = = = = = = =\n')
-
-with open('data/generated/random_sensors', 'a') as f:
+with open('data/generated/sensors', 'a') as f:
     for _ in range(args.num_of_sensors):
         x = random.uniform(1, args.width)
         y = random.uniform(1, args.height)
@@ -57,7 +56,6 @@ for uav_id in range(NUM_OF_UAVS):
                 grid_y = mouse_y // GRID_SIZE
                 selected_points.append((grid_x, grid_y))
                 print("Selected points:", selected_points)
-
         screen.fill(WHITE)
 
         for row in range(GRID_ROWS):
@@ -77,6 +75,15 @@ for uav_id in range(NUM_OF_UAVS):
         f.write(
             f'{selected_points[0][0]},{selected_points[0][1]},0,0,0,0,0,0,0,28800,2560,128,6400,256,640,20,10,30,10\n')
     selected_points.clear()
+
+with open('data/generated/sensors', 'a') as f:
+    f.write('= = = = = = = = = = = =\n')
+
+with open('data/generated/uavs', 'a') as f:
+    f.write('= = = = = = = = = = = =\n')
+
+with open('data/generated/way_points', 'a') as f:
+    f.write('= = = = = = = = = = = =\n')
 
 pygame.quit()
 sys.exit()
