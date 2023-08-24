@@ -9,9 +9,10 @@ parser.add_argument('num_of_uavs', type=int)
 parser.add_argument('num_of_sensors', type=int)
 parser.add_argument('width', type=int)
 parser.add_argument('height', type=int)
+parser.add_argument('grid_size', type=int, default=10)
 args = parser.parse_args()
 
-GRID_SIZE = 10
+GRID_SIZE = args.grid_size
 GRID_WIDTH = args.width * GRID_SIZE
 GRID_HEIGHT = args.height * GRID_SIZE
 NUM_OF_UAVS = args.num_of_uavs
@@ -55,7 +56,6 @@ for uav_id in range(NUM_OF_UAVS):
                 grid_x = mouse_x // GRID_SIZE
                 grid_y = mouse_y // GRID_SIZE
                 selected_points.append((grid_x, grid_y))
-                print("Selected points:", selected_points)
         screen.fill(WHITE)
 
         for row in range(GRID_ROWS):

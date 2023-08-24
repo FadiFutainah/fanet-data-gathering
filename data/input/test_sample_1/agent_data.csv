@@ -1,0 +1,2 @@
+action_size,state_size,epsilon,epsilon_min,epsilon_decay,max_steps_in_episode,num_of_episodes,alpha,gamma
+10,10,0,0.01,0.99,70,50,0.001,0.96

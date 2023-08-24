@@ -79,8 +79,8 @@ class DataForwardingAgent(Agent):
         pass
 
     def get_reward(self):
-        delay = self.env.calculate_e2e_delay(self.uav_index)
-        energy = self.env.calculate_consumed_energy(self.uav_index)
+        delay = self.env.calculate_e2e_delay(self.uav_indices)
+        energy = self.env.calculate_consumed_energy(self.uav_indices)
         pdr = self.env.calculate_pdr()
         delay_penalty = self.lambda_d * self.get_delay_penalty(delay)
         energy_penalty = self.gamma_e * self.get_energy_penalty(energy)
@@ -92,7 +92,7 @@ class DataForwardingAgent(Agent):
         return self.get_current_state()
 
     def get_current_state(self):
-        state = DataForwardingState(self.uav, self.env.get_uavs_in_range(self.uav_index))
+        state = DataForwardingState(self.uav, self.env.get_uavs_in_range(self.uav_indices))
         return state.get_state()
 
     def send_to_base_station(self) -> None:
@@ -101,30 +101,30 @@ class DataForwardingAgent(Agent):
                 self.uav.transfer_data(base_station, self.uav.memory.current_size, TransferType.SEND)
 
     def send_to_uav(self, uav: UAV, data_size: int) -> None:
-        uavs = self.env.get_uavs_in_range(self.uav_index)
+        uavs = self.env.get_uavs_in_range(self.uav_indices)
         if uav in uavs:
             self.uav.transfer_data(uav, data_size, TransferType.SEND)
         else:
             logging.error(f'the {uav} is not in the {self.uav} range')
 
-    def get_available_actions(self):
+    def get_available_actions(self, index: int) -> List[DataForwardingAction]:
         actions = []
-        uav = self.env.uavs[self.uav_index]
+        uav = self.env.uavs[index]
         if not uav.memory.has_data():
             return []
-        base_stations = self.env.get_base_stations_in_range(self.uav_index)
+        base_stations = self.env.get_base_stations_in_range(self.uav_indices)
         if len(base_stations) > 0:
             for i in range(len(base_stations)):
                 actions.append(DataForwardingAction(index=i, type=0))
         else:
-            uavs = self.env.get_uavs_in_range(self.uav_index)
+            uavs = self.env.get_uavs_in_range(self.uav_indices)
             for i in range(len(uavs)):
                 actions.append(DataForwardingAction(index=i, type=1))
         return actions
 
-    def step(self, encoded_action: int):
+    def step(self, encoded_action: int, index: int):
         action = DataForwardingAction.decode_action(encoded_action)
-        uav = self.env.uavs[self.uav_index]
+        uav = self.env.uavs[index]
         if action.type == 0:
             target = self.env.base_stations[action.index]
         else:

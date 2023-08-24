@@ -58,9 +58,9 @@ class DataCollectionAgent(Agent):
         return reward
 
     def get_current_state(self):
-        state = DataCollectionState(uav=self.env.uavs[self.uav_index],
+        state = DataCollectionState(uav=self.env.uavs[self.uav_indices],
                                     data_transition=self.env.get_collected_data_by_uav(self.uav),
-                                    neighbouring_uavs=self.env.get_uavs_in_range(self.uav_index),
+                                    neighbouring_uavs=self.env.get_uavs_in_range(self.uav_indices),
                                     sensors_heatmap=self.env.get_sensors_data_collection_heatmap())
         return state.calculate_state_hash()
 

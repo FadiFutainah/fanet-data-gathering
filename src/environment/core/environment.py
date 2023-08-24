@@ -7,7 +7,7 @@ import numpy as np
 from copy import deepcopy
 from dataclasses import dataclass, field
 
-from src.environment.core.energy_model import EnergyModel
+from src.environment.devices.energy_model import EnergyModel
 from src.environment.devices.uav import UAV
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.base_station import BaseStation
@@ -115,7 +115,7 @@ class Environment:
         return self.num_of_received_packets() / self.num_of_generated_packets()
 
     def reset(self) -> None:
-        # logging.info(f'\n== == == == == == ==\n reset environment to initial state\n== == == == == == ==\n')
+        logging.info(f'\n== == == == == == ==\n reset environment to initial state\n== == == == == == ==\n')
         self.time_step = 0
         self.data_loss = 0
         self.sensors_data_transitions.clear()

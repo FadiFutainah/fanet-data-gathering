@@ -1,6 +1,4 @@
-import inspect
 import os
-from collections import Counter
 from dataclasses import dataclass
 from typing import Any, List, Tuple
 
@@ -8,8 +6,8 @@ import pandas as pd
 
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
-# from src.algorithms.dqn_agent import DQNAgent
-from src.environment.core.energy_model import EnergyModel
+from src.algorithms.dqn_agent import DQNAgent
+from src.environment.devices.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.memory import Memory
@@ -29,28 +27,6 @@ class FileManager:
         self.output_dir = f'data/output/test_sample_{self.solution_id}/'
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
-
-    # def read_csv_table(self, filename, class_name, object_kwargs):
-    #     if len(filename) <= 4 or filename[-4:] != '.csv':
-    #         filename += '.csv'
-    #     df = pd.read_csv(self.input_dir + filename)
-    #     signature = inspect.signature(class_name.__init__)
-    #     params = list(signature.parameters.items())[1:]
-    #     obj_list = []
-    #     for index, row in df.iterrows():
-    #         kwargs = {}
-    #         for param_name, param in params:
-    #             type_hint = param.annotation
-    #             if type_hint is not int and type_hint is not str and type_hint is not float:
-    #                 continue
-    #             if param_name == 'id':
-    #                 kwargs[param_name] = index
-    #             else:
-    #                 kwargs[param_name] = row.get(param_name)
-    #         kwargs = dict(Counter(kwargs) + Counter(object_kwargs))
-    #         obj = class_name(*kwargs)
-    #         obj_list.append(obj)
-    #     return obj_list
 
     def read_table(self, name: str) -> Any:
         if len(name) <= 4 or name[-4:] != '.csv':
@@ -205,17 +181,17 @@ class FileManager:
             batch_size = row['batch_size']
             tau = row['tau']
             target_update_freq = row['target_update_freq']
-        data_collection_agent = DataCollectionAgent(uav_index=-1, alpha=alpha1, beta=beta1, action_size=action_size,
+        data_collection_agent = DataCollectionAgent(uav_indices=-1, alpha=alpha1, beta=beta1, action_size=action_size,
                                                     state_size=state_size, env=None)
-        data_forwarding_agent = DataForwardingAgent(uav_index=-1, beta=beta, lambda_d=lambda_d,
+        data_forwarding_agent = DataForwardingAgent(uav_indices=-1, beta=beta, lambda_d=lambda_d,
                                                     max_queue_length=max_queue_length, max_energy=max_energy,
                                                     max_delay=max_delay, state_size=state_size, action_size=action_size,
                                                     gamma_e=gamma_e, sigma_q=sigma_q, k=k, env=None)
-        # dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
-        #                          max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
-        #                          epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
-        #                          checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
-        return data_collection_agent, data_forwarding_agent
+        dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
+                                 max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
+                                 epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
+                                 checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
+        return data_collection_agent, data_forwarding_agent, dqn_algorithm
 
     def load_environment(self) -> Environment:
         height, width, speed_rate, run_until, energy_model = self.load_basic_variables()

@@ -3,7 +3,7 @@ import inspect
 
 from src.environment.utils.vector import Vector
 
-data = pd.read_csv('data/input/test_sample_2/' + 'sensors.csv')
+data = pd.read_csv('data/input/test_sample_1/' + 'sensors.csv')
 
 print(data.columns[0])
 
