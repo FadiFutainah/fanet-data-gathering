@@ -1,3 +1,0 @@
-x,y,z,x velocity,y velocity,z velocity,x acceleration,y acceleration,z acceleration,energy,buffer size,buffer io speed,memory size,memory io speed,network bandwidth,network coverage radius,network max devices,network protocol data loss percentage,network protocol data loss probability,network protocol data init size
-990,990,0,0,0,0,0,0,0,100000,1000,100000000,100,100000,50,100,10,20,1,0
-990,0,0,0,0,0,0,0,0,100000,1000,100000000,100,100000,50,100,10,20,1,0

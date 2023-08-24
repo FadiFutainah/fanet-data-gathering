@@ -1,3 +1,6 @@
+import inspect
+import os
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any, List, Tuple
 
@@ -24,6 +27,30 @@ class FileManager:
     def __post_init__(self):
         self.input_dir = f'data/input/test_sample_{self.solution_id}/'
         self.output_dir = f'data/output/test_sample_{self.solution_id}/'
+        if not os.path.exists(self.output_dir):
+            os.mkdir(self.output_dir)
+
+    # def read_csv_table(self, filename, class_name, object_kwargs):
+    #     if len(filename) <= 4 or filename[-4:] != '.csv':
+    #         filename += '.csv'
+    #     df = pd.read_csv(self.input_dir + filename)
+    #     signature = inspect.signature(class_name.__init__)
+    #     params = list(signature.parameters.items())[1:]
+    #     obj_list = []
+    #     for index, row in df.iterrows():
+    #         kwargs = {}
+    #         for param_name, param in params:
+    #             type_hint = param.annotation
+    #             if type_hint is not int and type_hint is not str and type_hint is not float:
+    #                 continue
+    #             if param_name == 'id':
+    #                 kwargs[param_name] = index
+    #             else:
+    #                 kwargs[param_name] = row.get(param_name)
+    #         kwargs = dict(Counter(kwargs) + Counter(object_kwargs))
+    #         obj = class_name(*kwargs)
+    #         obj_list.append(obj)
+    #     return obj_list
 
     def read_table(self, name: str) -> Any:
         if len(name) <= 4 or name[-4:] != '.csv':
@@ -55,11 +82,12 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            buffer = Memory(row['buffer size'], row['buffer io speed'])
-            receiving_buffer = Memory(3000, 500)
-            sending_buffer = Memory(3000, 500)
+            # buffer = Memory(row['buffer size'], row['buffer io speed'])
+
+            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            # memory = Memory(row['memory size'], row['memory io speed'])
             memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(5800, 400)
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
@@ -67,7 +95,7 @@ class FileManager:
                                   coverage_radius=row['network coverage radius'], protocol=protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
-            packet_life_time = 60
+            # packet_life_time = 60
             packet_size = row['packet size']
             energy = row['energy']
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
@@ -75,7 +103,7 @@ class FileManager:
                             memory=memory, network=network, num_of_collected_packets=0,
                             data_collecting_rate=data_collecting_rate, packet_size=packet_size,
                             packet_life_time=packet_life_time, energy=energy)
-            init_data_size = row['initial data size']
+            # init_data_size = row['initial data size']
             # num_of_packets = init_data_size / 30
             # sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
             #                                      num_of_packets=num_of_packets)])
@@ -90,11 +118,11 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            buffer = Memory(row['buffer size'], row['buffer io speed'])
-            receiving_buffer = Memory(3000, 500)
-            sending_buffer = Memory(3000, 500)
+            # buffer = Memory(row['buffer size'], row['buffer io speed'])
+            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            # memory = Memory(row['memory size'], row['memory io speed'])
             memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(30000, 400)
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
@@ -121,11 +149,11 @@ class FileManager:
                                           row['network protocol data init size'])
             network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
                                   coverage_radius=row['network coverage radius'], protocol=protocol)
-            buffer = Memory(row['buffer size'], row['buffer io speed'])
-            receiving_buffer = Memory(3000, 500)
-            sending_buffer = Memory(3000, 500)
+            # buffer = Memory(row['buffer size'], row['buffer io speed'])
+            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
+            # memory = Memory(row['memory size'], row['memory io speed'])
             memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(30000, 400)
             energy = row['energy']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
                       sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory, network=network,
@@ -187,7 +215,7 @@ class FileManager:
         #                          max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
         #                          epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
         #                          checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
-        return data_collection_agent, data_forwarding_agent, #dqn_algorithm
+        return data_collection_agent, data_forwarding_agent
 
     def load_environment(self) -> Environment:
         height, width, speed_rate, run_until, energy_model = self.load_basic_variables()

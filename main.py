@@ -8,7 +8,7 @@ def main():
     parser.add_argument('solution', type=int)
     parser.add_argument('run_type', type=str)
     args = parser.parse_args()
-    EnvironmentController.run(solution_id=2, run_type='plot')
+    EnvironmentController.run(solution_id=args.solution, run_type=args.run_type)
 
 
 if __name__ == '__main__':
