@@ -21,17 +21,17 @@ class Agent:
     def step(self, encoded_action: int, index: int):
         pass
 
-    def get_reward(self) -> float:
+    def get_reward(self, index: int) -> float:
         pass
 
-    def get_current_state(self) -> Any:
+    def get_current_state(self, index: int) -> Any:
         pass
 
-    def run(self) -> None:
+    def run(self, index: int) -> None:
         pass
 
     def get_available_actions(self, index: int):
         pass
 
-    def reset_environment(self):
+    def reset_environment(self, index: int):
         self.env.reset()

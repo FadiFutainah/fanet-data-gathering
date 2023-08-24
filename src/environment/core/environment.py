@@ -129,7 +129,7 @@ class Environment:
         for uav in self.uavs:
             uav.generate_random_data_collection_rates()
 
-    def get_uavs_in_range(self, uav_index) -> List[UAV]:
+    def get_uavs_in_range(self, uav_index: int) -> List[UAV]:
         neighbours = []
         for i, uav in enumerate(self.uavs):
             if i != uav_index and self.uavs[uav_index].in_range(uav):

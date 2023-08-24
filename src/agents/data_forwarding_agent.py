@@ -78,46 +78,34 @@ class DataForwardingAgent(Agent):
     def test(self):
         pass
 
-    def get_reward(self):
-        delay = self.env.calculate_e2e_delay(self.uav_indices)
-        energy = self.env.calculate_consumed_energy(self.uav_indices)
+    def get_reward(self, index: int):
+        delay = self.env.calculate_e2e_delay(index)
+        energy = self.env.calculate_consumed_energy(index)
         pdr = self.env.calculate_pdr()
         delay_penalty = self.lambda_d * self.get_delay_penalty(delay)
         energy_penalty = self.gamma_e * self.get_energy_penalty(energy)
         pdr_penalty = pdr * self.beta
         return pdr_penalty - energy_penalty - delay_penalty
 
-    def reset_environment(self):
+    def reset_environment(self, index: int):
         self.env.reset()
-        return self.get_current_state()
+        return self.get_current_state(index)
 
-    def get_current_state(self):
-        state = DataForwardingState(self.uav, self.env.get_uavs_in_range(self.uav_indices))
+    def get_current_state(self, index: int):
+        state = DataForwardingState(self.env.uavs[index], self.env.get_uavs_in_range(index))
         return state.get_state()
-
-    def send_to_base_station(self) -> None:
-        for base_station in self.env.base_stations:
-            if self.uav.in_range(base_station):
-                self.uav.transfer_data(base_station, self.uav.memory.current_size, TransferType.SEND)
-
-    def send_to_uav(self, uav: UAV, data_size: int) -> None:
-        uavs = self.env.get_uavs_in_range(self.uav_indices)
-        if uav in uavs:
-            self.uav.transfer_data(uav, data_size, TransferType.SEND)
-        else:
-            logging.error(f'the {uav} is not in the {self.uav} range')
 
     def get_available_actions(self, index: int) -> List[DataForwardingAction]:
         actions = []
         uav = self.env.uavs[index]
         if not uav.memory.has_data():
             return []
-        base_stations = self.env.get_base_stations_in_range(self.uav_indices)
+        base_stations = self.env.get_base_stations_in_range(index)
         if len(base_stations) > 0:
             for i in range(len(base_stations)):
                 actions.append(DataForwardingAction(index=i, type=0))
         else:
-            uavs = self.env.get_uavs_in_range(self.uav_indices)
+            uavs = self.env.get_uavs_in_range(index)
             for i in range(len(uavs)):
                 actions.append(DataForwardingAction(index=i, type=1))
         return actions
@@ -131,4 +119,4 @@ class DataForwardingAgent(Agent):
             target = self.env.uavs[action.index]
         uav.forward_data_target = target
         self.env.run()
-        return self.get_current_state(), self.get_reward(), self.env.has_ended()
+        return self.get_current_state(index), self.get_reward(index), self.env.has_ended()
