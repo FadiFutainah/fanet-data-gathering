@@ -35,7 +35,7 @@ class PacketData:
                         data_size = 0
                     packet.packet_size -= data_size
                 except RuntimeError:
-                    print('error<<>>>>>>>>>>>>>>>>>>>')
+                    print('error > > > > > > > > > > > > > > > > > > >')
                     print(data_size, packet.num_of_packets)
                 break
         return packet_data_list

@@ -181,9 +181,9 @@ class FileManager:
             batch_size = row['batch_size']
             tau = row['tau']
             target_update_freq = row['target_update_freq']
-        data_collection_agent = DataCollectionAgent(uav_indices=-1, alpha=alpha1, beta=beta1, action_size=action_size,
+        data_collection_agent = DataCollectionAgent(uav_indices=[], alpha=alpha1, beta=beta1, action_size=action_size,
                                                     state_size=state_size, env=None)
-        data_forwarding_agent = DataForwardingAgent(uav_indices=-1, beta=beta, lambda_d=lambda_d,
+        data_forwarding_agent = DataForwardingAgent(uav_indices=[], beta=beta, lambda_d=lambda_d,
                                                     max_queue_length=max_queue_length, max_energy=max_energy,
                                                     max_delay=max_delay, state_size=state_size, action_size=action_size,
                                                     gamma_e=gamma_e, sigma_q=sigma_q, k=k, env=None)

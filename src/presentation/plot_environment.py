@@ -1,16 +1,32 @@
+import random
 import logging
-from dataclasses import dataclass, field
 from typing import List, Any
+from dataclasses import dataclass, field
 
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from src.environment.devices.device import Device
 from src.environment.devices.uav import UAV
+from src.environment.utils.vector import Vector
 from src.environment.devices.sensor import Sensor
+from src.environment.devices.device import Device
 from src.environment.core.environment import Environment
-from src.presentation.uav_render_object import UavRenderObject
+
+
+def get_random_color():
+    return random.choice(['g', 'c', 'm', 'y'])
+
+
+@dataclass
+class UavRenderObject:
+    position: Any = None
+    range: Any = None
+    color: str = field(init=False, default_factory=get_random_color)
+
+    def update(self, position: Vector, range: int) -> None:
+        self.position = position
+        self.range = range
 
 
 @dataclass
