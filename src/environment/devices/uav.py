@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from src.environment.devices.device import Device
-from src.simulation_models.network.data_transition import DataTransition
+from src.environment.simulation_models.network.data_transition import DataTransition
 from src.environment.utils.vector import Vector
 
 

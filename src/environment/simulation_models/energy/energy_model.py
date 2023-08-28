@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.simulation_models.network.data_transition import DataTransition
+from src.environment.simulation_models.network.data_transition import DataTransition
 
 
 @dataclass

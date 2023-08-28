@@ -1,9 +1,8 @@
-import logging
 from dataclasses import field, dataclass
 from typing import List
 
-from src.simulation_models.network.connection_protocol import ConnectionProtocol
-from src.simulation_models.network.data_transition import TransferType
+from src.environment.simulation_models.network.connection_protocol import ConnectionProtocol
+from src.environment.simulation_models.network.data_transition import TransferType
 from src.environment.utils.vector import Vector
 
 
@@ -37,23 +36,20 @@ class NetworkModel:
             connection.speed = new_speed
 
     def connect(self, source, destination):
-        from src.simulation_models.network.connection import Connection
+        from src.environment.simulation_models.network.connection import Connection
         connection = Connection(source, destination, self.protocol)
         self.connections.append(connection)
         self.update_connections_speed()
         return connection
-        # logging.info(f' connection added between {self} and {connection.device2}')
 
     def disconnect(self, connection):
         self.connections.remove(connection)
         self.update_connections_speed()
-        # logging.info(f' connection removed between {self} and {connection.device2}')
 
     def transfer_data(self, source, destination, data_size: int, transfer_type: TransferType):
         connection = self.get_connection(destination)
         if connection is None:
             if not source.in_range(destination):
-                logging.info(f'{destination} is out of {source} range')
                 return None
             connection = self.connect(source, destination)
         return connection.run(data_size, transfer_type)

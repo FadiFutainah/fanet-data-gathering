@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from src.environment.devices.device import Device
-from src.simulation_models.memory.data_packet import DataPacket
+from src.environment.simulation_models.memory.data_packet import DataPacket
 
 
 @dataclass(order=True)

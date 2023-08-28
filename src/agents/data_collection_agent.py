@@ -5,7 +5,7 @@ import numpy as np
 from typing import List, Dict, Tuple
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.uav import UAV
-from src.simulation_models.network.data_transition import DataTransition
+from src.environment.simulation_models.network.data_transition import DataTransition
 
 from src.agents.agent import Agent
 

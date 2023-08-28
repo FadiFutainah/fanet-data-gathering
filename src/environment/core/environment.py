@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from src.environment.devices.device import Device
-from src.simulation_models.energy.energy_model import EnergyModel
+from src.environment.simulation_models.energy import EnergyModel
 from src.environment.devices.uav import UAV, UAVTask
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.base_station import BaseStation

@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 from typing import List, Tuple
 
 from src.environment.devices.device import Device
-from src.simulation_models.network.connection_protocol import ConnectionProtocol
-from src.simulation_models.memory.data_packet import DataPacket
-from src.simulation_models.network.data_transition import DataTransition
-from src.simulation_models.network.data_transition import TransferType
+from src.environment.simulation_models.network.connection_protocol import ConnectionProtocol
+from src.environment.simulation_models.memory.data_packet import DataPacket
+from src.environment.simulation_models.network.data_transition import DataTransition
+from src.environment.simulation_models.network.data_transition import TransferType
 
 
 @dataclass
@@ -19,10 +19,14 @@ class Connection:
     def is_initialized(self) -> bool:
         return self.initialization_data_sent >= self.protocol.initialization_data_size
 
-    def get_packets_after_error(self, packet_data_list: List[DataPacket]) -> \
+    def get_packets_after_error(self, data_packets: List[DataPacket]) -> \
             Tuple[List[DataPacket], int]:
-        error = self.protocol.calculate_data_loss(DataPacket.get_size_of_list(packet_data_list))
-        return DataPacket.remove_form_list(packet_data_list, error), error
+        data_size = sum(data_packer.size for data_packer in data_packets)
+        error = self.protocol.calculate_data_loss(data_size)
+        while len(data_packets) > 0 and error > 0:
+            data_packet = data_packets.pop()
+            error -= data_packet.size
+        return data_packets, error
 
     def get_devices_roles(self, transfer_type: TransferType) -> Tuple[Device, Device]:
         if transfer_type == TransferType.SEND:

@@ -7,14 +7,14 @@ import pandas as pd
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.algorithms.dqn_agent import DQNAgent
-from src.simulation_models.energy.energy_model import EnergyModel
+from src.environment.simulation_models.energy import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
-from src.simulation_models.memory.memory import Memory
+from src.environment.simulation_models.memory.memory import Memory
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.uav import UAV
-from src.simulation_models.network.connection_protocol import ConnectionProtocol
-from src.simulation_models.network.network_model import NetworkModel
+from src.environment.simulation_models import ConnectionProtocol
+from src.environment.simulation_models import NetworkModel
 from src.environment.utils.vector import Vector
 
 

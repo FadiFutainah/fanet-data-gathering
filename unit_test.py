@@ -2,10 +2,10 @@ from src.environment.devices.base_station import BaseStation
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.uav import UAV
 from src.environment.utils.vector import Vector
-from src.simulation_models.memory.memory import Memory
-from src.simulation_models.memory.memory_model import MemoryModel
-from src.simulation_models.network.connection_protocol import ConnectionProtocol
-from src.simulation_models.network.network_model import NetworkModel
+from src.environment.simulation_models.memory.memory import Memory
+from src.environment.simulation_models.memory.memory_model import MemoryModel
+from src.environment.simulation_models import ConnectionProtocol
+from src.environment.simulation_models import NetworkModel
 
 from copy import deepcopy
 

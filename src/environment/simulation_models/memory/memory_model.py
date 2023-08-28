@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from src.simulation_models.memory.memory import Memory
-from src.simulation_models.memory.data_packet import DataPacket
+from src.environment.simulation_models.memory.memory import Memory
+from src.environment.simulation_models.memory.data_packet import DataPacket
 
 
 @dataclass
