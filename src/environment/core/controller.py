@@ -1,10 +1,11 @@
 from typing import List
 from dataclasses import dataclass
 
+import numpy as np
+
 from src.data.logger import configure_logger
 from src.data.file_manager import FileManager
 from src.presentation.plot_environment import PlotEnvironment
-
 
 from src.algorithms.dqn_agent import RLAlgorithm
 
@@ -35,3 +36,16 @@ class EnvironmentController:
     @staticmethod
     def run_dqn_agents(algorithm: 'RLAlgorithm') -> None:
         algorithm.run()
+
+    @staticmethod
+    def num_of_generated_packets(environment) -> int:
+        return int(np.sum(sensor.num_of_collected_packets for sensor in environment.sensors))
+
+    @staticmethod
+    def num_of_received_packets(environment) -> int:
+        return int(np.sum(base_station.num_of_collected_packets for base_station in environment.base_stations))
+
+    def calculate_pdr(self, environment) -> float:
+        if self.num_of_generated_packets(environment) == 0:
+            return 0
+        return self.num_of_received_packets(environment) / self.num_of_generated_packets(environment)

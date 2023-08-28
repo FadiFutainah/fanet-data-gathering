@@ -1,82 +1,80 @@
-import logging
-import random
+from enum import Enum
 from typing import List
 
 from dataclasses import dataclass, field
+
+import numpy as np
+
 from src.environment.devices.device import Device
+from src.simulation_models.network.data_transition import DataTransition
 from src.environment.utils.vector import Vector
+
+
+class UAVTask(Enum):
+    FORWARD = 0
+    COLLECT = 1
+    GATHER = 2
+    MOVE = 3
 
 
 @dataclass(order=True)
 class UAV(Device):
-    way_points: List[Vector]
-    current_way_point: int = field(default=0, init=False)
-    areas_collection_rates: List[int] = field(default=List[int])
-    data_to_forward: int = field(init=False, default=0)
-    forward_data_target: Device = field(init=False, default=None)
-    started_forwarding: int = field(init=False)
-    memory_checkpoint: int = field(init=False)
+    way_points: List[Vector] = field(default_factory=list)
     consumed_energy: int = field(init=False, default=0)
+    data_to_forward: int = field(init=False, default=0)
+    current_way_point: int = field(default=0, init=False)
+    collection_rate_list: np.ndarray[int] = field(default_factory=list)
+    forward_data_target: 'UAV' = field(init=False, default=None)
+    data_transitions: List[DataTransition] = field(default_factory=list)
+    tasks: List[UAVTask] = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        self.started_forwarding = True
-        self.memory_checkpoint = 0
-
-    def generate_random_data_collection_rates(self):
-        for _ in self.way_points:
-            collect_data = random.randint(0, 1)
-            collection_rate = random.randint(1, self.memory.size)
-            collection_rate *= collect_data
-            self.add_area(collection_rate)
-
-    def calculate_full_distance(self):
-        distance = 0
-        for i in range(len(self.way_points) - 1):
-            p1 = self.way_points[i + 1]
-            p2 = self.way_points[i]
-            distance += p1.distance_from(p2)
-        return distance
-
-    def consume_energy(self, energy) -> None:
-        self.energy -= energy
-        self.consumed_energy += energy
-        if self.energy < 0:
-            self.energy = 0
-            logging.warning(f'{self} has no more energy to execute this action')
+        self.collection_rate_list = np.zeros(len(self.way_points))
+        self.tasks.append(UAVTask.MOVE)
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
-            logging.warning(f'{self} has already reached its destination')
-        else:
-            self.current_way_point += 1
+            self.tasks.pop()
+            return
+        self.current_way_point += 1
         self.velocity = self.way_points[self.current_way_point] - self.position
 
-    def add_area(self, collection_rate: int = 0) -> None:
-        self.areas_collection_rates.append(collection_rate)
+    def assign_collection_data_task(self, index: int, collection_rate: int) -> None:
+        self.collection_rate_list[index] = collection_rate
 
-    def get_movement_energy(self, c: float, delta: float) -> float:
-        total_distance = 0
-        i = self.current_way_point
-        while i > 0:
-            j = i - 1
-            total_distance += self.way_points[j].distance_from(self.way_points[i])
-            i -= 1
-        energy = total_distance * c + self.current_way_point * delta
-        return energy
+    def assign_forward_data_task(self, forward_data_target: 'UAV', data_to_forward: int) -> None:
+        self.network_model.delete_all_connections()
+        self.forward_data_target = forward_data_target
+        self.data_to_forward = data_to_forward
+        self.tasks.append(UAVTask.FORWARD)
+
+    def assign_receiving_data_task(self):
+        self.network_model.delete_all_connections()
+        self.tasks.append(UAVTask.COLLECT)
 
     def forward_data(self):
-        if self.started_forwarding:
-            self.started_forwarding = False
-            self.busy = True
-            self.forward_data_target.busy = True
-            self.memory_checkpoint = self.memory.current_size
-            self.data_to_forward = min(self.memory.current_size, self.forward_data_target.memory.get_available())
-        self.network.delete_all_connections()
-        data_transition = super().send_to(self.forward_data_target, self.data_to_forward)
-        self.data_to_forward -= (self.memory_checkpoint - self.memory.current_size)
+        data_size_before_transition = self.get_current_data_size()
+        data_transition = super().send_to(device=self.forward_data_target, data_size=self.data_to_forward)
+        self.data_to_forward -= data_size_before_transition - self.get_current_data_size()
         if self.data_to_forward <= 0:
-            self.started_forwarding = True
-            self.data_to_forward = 0
-            self.busy = False
-            self.forward_data_target.busy = False
+            self.tasks.pop()
+            self.forward_data_target.tasks.pop()
         return data_transition
+
+    def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
+        data_transition_list = []
+        for sensor in sensors_in_range:
+            data_transition = self.receive_from(sensor, self.collection_rate_list[self.current_way_point])
+            data_transition_list.append(data_transition)
+            self.collection_rate_list[self.current_way_point] -= data_transition.size
+            self.collection_rate_list[self.current_way_point] = \
+                max(0, self.collection_rate_list[self.current_way_point])
+            self.num_of_collected_packets += data_transition.size
+            if self.collection_rate_list[self.current_way_point] == 0:
+                break
+        return data_transition_list
+
+    def step(self, current_time: int, time_step_size: int = 1) -> None:
+        super().step(current_time, time_step_size)
+        if self.collection_rate_list[self.current_way_point] > 0:
+            self.tasks.append(UAVTask.GATHER)

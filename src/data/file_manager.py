@@ -7,14 +7,14 @@ import pandas as pd
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.algorithms.dqn_agent import DQNAgent
-from src.environment.devices.energy_model import EnergyModel
+from src.simulation_models.energy.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
-from src.environment.devices.memory import Memory
+from src.simulation_models.memory.memory import Memory
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.uav import UAV
-from src.environment.networking.connection_protocol import ConnectionProtocol
-from src.environment.networking.wifi_network import WiFiNetwork
+from src.simulation_models.network.connection_protocol import ConnectionProtocol
+from src.simulation_models.network.network_model import NetworkModel
 from src.environment.utils.vector import Vector
 
 
@@ -67,8 +67,8 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
-                                  coverage_radius=row['network coverage radius'], protocol=protocol)
+            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                   coverage_radius=row['network coverage radius'], protocol=protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
             # packet_life_time = 60
@@ -102,8 +102,8 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
-                                  coverage_radius=row['network coverage radius'], protocol=protocol)
+            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                   coverage_radius=row['network coverage radius'], protocol=protocol)
             energy = row['energy']
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
                                        sending_buffer=sending_buffer, receiving_buffer=receiving_buffer,
@@ -123,8 +123,8 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = WiFiNetwork(center=position, bandwidth=row['network bandwidth'],
-                                  coverage_radius=row['network coverage radius'], protocol=protocol)
+            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                   coverage_radius=row['network coverage radius'], protocol=protocol)
             # buffer = Memory(row['buffer size'], row['buffer io speed'])
             receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
             sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
@@ -133,7 +133,7 @@ class FileManager:
             energy = row['energy']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
                       sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory, network=network,
-                      num_of_collected_packets=0, energy=energy, way_points=[], areas_collection_rates=[])
+                      num_of_collected_packets=0, energy=energy, way_points=[], collection_rate_list=[])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
@@ -145,7 +145,7 @@ class FileManager:
                     break
 
             found.way_points.append(position)
-            found.areas_collection_rates.append(row['collection rate'])
+            found.collection_rate_list.append(row['collection rate'])
         return uavs
 
     def load_agents(self):

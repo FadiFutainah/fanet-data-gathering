@@ -1,8 +1,6 @@
-import logging
 import math
 
 from src.agents.agent import Agent
-from src.environment.networking.transfer_type import TransferType
 
 from dataclasses import dataclass
 from typing import List

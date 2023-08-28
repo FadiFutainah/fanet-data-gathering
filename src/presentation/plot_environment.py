@@ -19,7 +19,7 @@ def get_random_color():
 
 
 @dataclass
-class UavRenderObject:
+class UAVRenderObject:
     position: Any = None
     range: Any = None
     color: str = field(init=False, default_factory=get_random_color)
@@ -44,7 +44,7 @@ class PlotEnvironment:
         self.init_plot()
         self.uav_render_object_list = []
         for _ in self.env.uavs:
-            self.uav_render_object_list.append(UavRenderObject())
+            self.uav_render_object_list.append(UAVRenderObject())
 
     def init_plot(self) -> None:
         plt.xlim(-50, self.env.land_width + 50)
@@ -57,7 +57,7 @@ class PlotEnvironment:
 
     @staticmethod
     def get_sensor_color(sensor: Sensor) -> str:
-        if sensor.memory.has_data():
+        if sensor.get_current_data_size() != 0:
             return 'red'
         return 'darkgray'
 
@@ -89,7 +89,7 @@ class PlotEnvironment:
         return self.ax.plot(xs, ys, shape, markersize=size)
 
     def draw_circle(self, uav: UAV, color: str):
-        radius = plt.Circle((uav.position.x, uav.position.y), uav.network.coverage_radius, color=color, alpha=0.2)
+        radius = plt.Circle((uav.position.x, uav.position.y), uav.network_model.coverage_radius, color=color, alpha=0.2)
         return self.ax.add_patch(radius)
 
     def draw_all(self) -> None:
@@ -115,7 +115,7 @@ class PlotEnvironment:
             self.ani.event_source.stop()
             # plt.close()
         self.draw_all()
-        self.env.run()
+        self.env.step()
 
     def run(self) -> None:
         self.ani = FuncAnimation(self.fig, self.render, frames=300, repeat=False, interval=700)
