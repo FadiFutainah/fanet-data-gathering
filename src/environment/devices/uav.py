@@ -4,7 +4,7 @@ from typing import List
 from dataclasses import dataclass, field
 
 from src.environment.devices.device import Device
-from src.environment.simulation_models.network.data_transition import DataTransition
+from src.environment.simulation_models.network.data_transition import DataTransition, TransferType
 from src.environment.utils.vector import Vector
 
 
@@ -28,11 +28,20 @@ class UAV(Device):
 
     def __post_init__(self):
         self.collection_rate_list = [0] * len(self.way_points)
-        self.tasks.append(UAVTask.MOVE)
+        self.add_task(UAVTask.MOVE)
+
+    def add_task(self, task: UAVTask) -> None:
+        self.tasks.append(task)
+
+    def remove_task(self) -> UAVTask:
+        return self.tasks.pop()
+
+    def get_task(self) -> UAVTask:
+        return self.tasks[-1]
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
-            self.tasks.pop()
+            self.remove_task()
             self.velocity = Vector(0, 0, 0)
             return
         self.current_way_point += 1
@@ -45,26 +54,28 @@ class UAV(Device):
         self.network_model.delete_all_connections()
         self.forward_data_target = forward_data_target
         self.data_to_forward = data_to_forward
-        self.tasks.append(UAVTask.FORWARD)
+        self.add_task(UAVTask.FORWARD)
 
     def assign_receiving_data_task(self):
         self.network_model.delete_all_connections()
-        self.tasks.append(UAVTask.COLLECT)
+        self.add_task(UAVTask.COLLECT)
 
     def forward_data(self):
         data_size_before_transition = self.get_current_data_size()
-        data_transition = super().send_to(device=self.forward_data_target, data_size=self.data_to_forward)
+        data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
+                                                transfer_type=TransferType.SEND)
         self.data_to_forward -= data_size_before_transition - self.get_current_data_size()
         if self.data_to_forward <= 0:
-            self.tasks.pop()
+            self.remove_task()
             if type(self.forward_data_target) is UAV:
-                self.forward_data_target.tasks.pop()
+                self.forward_data_target.remove_task()
         return data_transition
 
     def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
         data_transition_list = []
         for sensor in sensors_in_range:
-            data_transition = self.receive_from(sensor, self.collection_rate_list[self.current_way_point])
+            data_transition = self.transfer_data(sensor, self.collection_rate_list[self.current_way_point],
+                                                 transfer_type=TransferType.RECEIVE)
             data_transition_list.append(data_transition)
             self.collection_rate_list[self.current_way_point] -= data_transition.size
             self.collection_rate_list[self.current_way_point] = \
@@ -78,7 +89,8 @@ class UAV(Device):
         super().step(current_time, time_step_size)
         if len(self.tasks) == 0:
             return
-        if self.tasks[-1] != UAVTask.GATHER and self.collection_rate_list[self.current_way_point] > 0:
-            self.tasks.append(UAVTask.GATHER)
-        elif self.tasks[-1] == UAVTask.GATHER and self.collection_rate_list[self.current_way_point] <= 0:
-            self.tasks.pop()
+        task = self.get_task()
+        if task == UAVTask.MOVE and self.collection_rate_list[self.current_way_point] > 0:
+            self.add_task(UAVTask.GATHER)
+        elif self.get_task() == UAVTask.GATHER and self.collection_rate_list[self.current_way_point] <= 0:
+            self.remove_task()

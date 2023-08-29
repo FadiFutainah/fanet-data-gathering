@@ -1,8 +1,7 @@
-import logging
-
 from typing import List
 from dataclasses import dataclass
 
+from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.simulation_models.memory.memory_model import MemoryModel
 from src.environment.simulation_models.network.data_transition import DataTransition
 from src.environment.simulation_models.memory.data_packet import DataPacket
@@ -16,6 +15,7 @@ class Device(PhysicalObject):
     id: int
     memory_model: MemoryModel
     network_model: NetworkModel
+    energy_model: EnergyModel
     num_of_collected_packets: int
     energy: float
 
@@ -36,9 +36,16 @@ class Device(PhysicalObject):
         return self.network_model.transfer_data(source=self, destination=device, transfer_type=TransferType.SEND,
                                                 data_size=data_size)
 
-    def receive_from(self, device: 'Device', data_size: int) -> DataTransition:
-        return self.network_model.transfer_data(source=self, destination=device, transfer_type=TransferType.RECEIVE,
-                                                data_size=data_size)
+    def consume_energy(self, energy: float) -> None:
+        self.energy -= energy
+
+    def transfer_data(self, device: 'Device', data_size: int, transfer_type: TransferType) -> DataTransition:
+        data_transition = self.network_model.transfer_data(source=self, destination=device,
+                                                           transfer_type=transfer_type, data_size=data_size)
+        energy = self.energy_model.get_collecting_data_energy(
+            network_coverage_radius=self.network_model.coverage_radius, data_transition=data_transition)
+        self.consume_energy(energy)
+        return data_transition
 
     def in_range(self, other: 'Device') -> bool:
         return self.network_model.in_range(other.position)

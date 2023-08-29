@@ -7,7 +7,7 @@ from src.data.logger import configure_logger
 from src.data.file_manager import FileManager
 from src.presentation.plot_environment import PlotEnvironment
 
-from src.algorithms.dqn_agent import RLAlgorithm
+from src.algorithms.dqn_algorithm import RLAlgorithm
 
 
 @dataclass

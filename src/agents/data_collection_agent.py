@@ -23,14 +23,15 @@ class DataCollectionState:
     neighbouring_uavs: List[UAV]
     sensors_heatmap: Tuple[Dict[Sensor, int], int]
 
-    def calculate_state_hash(self):
+    def state_encode(self):
         state = []
         x = self.uav.position.x
         y = self.uav.position.y
         way_points = []
         uavs_data = []
         for uav in self.neighbouring_uavs:
-            data = [uav.position.x, uav.position.y, uav.energy, uav.num_of_collected_packets - uav.memory_model.current_size]
+            data = [uav.position.x, uav.position.y, uav.energy,
+                    uav.num_of_collected_packets - uav.memory_model.current_size]
             uavs_data.extend(data)
         for point in self.uav.way_points:
             way_points.append(point.x)
@@ -62,7 +63,7 @@ class DataCollectionAgent(Agent):
                                     data_transition=self.env.get_collected_data_by_uav(self.uav),
                                     neighbouring_uavs=self.env.get_uavs_in_range(self.uav_indices),
                                     sensors_heatmap=self.env.get_sensors_data_collection_heatmap())
-        return state.calculate_state_hash()
+        return state.state_encode()
 
     def adjust_collection_rate(self, area_index: int, value: int) -> None:
         self.uav.collection_rate_list[area_index] = value

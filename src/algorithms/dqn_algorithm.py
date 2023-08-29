@@ -48,7 +48,7 @@ class DQNAgent(RLAlgorithm):
             done = False
             steps = 0
             rewards = []
-            self.wins = np.zeros(len(self.models))
+            self.wins = [0] * len(self.models)
             while not done and steps <= self.max_steps:
                 steps += 1
                 print(
@@ -85,25 +85,18 @@ class DQNAgent(RLAlgorithm):
                             y[j][a] = r
                             if not d:
                                 y[j][a] += q2[j]
-
                         self.models[i].fit(x, y, batch_size=self.batch_size, epochs=1, verbose=0)
-
                         for layer in self.models[i].layers:
                             for weight in layer.weights:
                                 weight_name = weight.name.replace(':', '_')
                                 tf.summary.histogram(weight_name, weight, step=steps)
-
                     if steps % self.target_update_freq == 0:
                         self.target_models[i].set_weights(self.models[i].get_weights())
-
                     if steps % self.checkpoint_freq == 0:
                         self.models[i].save_weights('{}/weights-{:08d}-{:08d}'.format(
                             self.checkpoint_paths[i], episode, steps))
-
                 states = next_states
-
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-
             tf.summary.scalar('return', episode_return, step=episode)
             tf.summary.flush()
             self.agent.episodes_rewards.append(episode_return)

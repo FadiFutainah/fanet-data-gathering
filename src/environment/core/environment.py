@@ -29,7 +29,7 @@ class Environment:
     def run_uav_task(self, uav: UAV) -> None:
         if len(uav.tasks) == 0:
             return
-        task = uav.tasks[-1]
+        task = uav.get_task()
         if task == UAVTask.FORWARD:
             uav.forward_data()
         elif task == UAVTask.GATHER:

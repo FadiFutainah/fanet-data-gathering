@@ -96,7 +96,7 @@ class DataForwardingAgent(Agent):
     def get_available_actions(self, index: int) -> List[DataForwardingAction]:
         actions = []
         uav = self.env.uavs[index]
-        if not uav.memory.has_data():
+        if not uav.memory_model.has_data():
             return []
         base_stations = self.env.get_base_stations_in_range(index)
         if len(base_stations) > 0:

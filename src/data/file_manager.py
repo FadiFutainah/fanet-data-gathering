@@ -6,7 +6,7 @@ import pandas as pd
 
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
-from src.algorithms.dqn_agent import DQNAgent
+from src.algorithms.dqn_algorithm import DQNAgent
 from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
@@ -51,7 +51,7 @@ class FileManager:
             data[0] += (energy_model,)
         return data[0]
 
-    def load_sensors(self) -> List[Sensor]:
+    def load_sensors(self, energy_model) -> List[Sensor]:
         sensors = []
         table = self.read_table(name='sensors.csv')
         for index, row in table.iterrows():
@@ -79,7 +79,7 @@ class FileManager:
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
                             memory_model=memory_model, network_model=network_model, num_of_collected_packets=0,
                             data_collecting_rate=data_collecting_rate, packet_size=packet_size,
-                            packet_life_time=packet_life_time, energy=energy)
+                            packet_life_time=packet_life_time, energy=energy, energy_model=energy_model)
             # init_data_size = row['initial data size']
             # num_of_packets = init_data_size / 30
             # sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
@@ -87,7 +87,7 @@ class FileManager:
             sensors.append(sensor)
         return sensors
 
-    def load_base_stations(self) -> List[BaseStation]:
+    def load_base_stations(self, energy_model) -> List[BaseStation]:
         base_stations = []
         table = self.read_table(name='base_stations.csv')
         for index, row in table.iterrows():
@@ -109,11 +109,11 @@ class FileManager:
             memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
                                        memory_model=memory_model, network_model=network_model, energy=energy,
-                                       num_of_collected_packets=0)
+                                       num_of_collected_packets=0, energy_model=energy_model)
             base_stations.append(base_station)
         return base_stations
 
-    def load_uavs(self) -> List[UAV]:
+    def load_uavs(self, energy_model) -> List[UAV]:
         uavs = []
         uav_table = self.read_table(name='uavs.csv')
         way_points_table = self.read_table(name='way_points.csv')
@@ -135,7 +135,7 @@ class FileManager:
             energy = row['energy']
             memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                      memory_model=memory_model, network_model=network_model,
+                      memory_model=memory_model, network_model=network_model, energy_model=energy_model,
                       num_of_collected_packets=0, energy=energy, way_points=[], collection_rate_list=[])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
@@ -198,8 +198,8 @@ class FileManager:
 
     def load_environment(self) -> Environment:
         height, width, speed_rate, run_until, energy_model = self.load_basic_variables()
-        uavs = self.load_uavs()
-        sensors = self.load_sensors()
-        base_stations = self.load_base_stations()
+        uavs = self.load_uavs(energy_model)
+        sensors = self.load_sensors(energy_model)
+        base_stations = self.load_base_stations(energy_model)
         return Environment(land_height=height, land_width=width, speed_rate=speed_rate, uavs=uavs, sensors=sensors,
                            base_stations=base_stations, run_until=run_until, energy_model=energy_model)
