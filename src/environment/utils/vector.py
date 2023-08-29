@@ -13,6 +13,14 @@ class Vector:
     def __post_init__(self) -> None:
         self.array = np.array([self.x, self.y, self.z])
 
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        return np.array_equal(self.array, other.array)
+
+    def __lt__(self, other):
+        return self.x < other.x
+
     def distance_from(self, other: 'Vector') -> float:
         return np.linalg.norm(self.array - other.array)
 

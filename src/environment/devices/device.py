@@ -8,7 +8,7 @@ from src.environment.simulation_models.network.data_transition import DataTransi
 from src.environment.simulation_models.memory.data_packet import DataPacket
 from src.environment.devices.physical_object import PhysicalObject
 from src.environment.simulation_models.network.data_transition import TransferType
-from src.environment.simulation_models import NetworkModel
+from src.environment.simulation_models.network.network_model import NetworkModel
 
 
 @dataclass(order=True)
@@ -21,7 +21,7 @@ class Device(PhysicalObject):
 
     def __post_init__(self) -> None:
         self.network_model.center = self.position
-        logging.info(f'{type(self).__name__} created at pos: {self.position}')
+        # logging.info(f'{type(self).__name__} created at pos: {self.position}')
 
     def __str__(self) -> str:
         return f'{type(self).__name__} {self.id}'
@@ -30,7 +30,7 @@ class Device(PhysicalObject):
         return self.memory_model.read_data()
 
     def get_current_data_size(self) -> int:
-        return DataPacket.get_size_of_list(self.memory_model.read_data())
+        return sum(packet.size for packet in self.memory_model.read_data())
 
     def send_to(self, device: 'Device', data_size: int) -> DataTransition:
         return self.network_model.transfer_data(source=self, destination=device, transfer_type=TransferType.SEND,
@@ -44,6 +44,9 @@ class Device(PhysicalObject):
         return self.network_model.in_range(other.position)
 
     def store_data(self, data_packets: List[DataPacket], overwrite=False):
+        self.memory_model.store_data(data_packets, overwrite)
+
+    def store_data_in_memory(self, data_packets: List[DataPacket], overwrite=False):
         self.memory_model.store_data_in_memory(data_packets, overwrite)
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:

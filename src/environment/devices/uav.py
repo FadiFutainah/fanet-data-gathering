@@ -3,8 +3,6 @@ from typing import List
 
 from dataclasses import dataclass, field
 
-import numpy as np
-
 from src.environment.devices.device import Device
 from src.environment.simulation_models.network.data_transition import DataTransition
 from src.environment.utils.vector import Vector
@@ -23,18 +21,19 @@ class UAV(Device):
     consumed_energy: int = field(init=False, default=0)
     data_to_forward: int = field(init=False, default=0)
     current_way_point: int = field(default=0, init=False)
-    collection_rate_list: np.ndarray[int] = field(default_factory=list)
-    forward_data_target: 'UAV' = field(init=False, default=None)
+    collection_rate_list: list[int] = field(default_factory=list)
+    forward_data_target: Device = field(init=False, default=None)
     data_transitions: List[DataTransition] = field(default_factory=list)
     tasks: List[UAVTask] = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        self.collection_rate_list = np.zeros(len(self.way_points))
+        self.collection_rate_list = [0] * len(self.way_points)
         self.tasks.append(UAVTask.MOVE)
 
     def update_velocity(self) -> None:
         if self.current_way_point + 1 >= len(self.way_points):
             self.tasks.pop()
+            self.velocity = Vector(0, 0, 0)
             return
         self.current_way_point += 1
         self.velocity = self.way_points[self.current_way_point] - self.position
@@ -42,7 +41,7 @@ class UAV(Device):
     def assign_collection_data_task(self, index: int, collection_rate: int) -> None:
         self.collection_rate_list[index] = collection_rate
 
-    def assign_forward_data_task(self, forward_data_target: 'UAV', data_to_forward: int) -> None:
+    def assign_forward_data_task(self, forward_data_target: Device, data_to_forward: int) -> None:
         self.network_model.delete_all_connections()
         self.forward_data_target = forward_data_target
         self.data_to_forward = data_to_forward
@@ -58,7 +57,8 @@ class UAV(Device):
         self.data_to_forward -= data_size_before_transition - self.get_current_data_size()
         if self.data_to_forward <= 0:
             self.tasks.pop()
-            self.forward_data_target.tasks.pop()
+            if type(self.forward_data_target) is UAV:
+                self.forward_data_target.tasks.pop()
         return data_transition
 
     def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
@@ -76,5 +76,9 @@ class UAV(Device):
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         super().step(current_time, time_step_size)
-        if self.collection_rate_list[self.current_way_point] > 0:
+        if len(self.tasks) == 0:
+            return
+        if self.tasks[-1] != UAVTask.GATHER and self.collection_rate_list[self.current_way_point] > 0:
             self.tasks.append(UAVTask.GATHER)
+        elif self.tasks[-1] == UAVTask.GATHER and self.collection_rate_list[self.current_way_point] <= 0:
+            self.tasks.pop()

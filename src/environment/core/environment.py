@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from src.environment.devices.device import Device
-from src.environment.simulation_models.energy import EnergyModel
+from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.devices.uav import UAV, UAVTask
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.base_station import BaseStation
@@ -27,7 +27,9 @@ class Environment:
         self.initial_state = deepcopy(self)
 
     def run_uav_task(self, uav: UAV) -> None:
-        task = uav.tasks[0]
+        if len(uav.tasks) == 0:
+            return
+        task = uav.tasks[-1]
         if task == UAVTask.FORWARD:
             uav.forward_data()
         elif task == UAVTask.GATHER:
@@ -38,7 +40,6 @@ class Environment:
 
     def step(self) -> None:
         self.time_step += self.speed_rate
-        logging.info(f'time step {self.time_step}:')
         for sensor in self.sensors:
             sensor.step(current_time=self.time_step)
         for base_station in self.base_stations:
@@ -50,13 +51,13 @@ class Environment:
     def has_ended(self) -> bool:
         done = True
         for uav in self.uavs:
-            if len(uav.tasks) == 0:
+            if len(uav.tasks) != 0:
                 done = False
                 break
         return self.time_step >= self.run_until or done
 
     def reset(self) -> None:
-        logging.info(f'reset environment to initial state')
+        # logging.info(f'reset environment to initial state')
         self.time_step = 0
         self.uavs = deepcopy(self.initial_state.uavs)
         self.sensors = deepcopy(self.initial_state.sensors)

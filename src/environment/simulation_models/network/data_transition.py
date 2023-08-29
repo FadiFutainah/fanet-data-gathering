@@ -24,8 +24,8 @@ class DataTransition:
 
     def __post_init__(self):
         self.size = sum(packet.size for packet in self.data)
-        logging.info(f'Data transition : {self.source} -> {self.destination} '
-                     f'number of packets is {self.size} - protocol is {self.protocol}')
+        # logging.info(f'Data transition : {self.source} -> {self.destination} '
+        #              f'number of packets is {self.size} - protocol is {self.protocol}')
 
     def __str__(self):
         return f'{self.source} -> {self.destination}: size {self.size}'

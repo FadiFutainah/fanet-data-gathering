@@ -14,10 +14,11 @@ class Sensor(Device):
     """ number of lost packets due to overwrite the sensor data """
 
     def collect_data(self, current_time: int) -> None:
-        data_packets = DataPacket(self.packet_life_time, self.packet_size, current_time,
-                                  self.data_collecting_rate // self.packet_size)
-        self.data_loss += max(0, data_packets.get_size() - self.get_current_data_size())
-        super().store_data([data_packets], overwrite=True)
+        num_of_packets = self.data_collecting_rate // self.packet_size
+        data_packet = DataPacket(life_time=self.packet_life_time, size=self.packet_size, created_time=current_time)
+        data_packets = [data_packet] * int(num_of_packets)
+        self.data_loss += max(0, data_packet.size * num_of_packets - self.get_current_data_size())
+        super().store_data_in_memory(data_packets, overwrite=True)
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         super().step(current_time, time_step_size)

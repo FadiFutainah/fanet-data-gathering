@@ -111,9 +111,9 @@ class PlotEnvironment:
         if self.env.time_step > 0:
             self.remove_all()
         if self.env.has_ended():
-            logging.info(f'ended at time step {i}')
+            # logging.info(f'ended at time step {i}')
             self.ani.event_source.stop()
-            # plt.close()
+            plt.close()
         self.draw_all()
         self.env.step()
 

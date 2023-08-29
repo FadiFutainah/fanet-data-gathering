@@ -18,7 +18,7 @@ class ConnectionProtocol:
     def calculate_data_loss(self, data_size: int) -> int:
         rand = random.randint(1, 100) / 100
         data = 0
-        if rand <= self.data_loss_probability:
-            logging.warning(f'data loss of size {self.data_loss_percentage * data_size} happened')
-            data = self.data_loss_percentage * data_size
+        if rand <= self.data_loss_probability / 100:
+            # logging.warning(f'data loss of size {self.data_loss_percentage * data_size} happened')
+            data = (1 - self.data_loss_percentage / 100) * data_size
         return data

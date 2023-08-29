@@ -7,14 +7,15 @@ import pandas as pd
 from src.agents.data_collection_agent import DataCollectionAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.algorithms.dqn_agent import DQNAgent
-from src.environment.simulation_models.energy import EnergyModel
+from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.simulation_models.memory.memory import Memory
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.uav import UAV
-from src.environment.simulation_models import ConnectionProtocol
-from src.environment.simulation_models import NetworkModel
+from src.environment.simulation_models.memory.memory_model import MemoryModel
+from src.environment.simulation_models.network.connection_protocol import ConnectionProtocol
+from src.environment.simulation_models.network.network_model import NetworkModel
 from src.environment.utils.vector import Vector
 
 
@@ -67,16 +68,16 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                   coverage_radius=row['network coverage radius'], protocol=protocol)
+            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                         coverage_radius=row['network coverage radius'], protocol=protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
             # packet_life_time = 60
             packet_size = row['packet size']
             energy = row['energy']
+            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                            sending_buffer=sending_buffer, receiving_buffer=receiving_buffer,
-                            memory=memory, network=network, num_of_collected_packets=0,
+                            memory_model=memory_model, network_model=network_model, num_of_collected_packets=0,
                             data_collecting_rate=data_collecting_rate, packet_size=packet_size,
                             packet_life_time=packet_life_time, energy=energy)
             # init_data_size = row['initial data size']
@@ -102,12 +103,13 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                   coverage_radius=row['network coverage radius'], protocol=protocol)
+            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                         coverage_radius=row['network coverage radius'], protocol=protocol)
             energy = row['energy']
+            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                                       sending_buffer=sending_buffer, receiving_buffer=receiving_buffer,
-                                       memory=memory, network=network, energy=energy, num_of_collected_packets=0)
+                                       memory_model=memory_model, network_model=network_model, energy=energy,
+                                       num_of_collected_packets=0)
             base_stations.append(base_station)
         return base_stations
 
@@ -123,16 +125,17 @@ class FileManager:
             protocol = ConnectionProtocol(row['network protocol data loss percentage'],
                                           row['network protocol data loss probability'],
                                           row['network protocol data init size'])
-            network = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                   coverage_radius=row['network coverage radius'], protocol=protocol)
+            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
+                                         coverage_radius=row['network coverage radius'], protocol=protocol)
             # buffer = Memory(row['buffer size'], row['buffer io speed'])
             receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
             sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
             # memory = Memory(row['memory size'], row['memory io speed'])
             memory = Memory(row['memory size'], row['memory io speed'])
             energy = row['energy']
+            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                      sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory, network=network,
+                      memory_model=memory_model, network_model=network_model,
                       num_of_collected_packets=0, energy=energy, way_points=[], collection_rate_list=[])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
@@ -186,11 +189,11 @@ class FileManager:
         data_forwarding_agent = DataForwardingAgent(uav_indices=[], beta=beta, lambda_d=lambda_d,
                                                     max_queue_length=max_queue_length, max_energy=max_energy,
                                                     max_delay=max_delay, state_size=state_size, action_size=action_size,
-                                                    gamma_e=gamma_e, sigma_q=sigma_q, k=k, env=None)
+                                                    gamma_e=gamma_e, k=k, env=None)
         dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
                                  max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
                                  epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
-                                 checkpoint_path=checkpoint_path, buffer_size=buffer_size, tau=tau)
+                                 buffer_size=buffer_size, tau=tau)
         return data_collection_agent, data_forwarding_agent, dqn_algorithm
 
     def load_environment(self) -> Environment:

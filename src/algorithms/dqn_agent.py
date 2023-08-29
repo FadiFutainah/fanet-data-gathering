@@ -24,7 +24,7 @@ class DQNAgent(RLAlgorithm):
     checkpoint_freq = 25
     models: List[Any] = field(init=False)
     target_models: List[Any] = field(init=False)
-    wins: np.ndarray[int] = field(init=False, default=0)
+    wins: list[int] = field(init=False, default_factory=list)
 
     def __post_init__(self):
         self.memories = [deque(maxlen=self.buffer_size) for _ in range(len(self.agent.uav_indices))]
