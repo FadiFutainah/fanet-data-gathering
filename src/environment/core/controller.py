@@ -23,13 +23,13 @@ class EnvironmentController:
         configure_logger(write_on_file=log_on_file)
         file = FileManager(solution_id)
         environment = file.load_environment()
-        data_collection_agent, data_forwarding_agent, dqn_agent = file.load_agents()
+        # data_collection_agent, data_forwarding_agent, dqn_agent = file.load_agents()
         if run_type == 'plot':
             plot_environment = PlotEnvironment(env=environment)
             plot_environment.run()
         elif run_type == 'dqn':
             print('dqn is working')
-            EnvironmentController.run_dqn_agents(dqn_agent)
+            # EnvironmentController.run_dqn_agents(dqn_agent)
         else:
             raise Exception('unknown run type!!')
 

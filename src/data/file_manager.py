@@ -146,9 +146,8 @@ class FileManager:
                 if uav.id == id:
                     found = uav
                     break
-
             found.way_points.append(position)
-            found.collection_rate_list.append(row['collection rate'])
+            found.collection_rate_list.append((row['collection rate'], 0))
         return uavs
 
     def load_agents(self):
@@ -184,9 +183,9 @@ class FileManager:
             batch_size = row['batch_size']
             tau = row['tau']
             target_update_freq = row['target_update_freq']
-        data_collection_agent = DataCollectionAgent(uav_indices=[], alpha=alpha1, beta=beta1, action_size=action_size,
+        data_collection_agent = DataCollectionAgent(alpha=alpha1, beta=beta1, action_size=action_size,
                                                     state_size=state_size, env=None)
-        data_forwarding_agent = DataForwardingAgent(uav_indices=[], beta=beta, lambda_d=lambda_d,
+        data_forwarding_agent = DataForwardingAgent(beta=beta, lambda_d=lambda_d,
                                                     max_queue_length=max_queue_length, max_energy=max_energy,
                                                     max_delay=max_delay, state_size=state_size, action_size=action_size,
                                                     gamma_e=gamma_e, k=k, env=None)

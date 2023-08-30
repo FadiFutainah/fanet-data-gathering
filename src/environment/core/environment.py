@@ -32,7 +32,7 @@ class Environment:
         task = uav.get_task()
         if task == UAVTask.FORWARD:
             uav.forward_data()
-        elif task == UAVTask.GATHER:
+        elif task == UAVTask.COLLECT:
             uav.collect_data(self.get_in_range(uav=uav, device_type=Sensor))
         elif task == UAVTask.MOVE:
             uav.update_velocity()

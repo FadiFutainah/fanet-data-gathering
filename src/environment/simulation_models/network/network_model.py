@@ -53,7 +53,7 @@ class NetworkModel:
                 return None
             connection = self.connect(source, destination)
         return connection.run(data_size, transfer_type)
-
+    
     def delete_all_connections(self) -> None:
         self.connections.clear()
 
