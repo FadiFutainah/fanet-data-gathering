@@ -6,16 +6,11 @@ from src.environment.core.environment import Environment
 
 @dataclass
 class Agent:
-    action_size: int
     state_size: int
+    action_size: int
     env: Environment
-    # uav_indices: List[int]
     steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
-    # uavs: List[UAV] = field(init=False)
-
-    # def init_uavs(self):
-    #     self.uavs = [self.env.uavs[i] for i in self.uav_indices]
 
     def step(self, encoded_action: int, index: int):
         pass

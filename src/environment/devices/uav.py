@@ -15,13 +15,19 @@ class UAVTask(Enum):
     FORWARD = 3
 
 
+@dataclass
+class WayPoint:
+    position: Vector
+    collection_rate: int = 0
+    active: bool = False
+
+
 @dataclass(order=True)
 class UAV(Device):
-    way_points: List[Vector] = field(default_factory=list)
+    way_points: List[WayPoint] = field(default_factory=list)
     consumed_energy: int = field(init=False, default=0)
     data_to_forward: int = field(init=False, default=0)
     current_way_point: int = field(default=0, init=False)
-    collection_rate_list: list = field(default_factory=list)
     forward_data_target: Device = field(init=False, default=None)
     data_transitions: List[DataTransition] = field(default_factory=list)
     tasks: Dict[UAVTask, bool] = field(init=False, default_factory=dict)
@@ -29,10 +35,15 @@ class UAV(Device):
     def __post_init__(self):
         self.activate_task(UAVTask.MOVE)
 
+    def add_way_point(self, position: Vector, collection_rate=0, active=False) -> None:
+        self.way_points.append(WayPoint(position=position, collection_rate=collection_rate, active=active))
+
     def activate_task(self, task: UAVTask) -> None:
+        assert self.tasks.get(task) is False or self.tasks.get(task) is None, 'cannot activate the same task twice'
         self.tasks[task] = True
 
     def deactivate_task(self, task: UAVTask) -> None:
+        assert self.tasks.get(task) is True, 'the task is already not active'
         self.tasks[task] = False
 
     def is_active(self, task: UAVTask) -> bool:
@@ -47,17 +58,18 @@ class UAV(Device):
             return
         self.current_way_point += 1
         self.current_way_point %= len(self.way_points)
-        self.velocity = self.way_points[self.current_way_point] - self.position
+        self.velocity = self.way_points[self.current_way_point].position - self.position
 
     def assign_collection_rate(self, index: int, collection_rate: int) -> None:
-        assert self.collection_rate_list[index][0] == 0, 'unable to assign the task, the collection rate must be 0'
-        self.collection_rate_list[index] = [collection_rate, 0]
+        assert self.way_points[index].collection_rate == 0, 'the collection rate must be 0'
+        self.way_points[index].collection_rate = collection_rate
+        self.way_points[index].active = False
 
     def assign_collect_data_task(self, index: int) -> None:
-        assert self.collection_rate_list[index][0] != 0, 'unable to assign the task, the collection rate must not be 0'
-        assert self.collection_rate_list[index][1] == 0, 'the task is already assigned'
+        assert self.way_points[index].collection_rate != 0, 'the collection rate must not be 0'
+        assert self.way_points[index].active is False, 'the task is already assigned'
         self.activate_task(UAVTask.COLLECT)
-        self.collection_rate_list[index][1] = 1
+        self.way_points[index].active = True
 
     def assign_forward_data_task(self, forward_data_target: Device, data_to_forward: int) -> None:
         # self.network_model.delete_all_connections()
@@ -80,38 +92,36 @@ class UAV(Device):
         if self.data_to_forward <= 0:
             self.deactivate_task(UAVTask.FORWARD)
             if type(self.forward_data_target) is UAV:
-                self.forward_data_target.deactivate_task(UAVTask.RECEIVE)
+                self.forward_data_target.   deactivate_task(UAVTask.RECEIVE)
         return data_transition
 
     def set_current_collection_rate(self, new_collection_rate):
-        assert new_collection_rate >= 0, "the new collection rate can not be negative"
-        if self.current_way_point >= len(self.collection_rate_list):
-            return
-        self.collection_rate_list[self.current_way_point][0] = new_collection_rate
+        assert new_collection_rate >= 0, 'the new collection rate can not be negative'
+        self.way_points[self.current_way_point].collection_rate = new_collection_rate
 
     def get_current_collection_rate(self):
-        if self.current_way_point >= len(self.collection_rate_list):
-            return -1
-        if self.collection_rate_list[self.current_way_point][1] == 0:
+        assert self.current_way_point < len(self.way_points), 'no collection rate for the current way point'
+        if self.way_points[self.current_way_point].active is False:
             return 0
-        return self.collection_rate_list[self.current_way_point][0]
+        return self.way_points[self.current_way_point].collection_rate
 
     def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
         data_transition_list = []
         for sensor in sensors_in_range:
-            data_transition = self.transfer_data(sensor, self.collection_rate_list[self.current_way_point][0],
+            data_transition = self.transfer_data(sensor, self.get_current_collection_rate(),
                                                  transfer_type=TransferType.RECEIVE)
             data_transition_list.append(data_transition)
-            self.collection_rate_list[self.current_way_point][0] -= data_transition.size
-            self.collection_rate_list[self.current_way_point][0] = \
-                max(0, self.collection_rate_list[self.current_way_point])
+            self.way_points[self.current_way_point].collection_rate -= data_transition.size
+            self.way_points[self.current_way_point].collection_rate \
+                = max(0, self.way_points[self.current_way_point].collection_rate)
             self.num_of_collected_packets += data_transition.size
-            if self.collection_rate_list[self.current_way_point][0] == 0:
+            if self.way_points[self.current_way_point].collection_rate == 0:
                 break
         return data_transition_list
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         super().step(current_time, time_step_size)
-        if self.get_current_collection_rate() == 0:
-            self.collection_rate_list[self.current_way_point][1] = 0
-            self.deactivate_task(UAVTask.COLLECT)
+        if self.get_current_collection_rate() <= 0:
+            self.way_points[self.current_way_point].active = False
+            if self.is_active(UAVTask.COLLECT):
+                self.deactivate_task(UAVTask.COLLECT)

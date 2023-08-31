@@ -34,16 +34,17 @@ class Connection:
         else:
             return self.device2, self.device1
 
-    def initialize(self, data_size: int) -> int:
-        remaining_data = self.protocol.initialization_data_size - self.initialization_data_sent
-        self.initialization_data_sent += min(remaining_data, data_size)
-        return max(0, data_size - remaining_data)
+    def get_init_data(self) -> int:
+        return self.protocol.initialization_data_size - self.initialization_data_sent
 
     def run(self, data_size: int, transfer_type: TransferType) -> DataTransition:
         sender, receiver = self.get_devices_roles(transfer_type)
+        speed = self.speed
+        init_data = self.get_init_data()
         if not self.is_initialized():
-            data_size = self.initialize(data_size)
-        data_size = min(data_size, self.speed)
+            self.initialization_data_sent += min(speed, init_data)
+            speed = max(0, speed - init_data)
+        data_size = min(data_size, speed)
         if sender.memory_model.get_available_to_send() < data_size:
             sender.memory_model.move_to_buffer_queue(data_size - sender.memory_model.get_available_to_send())
         data_size = min(data_size, receiver.memory_model.get_available_to_receive())

@@ -136,7 +136,7 @@ class FileManager:
             memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
                       memory_model=memory_model, network_model=network_model, energy_model=energy_model,
-                      num_of_collected_packets=0, energy=energy, way_points=[], collection_rate_list=[])
+                      num_of_collected_packets=0, energy=energy, way_points=[])
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
@@ -146,8 +146,9 @@ class FileManager:
                 if uav.id == id:
                     found = uav
                     break
-            found.way_points.append(position)
-            found.collection_rate_list.append([row['collection rate'], 0])
+            found.add_way_point(position, row['collection rate'])
+            # found.way_points.append(position)
+            # found.collection_rate_list.append([row['collection rate'], 0])
         return uavs
 
     def load_agents(self):
