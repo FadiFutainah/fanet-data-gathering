@@ -1,5 +1,3 @@
-import logging
-
 from typing import List
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -27,14 +25,16 @@ class Environment:
         self.initial_state = deepcopy(self)
 
     def run_uav_task(self, uav: UAV) -> None:
-        if len(uav.tasks) == 0:
-            return
-        task = uav.get_task()
-        if task == UAVTask.FORWARD:
+        can_move = uav.is_active(UAVTask.MOVE)
+        if uav.is_active(UAVTask.FORWARD):
+            can_move = False
             uav.forward_data()
-        elif task == UAVTask.COLLECT:
+        if uav.is_active(UAVTask.RECEIVE):
+            can_move = False
+        if uav.is_active(UAVTask.COLLECT):
+            can_move = False
             uav.collect_data(self.get_in_range(uav=uav, device_type=Sensor))
-        elif task == UAVTask.MOVE:
+        if can_move:
             uav.update_velocity()
             uav.move_to_next_position()
 
@@ -57,7 +57,7 @@ class Environment:
         return self.time_step >= self.run_until or done
 
     def reset(self) -> None:
-        # logging.info(f'reset environment to initial state')
+        # logging.info(f' reset environment to initial state')
         self.time_step = 0
         self.uavs = deepcopy(self.initial_state.uavs)
         self.sensors = deepcopy(self.initial_state.sensors)

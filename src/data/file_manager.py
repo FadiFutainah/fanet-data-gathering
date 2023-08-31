@@ -147,7 +147,7 @@ class FileManager:
                     found = uav
                     break
             found.way_points.append(position)
-            found.collection_rate_list.append((row['collection rate'], 0))
+            found.collection_rate_list.append([row['collection rate'], 0])
         return uavs
 
     def load_agents(self):

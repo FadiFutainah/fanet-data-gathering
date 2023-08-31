@@ -22,5 +22,17 @@ class PriorityQueue:
             raise IndexError("Priority queue is empty.")
         return heappop(self.data)
 
+    def get_item(self):
+        return self.data[0]
+
     def clear(self):
         self.data.clear()
+
+    def has_item(self, item) -> bool:
+        for i in self.data:
+            if i == item:
+                return True
+        return False
+
+    def is_empty(self):
+        return len(self.data) == 0
