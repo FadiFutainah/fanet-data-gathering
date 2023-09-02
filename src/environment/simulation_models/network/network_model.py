@@ -33,11 +33,11 @@ class NetworkModel:
             return
         new_speed = self.bandwidth // len(self.connections)
         for connection in self.connections:
-            connection.speed = new_speed
+            connection.update_speed(new_speed)
 
-    def connect(self, source, destination):
+    def connect(self, source, destination, speed=0):
         from src.environment.simulation_models.network.connection import Connection
-        connection = Connection(source, destination, self.protocol)
+        connection = Connection(source, destination, self.protocol, speed)
         self.connections.append(connection)
         self.update_connections_speed()
         return connection
@@ -46,14 +46,14 @@ class NetworkModel:
         self.connections.remove(connection)
         self.update_connections_speed()
 
-    def transfer_data(self, source, destination, data_size: int, transfer_type: TransferType):
+    def transfer_data(self, source, destination, data_size: int, transfer_type: TransferType, speed: int = 0):
         connection = self.get_connection(destination)
         if connection is None:
             if not source.in_range(destination):
                 return None
-            connection = self.connect(source, destination)
+            connection = self.connect(source, destination, speed)
         return connection.run(data_size, transfer_type)
-    
+
     def delete_all_connections(self) -> None:
         self.connections.clear()
 

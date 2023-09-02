@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass, field
 from typing import List
 
@@ -24,8 +23,9 @@ class DataTransition:
 
     def __post_init__(self):
         self.size = sum(packet.size for packet in self.data)
-        # logging.info(f'Data transition : {self.source} -> {self.destination} '
-        #              f'number of packets is {self.size} - protocol is {self.protocol}')
+
+    def get_e2e_delay(self):
+        return sum(data.get_e2e_delay() for data in self.data)
 
     def __str__(self):
         return f'{self.source} -> {self.destination}: size {self.size}'

@@ -17,7 +17,8 @@ class Sensor(Device):
         num_of_packets = self.data_collecting_rate // self.packet_size
         data_packet = DataPacket(life_time=self.packet_life_time, size=self.packet_size, created_time=current_time)
         data_packets = [data_packet] * int(num_of_packets)
-        self.data_loss += max(0, data_packet.size * num_of_packets - self.get_current_data_size())
+        self.data_loss += max(0, self.data_collecting_rate - self.get_current_data_size())
+        self.num_of_collected_packets += self.data_collecting_rate
         super().store_data_in_memory(data_packets, overwrite=True)
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:

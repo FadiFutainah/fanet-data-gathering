@@ -72,19 +72,18 @@ class UAV(Device):
         self.way_points[index].active = True
 
     def assign_forward_data_task(self, forward_data_target: Device, data_to_forward: int) -> None:
-        # self.network_model.delete_all_connections()
         self.forward_data_target = forward_data_target
         self.data_to_forward = data_to_forward
         self.activate_task(UAVTask.FORWARD)
 
     def assign_receiving_data_task(self):
-        # self.network_model.delete_all_connections()
         self.activate_task(UAVTask.RECEIVE)
 
     def forward_data(self):
         data_size_before_transition = self.get_current_data_size()
+        speed = self.forward_data_target.network_model.bandwidth // 10
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
-                                                transfer_type=TransferType.SEND)
+                                                transfer_type=TransferType.SEND, speed=speed)
         self.data_to_forward -= data_size_before_transition - self.get_current_data_size()
         if type(self.forward_data_target) is UAV:
             new_collection_rate = self.forward_data_target.get_current_collection_rate() - data_transition.size
@@ -92,7 +91,7 @@ class UAV(Device):
         if self.data_to_forward <= 0:
             self.deactivate_task(UAVTask.FORWARD)
             if type(self.forward_data_target) is UAV:
-                self.forward_data_target.   deactivate_task(UAVTask.RECEIVE)
+                self.forward_data_target.deactivate_task(UAVTask.RECEIVE)
         return data_transition
 
     def set_current_collection_rate(self, new_collection_rate):
@@ -107,9 +106,10 @@ class UAV(Device):
 
     def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
         data_transition_list = []
+        speed = self.network_model.bandwidth // (2 * len(sensors_in_range))
         for sensor in sensors_in_range:
             data_transition = self.transfer_data(sensor, self.get_current_collection_rate(),
-                                                 transfer_type=TransferType.RECEIVE)
+                                                 transfer_type=TransferType.RECEIVE, speed=speed)
             data_transition_list.append(data_transition)
             self.way_points[self.current_way_point].collection_rate -= data_transition.size
             self.way_points[self.current_way_point].collection_rate \

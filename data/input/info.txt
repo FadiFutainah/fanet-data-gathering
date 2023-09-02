@@ -7,5 +7,5 @@ devices:
 - speed in KBps.
 
 sensor:
-- the collection rate is the avarage of all collection rate of all types of data that the sensor 
+- the collection rate is the average of all collection rate of all types of data that the sensor
   gathers.

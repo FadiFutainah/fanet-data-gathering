@@ -22,7 +22,7 @@ class DataPacket:
 
     def get_e2e_delay(self) -> int:
         if self.arrival_time == -1:
-            return -1
+            return 0
         return self.arrival_time - self.created_time
 
     def reset_life_time(self) -> None:

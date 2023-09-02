@@ -19,6 +19,12 @@ class Connection:
     def is_initialized(self) -> bool:
         return self.initialization_data_sent >= self.protocol.initialization_data_size
 
+    def update_speed(self, new_speed) -> None:
+        if self.speed != 0:
+            self.speed = min(self.speed, new_speed)
+        else:
+            self.speed = new_speed
+
     def get_packets_after_error(self, data_packets: List[DataPacket]) -> \
             Tuple[List[DataPacket], int]:
         data_size = sum(data_packer.size for data_packer in data_packets)

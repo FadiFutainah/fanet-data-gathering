@@ -38,6 +38,27 @@ class Environment:
             uav.update_velocity()
             uav.move_to_next_position()
 
+    def calculate_e2e_delay(self) -> float:
+        sum_of_delays = 0
+        ns = 0
+        """ number of received packets """
+        for base_station in self.base_stations:
+            received_data = base_station.memory_model.read_data()
+            sum_of_delays = sum(data.get_e2e_delay() for data in received_data)
+        return sum_of_delays / ns
+
+    def num_of_generated_packets(self) -> int:
+        return int(sum(sensor.num_of_collected_packets for sensor in self.sensors))
+
+    def num_of_received_packets(self) -> int:
+        return int(sum(base_station.num_of_collected_packets for base_station in self.base_stations))
+
+    def calculate_pdr(self) -> float:
+        generated_packets = self.num_of_generated_packets()
+        if generated_packets == 0:
+            return 0
+        return self.num_of_received_packets() / generated_packets
+
     def step(self) -> None:
         self.time_step += self.speed_rate
         for sensor in self.sensors:
@@ -57,7 +78,6 @@ class Environment:
         return self.time_step >= self.run_until or done
 
     def reset(self) -> None:
-        # logging.info(f' reset environment to initial state')
         self.time_step = 0
         self.uavs = deepcopy(self.initial_state.uavs)
         self.sensors = deepcopy(self.initial_state.sensors)

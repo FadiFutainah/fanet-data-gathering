@@ -15,6 +15,9 @@ class MemoryModel:
         data_size = min(data_size, self.sending_buffer.io_speed)
         self.memory.move_to(other=self.sending_buffer, data_size=data_size)
 
+    def get_occupancy(self) -> float:
+        return round(self.memory.current_size / self.memory.size, 2)
+
     def move_to_memory(self) -> None:
         if not self.receiving_buffer.has_memory():
             return
