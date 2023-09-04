@@ -1,5 +1,6 @@
+import copy
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, List, Tuple
 
 import pandas as pd
@@ -22,6 +23,9 @@ from src.environment.utils.vector import Vector
 @dataclass
 class FileManager:
     solution_id: int
+    memory_models: list = field(init=False, default_factory=list)
+    network_models: list = field(init=False, default_factory=list)
+    energy_model: EnergyModel = field(init=False, default_factory=list)
 
     def __post_init__(self):
         self.input_dir = f'data/input/test_sample_{self.solution_id}/'
@@ -51,7 +55,7 @@ class FileManager:
             data[0] += (energy_model,)
         return data[0]
 
-    def load_sensors(self, energy_model) -> List[Sensor]:
+    def load_sensors(self) -> List[Sensor]:
         sensors = []
         table = self.read_table(name='sensors.csv')
         for index, row in table.iterrows():
@@ -59,35 +63,19 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            # buffer = Memory(row['buffer size'], row['buffer io speed'])
-
-            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            # memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(row['memory size'], row['memory io speed'])
-            protocol = ConnectionProtocol(row['network protocol data loss percentage'],
-                                          row['network protocol data loss probability'],
-                                          row['network protocol data init size'])
-            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                         coverage_radius=row['network coverage radius'], protocol=protocol)
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
-            # packet_life_time = 60
             packet_size = row['packet size']
             energy = row['energy']
-            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                            memory_model=memory_model, network_model=network_model, num_of_collected_packets=0,
-                            data_collecting_rate=data_collecting_rate, packet_size=packet_size,
-                            packet_life_time=packet_life_time, energy=energy, energy_model=energy_model)
-            # init_data_size = row['initial data size']
-            # num_of_packets = init_data_size / 30
-            # sensor.memory.store_data([PacketData(life_time=40, packet_size=30, created_time=0,
-            #                                      num_of_packets=num_of_packets)])
+                            memory_model=self.memory_models[0], network_model=self.network_models[0],
+                            num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
+                            packet_size=packet_size, packet_life_time=packet_life_time, energy=energy,
+                            energy_model=self.energy_model)
             sensors.append(sensor)
         return sensors
 
-    def load_base_stations(self, energy_model) -> List[BaseStation]:
+    def load_base_stations(self) -> List[BaseStation]:
         base_stations = []
         table = self.read_table(name='base_stations.csv')
         for index, row in table.iterrows():
@@ -95,25 +83,14 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            # buffer = Memory(row['buffer size'], row['buffer io speed'])
-            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            # memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(row['memory size'], row['memory io speed'])
-            protocol = ConnectionProtocol(row['network protocol data loss percentage'],
-                                          row['network protocol data loss probability'],
-                                          row['network protocol data init size'])
-            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                         coverage_radius=row['network coverage radius'], protocol=protocol)
             energy = row['energy']
-            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                                       memory_model=memory_model, network_model=network_model, energy=energy,
-                                       num_of_collected_packets=0, energy_model=energy_model)
+                                       memory_model=self.memory_models[1], network_model=self.network_models[1],
+                                       energy=energy, num_of_collected_packets=0, energy_model=self.energy_model)
             base_stations.append(base_station)
         return base_stations
 
-    def load_uavs(self, energy_model) -> List[UAV]:
+    def load_uavs(self) -> List[UAV]:
         uavs = []
         uav_table = self.read_table(name='uavs.csv')
         way_points_table = self.read_table(name='way_points.csv')
@@ -122,21 +99,12 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            protocol = ConnectionProtocol(row['network protocol data loss percentage'],
-                                          row['network protocol data loss probability'],
-                                          row['network protocol data init size'])
-            network_model = NetworkModel(center=position, bandwidth=row['network bandwidth'],
-                                         coverage_radius=row['network coverage radius'], protocol=protocol)
-            # buffer = Memory(row['buffer size'], row['buffer io speed'])
-            receiving_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            sending_buffer = Memory(row['buffer size'], row['buffer io speed'])
-            # memory = Memory(row['memory size'], row['memory io speed'])
-            memory = Memory(row['memory size'], row['memory io speed'])
             energy = row['energy']
-            memory_model = MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory)
+            speed = row['speed']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                      memory_model=memory_model, network_model=network_model, energy_model=energy_model,
-                      num_of_collected_packets=0, energy=energy, way_points=[])
+                      memory_model=self.memory_models[2], network_model=self.network_models[2],
+                      energy_model=self.energy_model, num_of_collected_packets=0, energy=energy, way_points=[],
+                      speed=speed)
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
@@ -147,8 +115,6 @@ class FileManager:
                     found = uav
                     break
             found.add_way_point(position, row['collection rate'])
-            # found.way_points.append(position)
-            # found.collection_rate_list.append([row['collection rate'], 0])
         return uavs
 
     def load_agents(self):
@@ -196,10 +162,34 @@ class FileManager:
                                  buffer_size=buffer_size, tau=tau)
         return data_collection_agent, data_forwarding_agent, dqn_algorithm
 
+    def load_memories(self):
+        table = self.read_table(name='memory_models')
+        data = []
+        for index, row in table.iterrows():
+            sending_buffer = Memory(size=row['buffer size'], io_speed=row['buffer io speed'])
+            memory = Memory(size=row['memory size'], io_speed=row['memory io speed'])
+            receiving_buffer = copy.copy(sending_buffer)
+            data.append(MemoryModel(sending_buffer=sending_buffer, receiving_buffer=receiving_buffer, memory=memory))
+        return data
+
+    def load_networks(self):
+        table = self.read_table(name='network_models')
+        data = []
+        for index, row in table.iterrows():
+            protocol = ConnectionProtocol(data_loss_percentage=row['data loss percentage'],
+                                          data_loss_probability=row['data loss probability'],
+                                          initialization_data_size=row['data init size'])
+            network = NetworkModel(center=Vector(0, 0, 0), bandwidth=row['bandwidth'],
+                                   coverage_radius=row['coverage radius'], protocol=protocol)
+            data.append(network)
+        return data
+
     def load_environment(self) -> Environment:
-        height, width, speed_rate, run_until, energy_model = self.load_basic_variables()
-        uavs = self.load_uavs(energy_model)
-        sensors = self.load_sensors(energy_model)
-        base_stations = self.load_base_stations(energy_model)
+        height, width, speed_rate, run_until, self.energy_model = self.load_basic_variables()
+        self.memory_models = self.load_memories()
+        self.network_models = self.load_networks()
+        uavs = self.load_uavs()
+        sensors = self.load_sensors()
+        base_stations = self.load_base_stations()
         return Environment(land_height=height, land_width=width, speed_rate=speed_rate, uavs=uavs, sensors=sensors,
-                           base_stations=base_stations, run_until=run_until, energy_model=energy_model)
+                           base_stations=base_stations, run_until=run_until)

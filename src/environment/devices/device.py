@@ -21,7 +21,6 @@ class Device(PhysicalObject):
 
     def __post_init__(self) -> None:
         self.network_model.center = self.position
-        # logging.info(f'{type(self).__name__} created at pos: {self.position}')
 
     def __str__(self) -> str:
         return f'{type(self).__name__} {self.id}'

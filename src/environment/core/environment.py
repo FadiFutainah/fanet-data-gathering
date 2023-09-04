@@ -3,7 +3,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from src.environment.devices.device import Device
-from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.devices.uav import UAV, UAVTask
 from src.environment.devices.sensor import Sensor
 from src.environment.devices.base_station import BaseStation
@@ -13,18 +12,21 @@ from src.environment.devices.base_station import BaseStation
 class Environment:
     land_width: float
     land_height: float
-    energy_model: EnergyModel
     speed_rate: int = field(default=1)
     uavs: List[UAV] = field(default_factory=list)
     sensors: List[Sensor] = field(default_factory=list)
     base_stations: List[BaseStation] = field(default_factory=list)
     run_until: int = 100
     time_step: int = field(init=False, default=0)
+    real_time: int = field(init=False, default=0)
 
     def __post_init__(self) -> None:
         self.initial_state = deepcopy(self)
 
     def run_uav_task(self, uav: UAV) -> None:
+        if uav.steps_to_move > 0:
+            uav.steps_to_move -= self.speed_rate
+            return
         can_move = uav.is_active(UAVTask.MOVE)
         if uav.is_active(UAVTask.FORWARD):
             can_move = False
@@ -72,7 +74,7 @@ class Environment:
     def has_ended(self) -> bool:
         done = True
         for uav in self.uavs:
-            if len(uav.tasks) != 0:
+            if uav.has_active_tasks():
                 done = False
                 break
         return self.time_step >= self.run_until or done

@@ -25,7 +25,7 @@ class EnvironmentController:
         environment = file.load_environment()
         # data_collection_agent, data_forwarding_agent, dqn_agent = file.load_agents()
         if run_type == 'plot':
-            plot_environment = PlotEnvironment(env=environment)
+            plot_environment = PlotEnvironment(env=environment, close_on_done=True)
             plot_environment.run()
         elif run_type == 'dqn':
             print('dqn is working')

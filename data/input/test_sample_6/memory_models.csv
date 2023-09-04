@@ -1,0 +1,4 @@
+buffer size,buffer io speed,memory size,memory io speed
+128,32,1600,32
+10000,3200,10000000,6400
+2560,128,6400,256

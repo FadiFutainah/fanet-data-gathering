@@ -19,6 +19,6 @@ class BaseStation(Device):
 
     def transfer_data(self, device: 'Device', data_size: int, transfer_type: TransferType,
                       speed: int = 0) -> DataTransition:
-        data_transition = super().transfer_data(device, data_size, transfer_type)
+        data_transition = super().transfer_data(device, data_size, transfer_type, speed)
         self.num_of_collected_packets += data_transition.size
         return data_transition

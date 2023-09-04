@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Dict
+from typing import List
 
 from dataclasses import dataclass, field
 
@@ -24,13 +24,15 @@ class WayPoint:
 
 @dataclass(order=True)
 class UAV(Device):
+    speed: int
     way_points: List[WayPoint] = field(default_factory=list)
     consumed_energy: int = field(init=False, default=0)
     data_to_forward: int = field(init=False, default=0)
     current_way_point: int = field(default=0, init=False)
     forward_data_target: Device = field(init=False, default=None)
     data_transitions: List[DataTransition] = field(default_factory=list)
-    tasks: Dict[UAVTask, bool] = field(init=False, default_factory=dict)
+    tasks: dict[UAVTask, bool] = field(init=False, default_factory=dict)
+    steps_to_move: int = field(init=False, default=0)
 
     def __post_init__(self):
         self.activate_task(UAVTask.MOVE)
@@ -59,6 +61,8 @@ class UAV(Device):
         self.current_way_point += 1
         self.current_way_point %= len(self.way_points)
         self.velocity = self.way_points[self.current_way_point].position - self.position
+        self.steps_to_move = \
+            max(int(self.position.distance_from(self.way_points[self.current_way_point].position) // self.speed), 0)
 
     def assign_collection_rate(self, index: int, collection_rate: int) -> None:
         assert self.way_points[index].collection_rate == 0, 'the collection rate must be 0'
@@ -118,6 +122,12 @@ class UAV(Device):
             if self.way_points[self.current_way_point].collection_rate == 0:
                 break
         return data_transition_list
+
+    def has_active_tasks(self) -> bool:
+        for v in self.tasks.values():
+            if v is True:
+                return True
+        return False
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         super().step(current_time, time_step_size)

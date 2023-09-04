@@ -21,9 +21,6 @@ class Agent:
     def get_current_state(self, index: int) -> Any:
         pass
 
-    def run(self, index: int) -> None:
-        pass
-
     def get_available_actions(self, index: int):
         pass
 

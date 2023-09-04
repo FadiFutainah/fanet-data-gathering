@@ -37,6 +37,7 @@ class PlotEnvironment:
     sensors_render_objects: Any = field(init=False)
     way_points_render_objects: Any = field(init=False)
     base_stations_render_objects: Any = field(init=False)
+    close_on_done: bool = False
 
     def __post_init__(self) -> None:
         matplotlib.use('TkAgg')
@@ -47,8 +48,10 @@ class PlotEnvironment:
             self.uav_render_object_list.append(UAVRenderObject())
 
     def init_plot(self) -> None:
-        plt.xlim(-50, self.env.land_width + 50)
-        plt.ylim(-50, self.env.land_height + 50)
+        w_padding = 5 * self.env.land_width / 100
+        h_padding = 5 * self.env.land_height / 100
+        plt.xlim(-w_padding, self.env.land_width + w_padding)
+        plt.ylim(-h_padding, self.env.land_height + h_padding)
         plt.grid()
 
     @staticmethod
@@ -84,8 +87,8 @@ class PlotEnvironment:
                                                          size=6)
 
     def draw_items(self, items: list, shape, size: int) -> Any:
-        xs = [item.x for item in items]
-        ys = [item.y for item in items]
+        xs = [item.position.x for item in items]
+        ys = [item.position.y for item in items]
         return self.ax.plot(xs, ys, shape, markersize=size)
 
     def draw_circle(self, uav: UAV, color: str):
@@ -111,9 +114,9 @@ class PlotEnvironment:
         if self.env.time_step > 0:
             self.remove_all()
         if self.env.has_ended():
-            # logging.info(f'ended at time step {i}')
             self.ani.event_source.stop()
-            # plt.close()
+            if self.close_on_done:
+                plt.close()
         self.draw_all()
         self.env.step()
 
