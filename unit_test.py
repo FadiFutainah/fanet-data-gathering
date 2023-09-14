@@ -37,18 +37,18 @@ network_model = NetworkModel(center=Vector(0, 0, 0), bandwidth=1000, coverage_ra
 
 uav1 = UAV(position=Vector(0, 0, 0), velocity=Vector(1, 1, 2), acceleration=Vector(0, 0, 0), id=1,
            memory_model=deepcopy(memory_model1), network_model=deepcopy(network_model), num_of_collected_packets=0,
-           energy=0, way_points=[WayPoint(position=Vector(0, 0, 0))], energy_model=energy_model)
+           consumed_energy=0, way_points=[WayPoint(position=Vector(0, 0, 0))], energy_model=energy_model)
 
 uav2 = deepcopy(uav1)
 uav3 = deepcopy(uav1)
 
 base_station = BaseStation(position=Vector(0, 0, 0), velocity=Vector(1, 0, 0), acceleration=Vector(0, 0, 0), id=1,
                            memory_model=deepcopy(memory_model1), network_model=deepcopy(network_model),
-                           num_of_collected_packets=0, energy=0, energy_model=energy_model)
+                           num_of_collected_packets=0, consumed_energy=0, energy_model=energy_model)
 
 sensor = Sensor(position=Vector(0, 0, 0), velocity=Vector(1, 0, 0), acceleration=Vector(0, 0, 0), id=1,
                 memory_model=deepcopy(memory_model2), network_model=deepcopy(network_model), num_of_collected_packets=0,
-                energy=0, data_collecting_rate=1000, packet_size=1, packet_life_time=1000, energy_model=energy_model)
+                consumed_energy=0, data_collecting_rate=1000, packet_size=1, packet_life_time=1000, energy_model=energy_model)
 sensor2 = deepcopy(sensor)
 sensor3 = deepcopy(sensor)
 sensor4 = deepcopy(sensor)

@@ -17,7 +17,7 @@ class Device(PhysicalObject):
     network_model: NetworkModel
     energy_model: EnergyModel
     num_of_collected_packets: int
-    energy: float
+    consumed_energy: float
 
     def __post_init__(self) -> None:
         self.network_model.center = self.position
@@ -32,7 +32,7 @@ class Device(PhysicalObject):
         return sum(packet.size for packet in self.memory_model.read_data())
 
     def consume_energy(self, energy: float) -> None:
-        self.energy -= energy
+        self.consumed_energy += energy
 
     def get_occupancy_percentage(self) -> float:
         return self.memory_model.get_occupancy()
@@ -44,6 +44,7 @@ class Device(PhysicalObject):
         energy = self.energy_model.get_collecting_data_energy(
             network_coverage_radius=self.network_model.coverage_radius, data_transition=data_transition)
         self.consume_energy(energy)
+        device.consume_energy(energy)
         return data_transition
 
     def in_range(self, other: 'Device') -> bool:

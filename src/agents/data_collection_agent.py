@@ -30,7 +30,7 @@ class DataCollectionState:
         way_points = []
         uavs_data = []
         for uav in self.neighbouring_uavs:
-            data = [uav.position.x, uav.position.y, uav.energy,
+            data = [uav.position.x, uav.position.y, uav.consumed_energy,
                     uav.num_of_collected_packets - uav.memory_model.current_size]
             uavs_data.extend(data)
         for point in self.uav.way_points:
@@ -39,7 +39,7 @@ class DataCollectionState:
         state.append(x)
         state.append(y)
         state.extend(way_points)
-        state.append(self.uav.energy)
+        state.append(self.uav.consumed_energy)
         state.append(self.uav.num_of_collected_packets - self.uav.memory_model.current_size)
         state.extend(uavs_data)
         return [state]
@@ -55,7 +55,7 @@ class DataCollectionAgent(Agent):
         for key, value in self.env.sensors_data_transitions:
             for data_transition in value:
                 np.append(data, data_transition.size)
-        reward = self.alpha * self.uav.energy + self.beta * np.var(data)
+        reward = self.alpha * self.uav.consumed_energy + self.beta * np.var(data)
         return reward
 
     def get_current_state(self):

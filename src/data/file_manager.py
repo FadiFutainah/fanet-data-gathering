@@ -70,7 +70,7 @@ class FileManager:
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
                             memory_model=self.memory_models[0], network_model=self.network_models[0],
                             num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
-                            packet_size=packet_size, packet_life_time=packet_life_time, energy=energy,
+                            packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=energy,
                             energy_model=self.energy_model)
             sensors.append(sensor)
         return sensors
@@ -86,7 +86,8 @@ class FileManager:
             energy = row['energy']
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
                                        memory_model=self.memory_models[1], network_model=self.network_models[1],
-                                       energy=energy, num_of_collected_packets=0, energy_model=self.energy_model)
+                                       consumed_energy=energy, num_of_collected_packets=0,
+                                       energy_model=self.energy_model)
             base_stations.append(base_station)
         return base_stations
 
@@ -103,7 +104,7 @@ class FileManager:
             speed = row['speed']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
                       memory_model=self.memory_models[2], network_model=self.network_models[2],
-                      energy_model=self.energy_model, num_of_collected_packets=0, energy=energy, way_points=[],
+                      energy_model=self.energy_model, num_of_collected_packets=0, way_points=[],
                       speed=speed)
             uavs.append(uav)
         for index, row in way_points_table.iterrows():

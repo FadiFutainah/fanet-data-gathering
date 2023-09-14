@@ -33,6 +33,8 @@ class UAV(Device):
     data_transitions: List[DataTransition] = field(default_factory=list)
     tasks: dict[UAVTask, bool] = field(init=False, default_factory=dict)
     steps_to_move: int = field(init=False, default=0)
+    pdr: int = field(init=False, default=0)
+    end_to_end_delay: int = field(init=False, default=0)
 
     def __post_init__(self):
         self.activate_task(UAVTask.MOVE)
@@ -88,7 +90,9 @@ class UAV(Device):
         speed = self.forward_data_target.network_model.bandwidth // 10
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
                                                 transfer_type=TransferType.SEND, speed=speed)
-        self.data_to_forward -= data_size_before_transition - self.get_current_data_size()
+        forwarded_data = data_size_before_transition - self.get_current_data_size()
+        self.data_to_forward -= forwarded_data
+        self.pdr += forwarded_data
         if type(self.forward_data_target) is UAV:
             new_collection_rate = self.forward_data_target.get_current_collection_rate() - data_transition.size
             self.forward_data_target.set_current_collection_rate(max(0, new_collection_rate))
