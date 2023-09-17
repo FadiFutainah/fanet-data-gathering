@@ -26,9 +26,6 @@ class FileManager:
 
     def __post_init__(self):
         self.input_dir = f'./data/input/test_sample_{self.solution_id}/'
-        # self.output_dir = f'./data/output/test_sample_{self.solution_id}/'
-        # if not os.path.exists(self.output_dir):
-        #     os.mkdir(self.output_dir)
 
     def read_table(self, name: str) -> Any:
         if len(name) <= 4 or name[-4:] != '.csv':
