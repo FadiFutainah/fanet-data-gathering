@@ -35,16 +35,14 @@ class DataForwardingState:
 
 @dataclass
 class DataForwardingAgent:
-    state_size: int
     action_size: int
     uav: UAV
     steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
     forward_targets: list = field(init=False, default_factory=list)
-    model: Any
-    target_model: Any
-    current_reward: float
-    memory: list
+    model: Any = field(init=False)
+    target_model: Any = field(init=False)
+    memory: list = field(init=False, default_factory=list)
     epsilon: float
     epsilon_min: float
     epsilon_max: float
@@ -54,8 +52,8 @@ class DataForwardingAgent:
     checkpoint_path: str
     gamma: float
     batch_size: int
-    buffer_size: int
     state_dim: int
+    current_reward: float = 0
     wins: int = 0
     episode_return: int = 0
     last_state: DataForwardingState = None
@@ -65,7 +63,7 @@ class DataForwardingAgent:
 
     def __post_init__(self):
         self.model = self.create_model()
-        self.target_models = tf.keras.models.clone_model(self.model)
+        self.target_model = tf.keras.models.clone_model(self.model)
 
     def create_model(self):
         num_units = 24
@@ -98,7 +96,7 @@ class DataForwardingAgent:
             actions = self.get_available_actions()
             return random.choice(actions)
         else:
-            return np.argmax(self.model.predict(np.array([self.current_state]), verbose=0)[0])
+            return np.argmax(self.model.predict(np.array(self.current_state.get()), verbose=0)[0])
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
@@ -113,7 +111,7 @@ class DataForwardingAgent:
             return
         if self.reward is None:
             return
-        experience = (self.last_state, self.action, self.reward, self.current_state)
+        experience = (self.last_state.get(), self.action, self.reward, self.current_state.get())
         self.memory.append(experience)
 
     def has_forward_task(self) -> bool:
@@ -134,9 +132,9 @@ class DataForwardingAgent:
             x = np.array([e[0] for e in experience_sample])
             y = self.model.predict(x, verbose=0)
             x2 = np.array([e[3] for e in experience_sample])
-            Q2 = self.gamma * np.max(self.target_model.predict(x2, verbose=0), axis=1)
+            q2 = self.gamma * np.max(self.target_model.predict(x2, verbose=0), axis=1)
             for i, (s, a, r, s2) in enumerate(experience_sample):
-                y[i][a] = r + Q2[i]
+                y[i][a] = r + q2[i]
             self.model.fit(x, y, batch_size=self.batch_size, epochs=1, verbose=0)
             for layer in self.model.layers:
                 for weight in layer.weights:

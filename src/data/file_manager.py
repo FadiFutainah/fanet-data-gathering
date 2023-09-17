@@ -5,9 +5,6 @@ from typing import Any, List, Tuple
 
 import pandas as pd
 
-from src.agents.data_collection_agent import DataCollectionAgent
-from src.agents.data_forwarding_agent import DataForwardingAgent
-from src.algorithms.dqn_algorithm import DQNAgent
 from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
@@ -66,11 +63,10 @@ class FileManager:
             data_collecting_rate = row['data collecting rate']
             packet_life_time = row['packet life time']
             packet_size = row['packet size']
-            energy = row['energy']
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
                             memory_model=self.memory_models[0], network_model=self.network_models[0],
                             num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
-                            packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=energy,
+                            packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=0,
                             energy_model=self.energy_model)
             sensors.append(sensor)
         return sensors
@@ -83,10 +79,9 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            energy = row['energy']
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
                                        memory_model=self.memory_models[1], network_model=self.network_models[1],
-                                       consumed_energy=energy, num_of_collected_packets=0,
+                                       consumed_energy=0, num_of_collected_packets=0,
                                        energy_model=self.energy_model)
             base_stations.append(base_station)
         return base_stations
@@ -100,12 +95,11 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            energy = row['energy']
             speed = row['speed']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
                       memory_model=self.memory_models[2], network_model=self.network_models[2],
                       energy_model=self.energy_model, num_of_collected_packets=0, way_points=[],
-                      speed=speed)
+                      speed=speed, consumed_energy=0)
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])
@@ -117,51 +111,6 @@ class FileManager:
                     break
             found.add_way_point(position, row['collection rate'])
         return uavs
-
-    def load_agents(self):
-        tables = [self.read_table('agent_data'), self.read_table('data_collection_agent'),
-                  self.read_table('data_forward_agent'), self.read_table('dqn_data')]
-        for index, row in tables[0].iterrows():
-            action_size = row['action_size']
-            state_size = row['state_size']
-            epsilon_min = row['epsilon_min']
-            epsilon = row['epsilon']
-            epsilon_decay = row['epsilon_decay']
-            max_steps_in_episode = row['max_steps_in_episode']
-            num_of_episodes = row['num_of_episodes']
-            alpha = row['alpha']
-            gamma = row['gamma']
-        for index, row in tables[1].iterrows():
-            alpha1 = row['alpha1']
-            beta1 = row['beta1']
-        for index, row in tables[2].iterrows():
-            max_delay = row['max_delay']
-            max_energy = row['max_energy']
-            max_queue_length = row['max_queue_length']
-            beta = row['beta']
-            gamma_e = row['gamma_e']
-            sigma_q = row['sigma_q']
-            lambda_d = row['lambda_d']
-            k = row['k']
-        for index, row in tables[3].iterrows():
-            checkpoint_path = row['checkpoint_path']
-            checkpoint_freq = row['checkpoint_freq']
-            state_dim = row['state_dim']
-            buffer_size = row['buffer_size']
-            batch_size = row['batch_size']
-            tau = row['tau']
-            target_update_freq = row['target_update_freq']
-        data_collection_agent = DataCollectionAgent(alpha=alpha1, beta=beta1, action_size=action_size,
-                                                    state_size=state_size, env=None)
-        data_forwarding_agent = DataForwardingAgent(beta=beta, lambda_d=lambda_d,
-                                                    max_queue_length=max_queue_length, max_energy=max_energy,
-                                                    max_delay=max_delay, state_size=state_size, action_size=action_size,
-                                                    gamma_e=gamma_e, k=k, env=None)
-        dqn_algorithm = DQNAgent(agent=data_forwarding_agent, alpha=alpha, batch_size=batch_size,
-                                 max_steps=max_steps_in_episode, num_of_episodes=num_of_episodes,
-                                 epsilon_min=epsilon_min, epsilon_decay=epsilon_decay, epsilon=epsilon, gamma=gamma,
-                                 buffer_size=buffer_size, tau=tau)
-        return data_collection_agent, data_forwarding_agent, dqn_algorithm
 
     def load_memories(self):
         table = self.read_table(name='memory_models')

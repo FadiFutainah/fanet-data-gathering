@@ -1,5 +1,5 @@
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.environment.core.environment import Environment
@@ -14,11 +14,11 @@ class DataForwardingAgentsController:
     agents: list[DataForwardingAgent]
     num_of_episodes: int
     max_steps: int
-    active_agents: list[DataForwardingAgent]
     k: float
     max_energy: float
     beta: float
     max_delay: float
+    active_agents: list[DataForwardingAgent] = field(init=False, default_factory=list)
 
     def get_available_targets(self, agent) -> list[Device]:
         if not agent.uav.is_active(UAVTask.FORWARD) or not agent.uav.memory_model.has_data():
