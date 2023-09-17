@@ -117,8 +117,8 @@ base_stations = [base_station]
 
 # forward between uav and uav
 
-uav1.store_data_in_memory([DataPacket(size=10, life_time=10, created_time=1)] * 50)
-uav2.store_data_in_memory([DataPacket(size=10, life_time=10, created_time=1)] * 50)
+uav1.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 50)
+uav2.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 50)
 
 uav1.assign_forward_data_task(forward_data_target=uav2, data_to_forward=50)
 uav2.assign_forward_data_task(forward_data_target=uav3, data_to_forward=50)
@@ -144,7 +144,7 @@ print('u3:', uav3.get_current_data_size())
 
 print('- - - - - - - - - - - - - - - - - - -')
 
-uav2.forward_data()
+uav2.forward_data(time_step=1)
 
 uav1.step(current_time=2)
 uav2.step(current_time=2)
@@ -155,7 +155,7 @@ print('u2:', uav2.get_current_data_size())
 print('u3:', uav3.get_current_data_size())
 
 # forward between uav and basestation
-# uav1.store_data_in_memory([DataPacket(size=10, life_time=10, created_time=1)] * 100)
+# uav1.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 100)
 # uav1.assign_forward_data_task(forward_data_target=base_station, data_to_forward=1000)
 # task = uav1.tasks[-1]
 # print(uav1.get_current_data_size())

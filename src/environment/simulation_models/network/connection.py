@@ -43,7 +43,7 @@ class Connection:
     def get_init_data(self) -> int:
         return self.protocol.initialization_data_size - self.initialization_data_sent
 
-    def run(self, data_size: int, transfer_type: TransferType) -> DataTransition:
+    def run(self, data_size: int, transfer_type: TransferType, time_step: int) -> DataTransition:
         sender, receiver = self.get_devices_roles(transfer_type)
         speed = self.speed
         init_data = self.get_init_data()
@@ -58,4 +58,8 @@ class Connection:
         data_packets = sender.memory_model.fetch_data(data_size)
         data_packets, error_loss = self.get_packets_after_error(data_packets)
         receiver.store_data(data_packets)
-        return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)
+        delay_time = 0
+        for packet in data_packets:
+            delay_time += time_step - packet.arrival_time
+            packet.arrival_time = time_step
+        return DataTransition(sender, receiver, data_packets, self.protocol, error_loss, delay_time)

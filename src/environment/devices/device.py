@@ -38,9 +38,9 @@ class Device(PhysicalObject):
         return self.memory_model.get_occupancy()
 
     def transfer_data(self, device: 'Device', data_size: int, transfer_type: TransferType,
-                      speed: int = 0) -> DataTransition:
+                      time_step: int, speed: int = 0) -> DataTransition:
         data_transition = self.network_model.transfer_data(source=self, destination=device, transfer_type=transfer_type,
-                                                           data_size=data_size, speed=speed)
+                                                           data_size=data_size, speed=speed, time_step=time_step)
         energy = self.energy_model.get_collecting_data_energy(
             network_coverage_radius=self.network_model.coverage_radius, data_transition=data_transition)
         self.consume_energy(energy)

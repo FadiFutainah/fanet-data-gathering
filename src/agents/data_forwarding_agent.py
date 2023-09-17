@@ -1,5 +1,3 @@
-from copy import copy
-
 import tensorflow as tf
 
 from dataclasses import dataclass, field
@@ -9,7 +7,6 @@ from typing import List, Any
 
 import numpy as np
 
-from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.uav import UAV, UAVTask
 
@@ -41,28 +38,43 @@ class DataForwardingAgent:
     state_size: int
     action_size: int
     uav: UAV
-    env: Environment
     steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
-    max_delay: float
-    max_energy: float
-    beta: float
-    gamma_e: float
-    """ represents the maximum penalty for exceeding the max_energy """
-    lambda_d: float
-    """ represents the maximum penalty for exceeding the max_delay """
-    k: float
-    """ describes the steepness of the sigmoid function """
     forward_targets: list = field(init=False, default_factory=list)
     model: Any
+    target_model: Any
     current_reward: float
     memory: list
+    epsilon: float
+    epsilon_min: float
+    epsilon_max: float
+    epsilon_decay: float
+    target_update_freq: int
+    checkpoint_freq: int
+    checkpoint_path: str
+    gamma: float
+    batch_size: int
+    buffer_size: int
+    state_dim: int
     wins: int = 0
     episode_return: int = 0
     last_state: DataForwardingState = None
     current_state: DataForwardingState = None
     action: int = -1
     reward: int = 0
+
+    def __post_init__(self):
+        self.model = self.create_model()
+        self.target_models = tf.keras.models.clone_model(self.model)
+
+    def create_model(self):
+        num_units = 24
+        model = tf.keras.Sequential()
+        model.add(tf.keras.layers.Dense(num_units, input_dim=self.state_dim, activation='relu'))
+        model.add(tf.keras.layers.Dense(num_units, activation='relu'))
+        model.add(tf.keras.layers.Dense(self.action_size))
+        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam())
+        return model
 
     def initialize_for_episode(self):
         self.steps = 0
@@ -104,9 +116,6 @@ class DataForwardingAgent:
         experience = (self.last_state, self.action, self.reward, self.current_state)
         self.memory.append(experience)
 
-    def update_epsilon(self):
-        pass
-
     def has_forward_task(self) -> bool:
         return self.uav.is_active(UAVTask.FORWARD)
 
@@ -123,25 +132,13 @@ class DataForwardingAgent:
         if len(self.memory) > self.batch_size:
             experience_sample = random.sample(self.memory, self.batch_size)
             x = np.array([e[0] for e in experience_sample])
-
             y = self.model.predict(x, verbose=0)
             x2 = np.array([e[3] for e in experience_sample])
             Q2 = self.gamma * np.max(self.target_model.predict(x2, verbose=0), axis=1)
             for i, (s, a, r, s2) in enumerate(experience_sample):
-                # y[i][a] = r
                 y[i][a] = r + Q2[i]
             self.model.fit(x, y, batch_size=self.batch_size, epochs=1, verbose=0)
             for layer in self.model.layers:
                 for weight in layer.weights:
                     weight_name = weight.name.replace(':', '_')
                     tf.summary.histogram(weight_name, weight, step=self.steps)
-
-    def step(self, action: int, index: int):
-        uav = self.env.uavs[index]
-        if action.type == 0:
-            target = self.env.base_stations[action]
-        else:
-            target = self.env.uavs[action]
-        uav.forward_data_target = target
-        self.env.run()
-        return self.get_current_state(index), self.get_reward(index), self.env.has_ended()

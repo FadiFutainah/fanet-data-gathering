@@ -46,13 +46,14 @@ class NetworkModel:
         self.connections.remove(connection)
         self.update_connections_speed()
 
-    def transfer_data(self, source, destination, data_size: int, transfer_type: TransferType, speed: int = 0):
+    def transfer_data(self, source, destination, data_size: int, transfer_type: TransferType, time_step: int,
+                      speed: int = 0):
         connection = self.get_connection(destination)
         if connection is None:
             if not source.in_range(destination):
                 return None
             connection = self.connect(source, destination, speed)
-        return connection.run(data_size, transfer_type)
+        return connection.run(data_size, transfer_type, time_step)
 
     def delete_all_connections(self) -> None:
         self.connections.clear()

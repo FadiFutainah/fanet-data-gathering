@@ -19,13 +19,11 @@ class DataTransition:
     data: List[DataPacket]
     protocol: ConnectionProtocol
     data_loss: int
+    delay_time: int
     size: int = field(init=False)
 
     def __post_init__(self):
         self.size = sum(packet.size for packet in self.data)
-
-    def get_e2e_delay(self):
-        return sum(data.get_e2e_delay() for data in self.data)
 
     def __str__(self):
         return f'{self.source} -> {self.destination}: size {self.size}'

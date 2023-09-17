@@ -20,9 +20,6 @@ class DataForwardingAgentsController:
     beta: float
     max_delay: float
 
-    def reset_environment(self):
-        self.environment.reset()
-
     def get_available_targets(self, agent) -> list[Device]:
         if not agent.uav.is_active(UAVTask.FORWARD) or not agent.uav.memory_model.has_data():
             return []
@@ -73,7 +70,7 @@ class DataForwardingAgentsController:
 
     def run_multi_agents(self):
         for episode in range(self.num_of_episodes):
-            self.reset_environment()
+            self.environment.reset()
             for agent in self.agents:
                 agent.initialize_for_episode()
             steps = 0
@@ -81,8 +78,6 @@ class DataForwardingAgentsController:
                 steps += 1
                 self.update_agents_rewards()
                 agents = self.get_available_agents()
-                if len(agents) == 0:
-                    continue
                 for agent in agents:
                     agent.steps += 1
                     agent.current_state = agent.get_current_state(

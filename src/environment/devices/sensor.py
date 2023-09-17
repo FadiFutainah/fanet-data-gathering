@@ -15,7 +15,7 @@ class Sensor(Device):
 
     def collect_data(self, current_time: int) -> None:
         num_of_packets = self.data_collecting_rate // self.packet_size
-        data_packet = DataPacket(life_time=self.packet_life_time, size=self.packet_size, created_time=current_time)
+        data_packet = DataPacket(life_time=self.packet_life_time, size=self.packet_size, arrival_time=current_time)
         data_packets = [data_packet] * int(num_of_packets)
         self.data_loss += max(0, self.data_collecting_rate - self.get_current_data_size())
         self.num_of_collected_packets += self.data_collecting_rate

@@ -26,7 +26,6 @@ class WayPoint:
 class UAV(Device):
     speed: int
     way_points: List[WayPoint] = field(default_factory=list)
-    consumed_energy: int = field(init=False, default=0)
     data_to_forward: int = field(init=False, default=0)
     current_way_point: int = field(default=0, init=False)
     forward_data_target: Device = field(init=False, default=None)
@@ -85,14 +84,15 @@ class UAV(Device):
     def assign_receiving_data_task(self):
         self.activate_task(UAVTask.RECEIVE)
 
-    def forward_data(self):
+    def forward_data(self, time_step: int):
         data_size_before_transition = self.get_current_data_size()
         speed = self.forward_data_target.network_model.bandwidth // 10
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
-                                                transfer_type=TransferType.SEND, speed=speed)
+                                                transfer_type=TransferType.SEND, time_step=time_step, speed=speed)
         forwarded_data = data_size_before_transition - self.get_current_data_size()
         self.data_to_forward -= forwarded_data
         self.pdr += forwarded_data
+        self.end_to_end_delay += data_transition.delay_time
         if type(self.forward_data_target) is UAV:
             new_collection_rate = self.forward_data_target.get_current_collection_rate() - data_transition.size
             self.forward_data_target.set_current_collection_rate(max(0, new_collection_rate))
@@ -112,12 +112,12 @@ class UAV(Device):
             return 0
         return self.way_points[self.current_way_point].collection_rate
 
-    def collect_data(self, sensors_in_range: List['Device']) -> List[DataTransition]:
+    def collect_data(self, sensors_in_range: List['Device'], time_step: int) -> List[DataTransition]:
         data_transition_list = []
         speed = self.network_model.bandwidth // (2 * len(sensors_in_range))
         for sensor in sensors_in_range:
             data_transition = self.transfer_data(sensor, self.get_current_collection_rate(),
-                                                 transfer_type=TransferType.RECEIVE, speed=speed)
+                                                 transfer_type=TransferType.RECEIVE, time_step=time_step, speed=speed)
             data_transition_list.append(data_transition)
             self.way_points[self.current_way_point].collection_rate -= data_transition.size
             self.way_points[self.current_way_point].collection_rate \

@@ -30,36 +30,21 @@ class Environment:
         can_move = uav.is_active(UAVTask.MOVE)
         if uav.is_active(UAVTask.FORWARD):
             can_move = False
-            uav.forward_data()
+            uav.forward_data(time_step=self.time_step)
         if uav.is_active(UAVTask.RECEIVE):
             can_move = False
         if uav.is_active(UAVTask.COLLECT):
             can_move = False
-            uav.collect_data(self.get_in_range(uav=uav, device_type=Sensor))
+            uav.collect_data(self.get_in_range(uav=uav, device_type=Sensor), time_step=self.time_step)
         if can_move:
             uav.update_velocity()
             uav.move_to_next_position()
-
-    def calculate_e2e_delay(self) -> float:
-        sum_of_delays = 0
-        ns = 0
-        """ number of received packets """
-        for base_station in self.base_stations:
-            received_data = base_station.memory_model.read_data()
-            sum_of_delays = sum(data.get_e2e_delay() for data in received_data)
-        return sum_of_delays / ns
 
     def num_of_generated_packets(self) -> int:
         return int(sum(sensor.num_of_collected_packets for sensor in self.sensors))
 
     def num_of_received_packets(self) -> int:
         return int(sum(base_station.num_of_collected_packets for base_station in self.base_stations))
-
-    def calculate_pdr(self) -> float:
-        generated_packets = self.num_of_generated_packets()
-        if generated_packets == 0:
-            return 0
-        return self.num_of_received_packets() / generated_packets
 
     def step(self) -> None:
         self.time_step += self.speed_rate
