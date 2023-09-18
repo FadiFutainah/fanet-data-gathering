@@ -25,7 +25,8 @@ class FileManager:
     energy_model: EnergyModel = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        self.input_dir = f'./data/input/test_sample_{self.solution_id}/'
+        current_dir = os.getcwd()
+        self.input_dir = f'{current_dir}/data/input/test_sample_{self.solution_id}/'
 
     def read_table(self, name: str) -> Any:
         if len(name) <= 4 or name[-4:] != '.csv':
