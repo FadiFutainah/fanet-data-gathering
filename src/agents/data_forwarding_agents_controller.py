@@ -43,6 +43,7 @@ class DataForwardingAgentsController:
             target = self.environment.base_stations[agent.current_action]
         else:
             target = self.environment.uavs[agent.current_action - len(self.environment.base_stations)]
+            target.assign_receiving_data_task()
         agent.uav.assign_forward_data_task(data_to_forward=agent.uav.memory_model.memory.current_size,
                                            forward_data_target=target)
         self.active_agents.append(agent)

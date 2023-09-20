@@ -8,7 +8,7 @@ from src.agents.data_forwarding_agents_controller import DataForwardingAgentsCon
 from src.data.logger import configure_logger
 from src.data.file_manager import FileManager
 from src.environment.core.environment import Environment
-from src.presentation.plot_environment import PlotEnvironment
+from src.presentation.plot_view import PlotEnvironment
 
 
 @dataclass
@@ -28,6 +28,7 @@ class EnvironmentController:
                                         epsilon_decay=0.995, target_update_freq=2, checkpoint_freq=1000,
                                         checkpoint_path='path', gamma=0.95, batch_size=2)
             agents.append(agent)
+            uav.assign_receiving_data_task()
         agents_controller = DataForwardingAgentsController(environment=environment, agents=agents, num_of_episodes=10,
                                                            max_steps=100, max_delay=50, max_energy=100, k=1, beta=1)
         if run_type == 'plot':

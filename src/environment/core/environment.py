@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -48,6 +49,7 @@ class Environment:
 
     def step(self) -> None:
         self.time_step += self.speed_rate
+        # logging.info(f'{self.time_step}')
         for sensor in self.sensors:
             sensor.step(current_time=self.time_step)
         for base_station in self.base_stations:

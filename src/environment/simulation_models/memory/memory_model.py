@@ -19,7 +19,7 @@ class MemoryModel:
         return round(self.memory.current_size / self.memory.size, 2)
 
     def move_to_memory(self) -> None:
-        if not self.receiving_buffer.has_memory():
+        if not self.receiving_buffer.has_data():
             return
         speed = min(self.receiving_buffer.io_speed, self.memory.io_speed)
         self.receiving_buffer.move_to(other=self.memory, data_size=speed)

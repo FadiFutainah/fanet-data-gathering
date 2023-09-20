@@ -107,7 +107,7 @@ class FileManager:
                 if uav.id == id:
                     found = uav
                     break
-            found.add_way_point(position, row['collection rate'])
+            found.add_way_point(position, collection_rate=row['collection rate'])
         return uavs
 
     def load_memories(self):

@@ -20,10 +20,10 @@ class Memory:
         return self.size - self.current_size
 
     def has_data(self, data_size: int = 1) -> bool:
-        return self.current_size - data_size >= 0
+        return self.current_size >= data_size
 
     def has_memory(self, data_size: int = 1) -> bool:
-        return self.get_available() - data_size >= 0
+        return self.get_available() >= data_size
 
     def pop_prior_packet(self) -> DataPacket:
         data_packets = self.current_data.pop()

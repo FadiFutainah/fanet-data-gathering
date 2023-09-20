@@ -132,7 +132,7 @@ print('u3:', uav3.get_current_data_size())
 
 print('- - - - - - - - - - - - - - - - - - -')
 
-uav1.forward_data()
+uav1.forward_data(time_step=9)
 
 uav1.step(current_time=2)
 uav2.step(current_time=2)
