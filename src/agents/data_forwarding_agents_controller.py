@@ -1,6 +1,8 @@
 import math
 from dataclasses import dataclass, field
+from typing import List
 
+from src.agents.data_collecting_agent import DataCollectingAgent
 from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
@@ -11,14 +13,18 @@ from src.environment.devices.uav import UAV, UAVTask
 @dataclass
 class DataForwardingAgentsController:
     environment: Environment
-    agents: list[DataForwardingAgent]
+    forwarding_agents: list[DataForwardingAgent]
+    collecting_agents: list[DataCollectingAgent]
     num_of_episodes: int
     max_steps: int
     k: float
     max_energy: float
     beta: float
     max_delay: float
-    active_agents: list[DataForwardingAgent] = field(init=False, default_factory=list)
+    # a: float
+    # b: float
+    active_forwarding_agents: list[DataForwardingAgent] = field(init=False, default_factory=list)
+    # active_collecting_agents: list[DataCollectingAgent] = field(init=False, default_factory=list)
 
     def get_available_targets(self, agent) -> list[Device]:
         if not agent.uav.is_active(UAVTask.FORWARD) or not agent.uav.memory_model.has_data():
@@ -28,9 +34,9 @@ class DataForwardingAgentsController:
             return base_stations
         return self.environment.get_in_range(agent.uav, device_type=UAV)
 
-    def get_available_agents(self):
+    def get_available_forwarding_agents(self):
         available_agents = []
-        for agent in self.agents:
+        for agent in self.forwarding_agents:
             if agent.has_forward_task():
                 continue
             agent.forward_targets = self.get_available_targets(agent)
@@ -38,7 +44,7 @@ class DataForwardingAgentsController:
                 available_agents.append(agent)
         return available_agents
 
-    def take_action(self, agent):
+    def take_forwarding_action(self, agent):
         if agent.action < len(self.environment.base_stations):
             target = self.environment.base_stations[agent.current_action]
         else:
@@ -46,7 +52,7 @@ class DataForwardingAgentsController:
             target.assign_receiving_data_task()
         agent.uav.assign_forward_data_task(data_to_forward=agent.uav.memory_model.memory.current_size,
                                            forward_data_target=target)
-        self.active_agents.append(agent)
+        self.active_forwarding_agents.append(agent)
 
     def get_delay_penalty(self, delay: float) -> float:
         return 1 / (1 + math.exp(-self.k * (delay - self.max_delay)))
@@ -57,10 +63,14 @@ class DataForwardingAgentsController:
     def get_pdr_reward(self, pdr: float):
         return self.beta * pdr
 
+    # def get_data_variance(self, uav: UAV):
+    #     return self.environment.get_data_way_points_variance(uav)
+
     def update_agents_rewards(self):
-        agents = [agent for agent in self.active_agents if not agent.has_forward_task()]
-        for agent in agents:
-            self.active_agents.remove(agent)
+        forwarding_agents = [agent for agent in self.active_forwarding_agents if not agent.has_forward_task()]
+        # collecting_agents = [agent for agent in self.active_collecting_agents if not agent.has_collect_task()]
+        for agent in forwarding_agents:
+            self.active_forwarding_agents.remove(agent)
             pdr = agent.uav.pdr
             consumed_energy = agent.uav.consumed_energy
             end_to_end_delay = agent.uav.end_to_end_delay
@@ -68,29 +78,43 @@ class DataForwardingAgentsController:
             consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
             delay_penalty = self.get_delay_penalty(end_to_end_delay)
             agent.current_reward = pdr_reward - delay_penalty - consumed_energy_penalty
+        # for agent in collecting_agents:
+        #     self.active_collecting_agents.remove(agent)
+        #     consumed_energy = agent.uav.consumed_energy
+        #     data_variance = self.get_data_variance(agent.uav)
+        #     agent.current_reward = self.a * consumed_energy + self.b * data_variance
+
+    def get_available_collecting_agents(self) -> List:
+        return [agent for agent in self.collecting_agents if agent.need_collecting_task()]
 
     def run_multi_agents(self):
         for episode in range(self.num_of_episodes):
             self.environment.reset()
-            for agent in self.agents:
+            for agent in self.forwarding_agents:
                 agent.initialize_for_episode()
+            # for agent in self.collecting_agents:
+            #     agent.initialize_for_episode()
             steps = 0
             while not self.environment.has_ended() and steps <= self.max_steps:
                 steps += 1
                 self.update_agents_rewards()
-                agents = self.get_available_agents()
-                for agent in agents:
+                self.environment.step()
+                forwarding_agents = self.get_available_forwarding_agents()
+                collecting_agents = self.get_available_collecting_agents()
+                for agent in collecting_agents:
+                    agent.take_random_collecting_action()
+                for agent in forwarding_agents:
                     agent.steps += 1
                     agent.current_state = agent.get_current_state(
                         uavs_in_range=self.environment.get_in_range(agent.uav, device_type=UAV),
                         uavs=self.environment.uavs)
                     agent.action = agent.get_current_action()
                     agent.update_experience()
-                    self.take_action(agent)
-                for agent in agents:
+                    self.take_forwarding_action(agent)
+                for agent in forwarding_agents:
                     agent.replay()
                     agent.update_target_network()
                     agent.save_weights(episode)
-            for agent in self.agents:
+            for agent in self.forwarding_agents:
                 agent.update_epsilon()
                 agent.episodes_rewards.append(agent.episode_return)

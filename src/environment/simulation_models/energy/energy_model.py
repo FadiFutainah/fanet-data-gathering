@@ -13,7 +13,7 @@ class EnergyModel:
     power_amplifier_for_amp: float = 1
     scale: float = 1
 
-    def get_collecting_data_energy(self, data_transition: DataTransition, network_coverage_radius: float) -> float:
+    def get_data_transition_energy(self, data_transition: DataTransition, network_coverage_radius: float) -> float:
         k = data_transition.size
         threshold = self.distance_threshold * network_coverage_radius
         distance = data_transition.source.position.distance_from(data_transition.destination.position)

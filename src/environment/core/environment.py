@@ -1,7 +1,8 @@
-import logging
 from typing import List
 from copy import deepcopy
 from dataclasses import dataclass, field
+
+import numpy as np
 
 from src.environment.devices.device import Device
 from src.environment.devices.uav import UAV, UAVTask
@@ -19,7 +20,6 @@ class Environment:
     base_stations: List[BaseStation] = field(default_factory=list)
     run_until: int = 100
     time_step: int = field(init=False, default=0)
-    real_time: int = field(init=False, default=0)
 
     def __post_init__(self) -> None:
         self.initial_state = deepcopy(self)
@@ -84,3 +84,12 @@ class Environment:
             if uav != device and uav.in_range(device):
                 neighbours.append(device)
         return neighbours
+
+    def get_data_way_points_variance(self, uav: UAV):
+        data = []
+        for i, way_point in enumerate(uav.way_points):
+            data.append(0)
+            for sensor in self.sensors:
+                if way_point.position.distance_from(sensor.position) <= uav.network_model.coverage_radius:
+                    data[i] += sensor.get_current_data_size()
+        return np.var(data)

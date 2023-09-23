@@ -41,7 +41,7 @@ class Device(PhysicalObject):
                       time_step: int, speed: int = 0) -> DataTransition:
         data_transition = self.network_model.transfer_data(source=self, destination=device, transfer_type=transfer_type,
                                                            data_size=data_size, speed=speed, time_step=time_step)
-        energy = self.energy_model.get_collecting_data_energy(
+        energy = self.energy_model.get_data_transition_energy(
             network_coverage_radius=self.network_model.coverage_radius, data_transition=data_transition)
         self.consume_energy(energy)
         device.consume_energy(energy)
@@ -59,3 +59,7 @@ class Device(PhysicalObject):
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         self.memory_model.step(time_step_size)
         self.network_model.step()
+
+    def move_to_next_position(self, delta_t: int = 1) -> None:
+        super().move_to_next_position(delta_t)
+        self.network_model.center = self.position
