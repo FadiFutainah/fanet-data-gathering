@@ -16,17 +16,26 @@ class DataForwardingState:
     uav: UAV
     uavs: List[UAV]
     neighbouring_uavs: List[UAV]
+    base_stations: List[BaseStation]
+    neighbouring_base_stations: List[BaseStation]
 
     def get(self):
         state = []
         uav_positions = []
+        base_stations = []
         for uav in self.uavs:
             if uav in self.neighbouring_uavs:
                 uav_positions.append(uav.current_way_point)
             else:
                 uav_positions.append(-1)
+        for base_station in self.base_stations:
+            if base_station in self.neighbouring_uavs:
+                base_stations.append(base_station.id)
+            else:
+                base_stations.append(-1)
         state.append(self.uav.current_way_point)
         state.extend(uav_positions)
+        state.extend(base_stations)
         state.append(self.uav.consumed_energy)
         state.append(self.uav.num_of_collected_packets)
         state.append(self.uav.get_occupancy_percentage())
@@ -74,29 +83,17 @@ class DataForwardingAgent:
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam())
         return model
 
-    def initialize_for_episode(self):
+    def initialize_for_episode(self, uav: UAV) -> None:
         self.steps = 0
         self.episode_return = 0
+        self.uav = uav
 
     def update_episode_return(self):
         self.episode_return += self.current_reward
 
-    def get_current_state(self, uavs_in_range: list, uavs: list):
-        return DataForwardingState(self.uav, uavs_in_range, uavs)
-
-    def get_available_actions(self) -> List[int]:
-        if self.forward_targets[0] is BaseStation:
-            actions = [i for i in range(len(self.forward_targets))]
-        else:
-            actions = [self.action_size - 1 - i for i in range(len(self.forward_targets))]
-        return actions
-
-    def get_current_action(self):
-        if np.random.rand() < self.epsilon:
-            actions = self.get_available_actions()
-            return random.choice(actions)
-        else:
-            return np.argmax(self.model.predict(np.array(self.current_state.get()), verbose=0)[0])
+    def get_current_state(self, uavs_in_range: list, uavs: list, base_stations: list, neighbouring_base_stations: list):
+        return DataForwardingState(uav=self.uav, neighbouring_uavs=uavs_in_range, uavs=uavs,
+                                   neighbouring_base_stations=neighbouring_base_stations, base_stations=base_stations)
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
@@ -116,6 +113,9 @@ class DataForwardingAgent:
 
     def has_forward_task(self) -> bool:
         return self.uav.is_active(UAVTask.FORWARD)
+
+    def has_receiving_task(self) -> bool:
+        return self.uav.is_active(UAVTask.RECEIVE)
 
     def update_target_network(self):
         if self.steps % self.target_update_freq == 0:

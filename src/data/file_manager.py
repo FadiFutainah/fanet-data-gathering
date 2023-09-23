@@ -2,6 +2,7 @@ import copy
 import os
 from dataclasses import dataclass, field
 from typing import Any, List, Tuple
+from copy import deepcopy
 
 import pandas as pd
 
@@ -62,10 +63,11 @@ class FileManager:
             packet_life_time = row['packet life time']
             packet_size = row['packet size']
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                            memory_model=self.memory_models[0], network_model=self.network_models[0],
+                            memory_model=self.memory_models[0], network_model=deepcopy(self.network_models[0]),
                             num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
                             packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=0,
                             energy_model=self.energy_model)
+            # sensor.network_model.center = sensor.position
             sensors.append(sensor)
         return sensors
 
@@ -78,9 +80,11 @@ class FileManager:
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
             base_station = BaseStation(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                                       memory_model=self.memory_models[1], network_model=self.network_models[1],
+                                       memory_model=self.memory_models[1],
+                                       network_model=deepcopy(self.network_models[1]),
                                        consumed_energy=0, num_of_collected_packets=0,
                                        energy_model=self.energy_model)
+            # base_station.network_model.center = base_station.position
             base_stations.append(base_station)
         return base_stations
 
@@ -95,9 +99,10 @@ class FileManager:
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
             speed = row['speed']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                      memory_model=self.memory_models[2], network_model=self.network_models[2],
+                      memory_model=self.memory_models[2], network_model=deepcopy(self.network_models[2]),
                       energy_model=self.energy_model, num_of_collected_packets=0, way_points=[],
                       speed=speed, consumed_energy=0)
+            # uav.network_model.center = uav.position
             uavs.append(uav)
         for index, row in way_points_table.iterrows():
             position = Vector(row['x'], row['y'], row['z'])

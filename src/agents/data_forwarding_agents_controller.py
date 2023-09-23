@@ -1,4 +1,9 @@
+import random
 import math
+from operator import index
+
+import numpy as np
+
 from dataclasses import dataclass, field
 from typing import List
 
@@ -7,14 +12,14 @@ from src.agents.data_forwarding_agent import DataForwardingAgent
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.device import Device
-from src.environment.devices.uav import UAV, UAVTask
+from src.environment.devices.uav import UAV
 
 
 @dataclass
 class DataForwardingAgentsController:
     environment: Environment
-    forwarding_agents: list[DataForwardingAgent]
-    collecting_agents: list[DataCollectingAgent]
+    forwarding_agents: List[DataForwardingAgent]
+    collecting_agents: List[DataCollectingAgent]
     num_of_episodes: int
     max_steps: int
     k: float
@@ -23,11 +28,13 @@ class DataForwardingAgentsController:
     max_delay: float
     # a: float
     # b: float
-    active_forwarding_agents: list[DataForwardingAgent] = field(init=False, default_factory=list)
+    active_forwarding_agents: List[DataForwardingAgent] = field(init=False, default_factory=list)
+
     # active_collecting_agents: list[DataCollectingAgent] = field(init=False, default_factory=list)
 
     def get_available_targets(self, agent) -> list[Device]:
-        if not agent.uav.is_active(UAVTask.FORWARD) or not agent.uav.memory_model.has_data():
+        # if not agent.uav.is_active(UAVTask.FORWARD) or not agent.uav.memory_model.has_data():
+        if not agent.uav.memory_model.has_data():
             return []
         base_stations = self.environment.get_in_range(agent.uav, device_type=BaseStation)
         if len(base_stations) != 0:
@@ -37,7 +44,7 @@ class DataForwardingAgentsController:
     def get_available_forwarding_agents(self):
         available_agents = []
         for agent in self.forwarding_agents:
-            if agent.has_forward_task():
+            if agent.has_forward_task() or agent.has_receiving_task():
                 continue
             agent.forward_targets = self.get_available_targets(agent)
             if len(agent.forward_targets) > 0:
@@ -46,9 +53,9 @@ class DataForwardingAgentsController:
 
     def take_forwarding_action(self, agent):
         if agent.action < len(self.environment.base_stations):
-            target = self.environment.base_stations[agent.current_action]
+            target = self.environment.base_stations[agent.action]
         else:
-            target = self.environment.uavs[agent.current_action - len(self.environment.base_stations)]
+            target = self.environment.uavs[agent.action - len(self.environment.base_stations)]
             target.assign_receiving_data_task()
         agent.uav.assign_forward_data_task(data_to_forward=agent.uav.memory_model.memory.current_size,
                                            forward_data_target=target)
@@ -78,6 +85,8 @@ class DataForwardingAgentsController:
             consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
             delay_penalty = self.get_delay_penalty(end_to_end_delay)
             agent.current_reward = pdr_reward - delay_penalty - consumed_energy_penalty
+            if agent.uav.forward_data_target is BaseStation:
+                agent.current_reward += 1000
         # for agent in collecting_agents:
         #     self.active_collecting_agents.remove(agent)
         #     consumed_energy = agent.uav.consumed_energy
@@ -87,11 +96,32 @@ class DataForwardingAgentsController:
     def get_available_collecting_agents(self) -> List:
         return [agent for agent in self.collecting_agents if agent.need_collecting_task()]
 
+    def get_available_actions(self, agent) -> List[int]:
+        actions = []
+        if type(agent.forward_targets[0]) is BaseStation:
+            for base_station in agent.forward_targets:
+                actions.append(self.environment.base_stations.index(base_station))
+        else:
+            for i, uav in enumerate(agent.forward_targets):
+                if uav is agent.uav:
+                    continue
+                actions.append(agent.action_size - 1 - self.environment.uavs.index(uav))
+        return actions
+
+    def get_current_action(self, agent):
+        if np.random.rand() < agent.epsilon * 0.000000001:
+            actions = self.get_available_actions(agent)
+            return random.choice(actions)
+        else:
+            return np.argmax(agent.model.predict(np.array(agent.current_state.get()), verbose=0)[0])
+
     def run_multi_agents(self):
         for episode in range(self.num_of_episodes):
             self.environment.reset()
-            for agent in self.forwarding_agents:
-                agent.initialize_for_episode()
+            for uav, agent in zip(self.environment.uavs, self.forwarding_agents):
+                agent.initialize_for_episode(uav)
+            for uav, agent in zip(self.environment.uavs, self.collecting_agents):
+                agent.initialize_for_episode(uav)
             # for agent in self.collecting_agents:
             #     agent.initialize_for_episode()
             steps = 0
@@ -107,8 +137,10 @@ class DataForwardingAgentsController:
                     agent.steps += 1
                     agent.current_state = agent.get_current_state(
                         uavs_in_range=self.environment.get_in_range(agent.uav, device_type=UAV),
-                        uavs=self.environment.uavs)
-                    agent.action = agent.get_current_action()
+                        uavs=self.environment.uavs,
+                        neighbouring_base_stations=self.environment.get_in_range(agent.uav, device_type=BaseStation),
+                        base_stations=self.environment.base_stations)
+                    agent.action = self.get_current_action(agent)
                     agent.update_experience()
                     self.take_forwarding_action(agent)
                 for agent in forwarding_agents:

@@ -22,6 +22,13 @@ class Device(PhysicalObject):
     def __post_init__(self) -> None:
         self.network_model.center = self.position
 
+    def move_to_next_position(self, delta_t: int = 1) -> None:
+        super().move_to_next_position(delta_t)
+        self.centralize_network()
+
+    def centralize_network(self) -> None:
+        self.network_model.center = self.position
+
     def __str__(self) -> str:
         return f'{type(self).__name__} {self.id}'
 
@@ -59,7 +66,3 @@ class Device(PhysicalObject):
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         self.memory_model.step(time_step_size)
         self.network_model.step()
-
-    def move_to_next_position(self, delta_t: int = 1) -> None:
-        super().move_to_next_position(delta_t)
-        self.network_model.center = self.position

@@ -51,10 +51,16 @@ class Environment:
         self.time_step += self.speed_rate
         # logging.info(f'{self.time_step}')
         for sensor in self.sensors:
+            assert sensor.network_model.center == sensor.position, f'the network model {sensor.network_model.center} ' \
+                                                                   f'does not equal {sensor} position {sensor.position}'
             sensor.step(current_time=self.time_step)
         for base_station in self.base_stations:
+            assert base_station.network_model.center == base_station.position, f'the network model {base_station.network_model.center} ' \
+                                                                               f'does not equal {base_station} position {base_station.position}'
             base_station.step(current_time=self.time_step)
         for uav in self.uavs:
+            # assert uav.network_model.center == uav.position, f'the network model {uav.network_model.center} ' \
+            #                                                  f'does not equal {uav} position {uav.position}'
             uav.step(current_time=self.time_step)
             self.run_uav_task(uav)
 
@@ -71,6 +77,12 @@ class Environment:
         self.uavs = deepcopy(self.initial_state.uavs)
         self.sensors = deepcopy(self.initial_state.sensors)
         self.base_stations = deepcopy(self.initial_state.base_stations)
+        # for uav in self.uavs:
+        #     uav.centralize_network()
+        # for sensor in self.sensors:
+        #     sensor.centralize_network()
+        # for base_station in self.base_stations:
+        #     base_station.centralize_network()
 
     def get_in_range(self, uav: UAV, device_type: type) -> List[Device]:
         neighbours = []

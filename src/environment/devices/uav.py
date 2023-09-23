@@ -36,13 +36,14 @@ class UAV(Device):
     end_to_end_delay: int = field(init=False, default=0)
 
     def __post_init__(self):
+        super().__post_init__()
         self.activate_task(UAVTask.MOVE)
 
     def add_way_point(self, position: Vector, collection_rate=0, active=False) -> None:
         self.way_points.append(WayPoint(position=position, collection_rate=collection_rate, active=active))
 
     def activate_task(self, task: UAVTask) -> None:
-        assert self.tasks.get(task) is False or self.tasks.get(task) is None, 'cannot activate the same task twice'
+        assert self.tasks.get(task) is False or self.tasks.get(task) is None, f'{task} is already activated'
         self.tasks[task] = True
 
     def deactivate_task(self, task: UAVTask) -> None:
@@ -89,6 +90,7 @@ class UAV(Device):
         speed = self.forward_data_target.network_model.bandwidth // 10
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
                                                 transfer_type=TransferType.SEND, time_step=time_step, speed=speed)
+        assert data_transition is not None, "data_transition should not be None"
         forwarded_data = data_size_before_transition - self.get_current_data_size()
         self.data_to_forward -= forwarded_data
         self.pdr += forwarded_data

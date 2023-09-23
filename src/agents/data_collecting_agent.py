@@ -67,19 +67,20 @@ class DataCollectingAgent:
     def __post_init__(self):
         self.collection_rates = [0] * len(self.uav.way_points)
 
-    def initialize_for_episode(self):
+    def initialize_for_episode(self, uav):
         self.steps = 0
         self.episode_return = 0
+        self.uav = uav
 
     def has_collect_task(self):
         return self.uav.is_active(UAVTask.COLLECT)
 
     def need_collecting_task(self) -> bool:
-        return self.uav.way_points[self.uav.current_way_point].collection_rate == 0
+        return self.collection_rates[self.uav.current_way_point] == 0
 
     def take_random_collecting_action(self):
         collection_rate = random.choice([32, 64, 128])
-        do_collect = random.choice([0, 1])
+        do_collect = random.choice([1])
         self.collection_rates[self.uav.current_way_point] = collection_rate
         self.action = DataCollectingAction(collection_rate=collection_rate, do_collect=bool(do_collect))
         self.uav.assign_collection_rate(self.uav.current_way_point, self.action.collection_rate)

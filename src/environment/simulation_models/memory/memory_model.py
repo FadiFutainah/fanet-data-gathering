@@ -11,6 +11,9 @@ class MemoryModel:
     receiving_buffer: Memory
     memory: Memory
 
+    def has_data(self) -> bool:
+        return self.memory.has_data()
+
     def move_to_buffer_queue(self, data_size: int) -> None:
         data_size = min(data_size, self.sending_buffer.io_speed)
         self.memory.move_to(other=self.sending_buffer, data_size=data_size)
