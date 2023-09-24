@@ -1,6 +1,5 @@
 import random
 import math
-from operator import index
 
 import numpy as np
 
@@ -44,7 +43,7 @@ class DataForwardingAgentsController:
     def get_available_forwarding_agents(self):
         available_agents = []
         for agent in self.forwarding_agents:
-            if agent.has_forward_task() or agent.has_receiving_task():
+            if agent.is_busy():
                 continue
             agent.forward_targets = self.get_available_targets(agent)
             if len(agent.forward_targets) > 0:
@@ -57,6 +56,7 @@ class DataForwardingAgentsController:
         else:
             target = self.environment.uavs[agent.action - len(self.environment.base_stations)]
             target.assign_receiving_data_task()
+        assert agent.uav.in_range(target), f'{agent.uav} must be in range of the {target} {agent.action}'
         agent.uav.assign_forward_data_task(data_to_forward=agent.uav.memory_model.memory.current_size,
                                            forward_data_target=target)
         self.active_forwarding_agents.append(agent)
@@ -98,18 +98,19 @@ class DataForwardingAgentsController:
 
     def get_available_actions(self, agent) -> List[int]:
         actions = []
+        # print(agent.uav, agent.forward_targets)
+        # print('= = = = = = = = = = = = = = = = = = =')
         if type(agent.forward_targets[0]) is BaseStation:
             for base_station in agent.forward_targets:
                 actions.append(self.environment.base_stations.index(base_station))
         else:
-            for i, uav in enumerate(agent.forward_targets):
-                if uav is agent.uav:
-                    continue
-                actions.append(agent.action_size - 1 - self.environment.uavs.index(uav))
+            for uav in agent.forward_targets:
+                actions.append(self.environment.uavs.index(uav) + len(self.environment.base_stations))
+        # print(agent.uav, actions)
         return actions
 
     def get_current_action(self, agent):
-        if np.random.rand() < agent.epsilon * 0.000000001:
+        if np.random.rand() < agent.epsilon:
             actions = self.get_available_actions(agent)
             return random.choice(actions)
         else:
@@ -127,6 +128,8 @@ class DataForwardingAgentsController:
             steps = 0
             while not self.environment.has_ended() and steps <= self.max_steps:
                 steps += 1
+                print('\r> DQN: Episode {} / {}, step: {} / {}'.format(episode + 1, self.num_of_episodes, steps,
+                                                                       self.max_steps), end='')
                 self.update_agents_rewards()
                 self.environment.step()
                 forwarding_agents = self.get_available_forwarding_agents()
@@ -142,6 +145,8 @@ class DataForwardingAgentsController:
                         base_stations=self.environment.base_stations)
                     agent.action = self.get_current_action(agent)
                     agent.update_experience()
+                    # print(agent.action)
+                    # print('- - - - - - - - - - - - - - - - - - - -')
                     self.take_forwarding_action(agent)
                 for agent in forwarding_agents:
                     agent.replay()

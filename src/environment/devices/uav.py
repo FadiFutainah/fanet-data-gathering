@@ -30,7 +30,7 @@ class UAV(Device):
     current_way_point: int = field(default=0, init=False)
     forward_data_target: Device = field(init=False, default=None)
     data_transitions: List[DataTransition] = field(default_factory=list)
-    tasks: dict[UAVTask, bool] = field(init=False, default_factory=dict)
+    tasks: dict[UAVTask, int] = field(init=False, default_factory=dict)
     steps_to_move: int = field(init=False, default=0)
     pdr: int = field(init=False, default=0)
     end_to_end_delay: int = field(init=False, default=0)
@@ -43,17 +43,17 @@ class UAV(Device):
         self.way_points.append(WayPoint(position=position, collection_rate=collection_rate, active=active))
 
     def activate_task(self, task: UAVTask) -> None:
-        assert self.tasks.get(task) is False or self.tasks.get(task) is None, f'{task} is already activated'
-        self.tasks[task] = True
+        assert task == UAVTask.RECEIVE or self.tasks.get(task, 0) == 0, f'{task} is already activated'
+        self.tasks[task] = self.tasks.get(task, 0) + 1
 
     def deactivate_task(self, task: UAVTask) -> None:
-        assert self.tasks.get(task) is True, 'the task is already not active'
-        self.tasks[task] = False
+        assert self.tasks.get(task) is not None and self.tasks.get(task) > 0, f'{task} is not active'
+        self.tasks[task] = self.tasks.get(task) - 1
 
     def is_active(self, task: UAVTask) -> bool:
         if self.tasks.get(task) is None:
             return False
-        return self.tasks[task]
+        return self.tasks[task] > 0
 
     def update_velocity(self, run_in_loop: bool = False) -> None:
         if not run_in_loop and self.current_way_point + 1 >= len(self.way_points):
@@ -90,14 +90,13 @@ class UAV(Device):
         speed = self.forward_data_target.network_model.bandwidth // 10
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
                                                 transfer_type=TransferType.SEND, time_step=time_step, speed=speed)
-        assert data_transition is not None, "data_transition should not be None"
         forwarded_data = data_size_before_transition - self.get_current_data_size()
         self.data_to_forward -= forwarded_data
         self.pdr += forwarded_data
         self.end_to_end_delay += data_transition.delay_time
-        if type(self.forward_data_target) is UAV:
-            new_collection_rate = self.forward_data_target.get_current_collection_rate() - data_transition.size
-            self.forward_data_target.set_current_collection_rate(max(0, new_collection_rate))
+        # if type(self.forward_data_target) is UAV:
+        #     new_collection_rate = self.forward_data_target.get_current_collection_rate() - data_transition.size
+        #     self.forward_data_target.set_current_collection_rate(max(0, new_collection_rate))
         if self.data_to_forward <= 0:
             self.deactivate_task(UAVTask.FORWARD)
             if type(self.forward_data_target) is UAV:
@@ -131,7 +130,7 @@ class UAV(Device):
 
     def has_active_tasks(self) -> bool:
         for v in self.tasks.values():
-            if v is True:
+            if v > 0:
                 return True
         return False
 

@@ -50,8 +50,9 @@ class NetworkModel:
                       speed: int = 0):
         connection = self.get_connection(destination)
         if connection is None:
-            if not source.in_range(destination):
-                return None
+            # if not source.in_range(destination):
+            #     return None
+            assert source.in_range(destination), f'{destination} must be in range of the {source}'
             connection = self.connect(source, destination, speed)
         return connection.run(data_size, transfer_type, time_step)
 

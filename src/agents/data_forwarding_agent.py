@@ -39,7 +39,7 @@ class DataForwardingState:
         state.append(self.uav.consumed_energy)
         state.append(self.uav.num_of_collected_packets)
         state.append(self.uav.get_occupancy_percentage())
-        return [state]
+        return state
 
 
 @dataclass
@@ -116,6 +116,9 @@ class DataForwardingAgent:
 
     def has_receiving_task(self) -> bool:
         return self.uav.is_active(UAVTask.RECEIVE)
+
+    def is_busy(self) -> bool:
+        return self.has_forward_task() or self.has_receiving_task() or self.uav.steps_to_move > 0
 
     def update_target_network(self):
         if self.steps % self.target_update_freq == 0:

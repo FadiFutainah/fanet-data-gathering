@@ -34,15 +34,15 @@ class EnvironmentController:
             #     if point.collection_rate != 0:
             #         uav.assign_collect_data_task(i)
         agents_controller = DataForwardingAgentsController(environment=environment, forwarding_agents=forwarding_agents,
-                                                           num_of_episodes=1, collecting_agents=collecting_agents,
+                                                           num_of_episodes=40, collecting_agents=collecting_agents,
                                                            max_steps=100, max_delay=50, max_energy=100, k=1, beta=1)
         if run_type == 'plot':
-            plot_environment = PlotEnvironment(env=environment, close_on_done=True)
+            plot_environment = PlotEnvironment(env=environment, close_on_done=False)
             plot_environment.run()
         elif run_type == 'dqn-forward':
             agents_controller.run_multi_agents()
         else:
-            raise Exception('unknown run type!!')
+            raise ValueError('unknown run type!!')
 
     @staticmethod
     def num_of_generated_packets(environment) -> int:

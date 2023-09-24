@@ -31,13 +31,13 @@ energy_model = EnergyModel(e_elec=1, c=1, delta=1, scale=1,
                            distance_threshold=1,
                            power_amplifier_for_fs=1,
                            power_amplifier_for_amp=1)
-protocol = ConnectionProtocol(data_loss_percentage=3, data_loss_probability=3, initialization_data_size=950)
+protocol = ConnectionProtocol(data_loss_percentage=3, data_loss_probability=3, initialization_data_size=7)
 
 network_model = NetworkModel(center=Vector(0, 0, 0), bandwidth=1000, coverage_radius=30, protocol=protocol)
 
 uav1 = UAV(position=Vector(0, 0, 0), velocity=Vector(1, 1, 2), acceleration=Vector(0, 0, 0), id=1,
            memory_model=deepcopy(memory_model1), network_model=deepcopy(network_model), num_of_collected_packets=0,
-           consumed_energy=0, way_points=[WayPoint(position=Vector(0, 0, 0))], energy_model=energy_model)
+           consumed_energy=0, way_points=[WayPoint(position=Vector(0, 0, 0))], energy_model=energy_model, speed=1)
 
 uav2 = deepcopy(uav1)
 uav3 = deepcopy(uav1)
@@ -118,41 +118,47 @@ base_stations = [base_station]
 # forward between uav and uav
 
 uav1.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 50)
-uav2.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 50)
+# uav2.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 50)
 
-uav1.assign_forward_data_task(forward_data_target=uav2, data_to_forward=50)
-uav2.assign_forward_data_task(forward_data_target=uav3, data_to_forward=50)
+uav1.assign_forward_data_task(forward_data_target=base_station, data_to_forward=50)
+# uav2.assign_forward_data_task(forward_data_target=uav3, data_to_forward=50)
 
-uav2.assign_receiving_data_task()
-uav3.assign_receiving_data_task()
+# uav2.assign_receiving_data_task()
+# uav3.assign_receiving_data_task()
 
 print('u1:', uav1.get_current_data_size())
-print('u2:', uav2.get_current_data_size())
-print('u3:', uav3.get_current_data_size())
+print('b1:', base_station.get_current_data_size())
+# print('u2:', uav2.get_current_data_size())
+# print('u3:', uav3.get_current_data_size())
 
 print('- - - - - - - - - - - - - - - - - - -')
 
 uav1.forward_data(time_step=9)
 
 uav1.step(current_time=2)
-uav2.step(current_time=2)
-uav3.step(current_time=2)
+base_station.step(current_time=2)
+# uav2.step(current_time=2)
+# uav3.step(current_time=2)
 
 print('u1:', uav1.get_current_data_size())
-print('u2:', uav2.get_current_data_size())
-print('u3:', uav3.get_current_data_size())
+print('b1:', base_station.get_current_data_size())
+# print('u2:', uav2.get_current_data_size())
+# print('u3:', uav3.get_current_data_size())
 
 print('- - - - - - - - - - - - - - - - - - -')
 
-uav2.forward_data(time_step=1)
+# uav2.forward_data(time_step=1)
 
 uav1.step(current_time=2)
-uav2.step(current_time=2)
-uav3.step(current_time=2)
+base_station.step(current_time=2)
+# uav2.step(current_time=2)
+# uav3.step(current_time=2)
 
 print('u1:', uav1.get_current_data_size())
-print('u2:', uav2.get_current_data_size())
-print('u3:', uav3.get_current_data_size())
+print('b1:', base_station.get_current_data_size())
+
+# print('u2:', uav2.get_current_data_size())
+# print('u3:', uav3.get_current_data_size())
 
 # forward between uav and basestation
 # uav1.store_data_in_memory([DataPacket(size=10, life_time=10, arrival_time=1)] * 100)
