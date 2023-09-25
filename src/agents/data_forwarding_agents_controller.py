@@ -176,3 +176,5 @@ class DataForwardingAgentsController:
                     agent.update_target_network()
                     # agent.save_weights(episode)
                     agent.episodes_rewards.append(experience[2])
+        for agent in self.forwarding_agents:
+            agent.save_reward_as_a_plot()

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import random
 from typing import List, Any
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.environment.devices.base_station import BaseStation
@@ -88,6 +89,9 @@ class DataForwardingAgent:
         self.model = self.create_model()
         self.target_model = tf.keras.models.clone_model(self.model)
 
+    def __str__(self):
+        return self.uav.__str__()
+
     def create_model(self):
         num_units = 24
         model = tf.keras.Sequential()
@@ -96,6 +100,16 @@ class DataForwardingAgent:
         model.add(tf.keras.layers.Dense(self.action_size))
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam())
         return model
+
+    def save_reward_as_a_plot(self):
+        chunk_size = 2
+        y_points = np.array([])
+        for chunk in range(len(self.episodes_rewards) // chunk_size):
+            avg = np.sum(self.episodes_rewards[chunk * chunk_size: chunk * chunk_size + chunk_size]) / chunk_size
+            y_points = np.append(y_points, avg)
+        x_points = np.arange(0, len(self.episodes_rewards) // chunk_size)
+        plt.plot(x_points, y_points)
+        plt.savefig(f'data/output/results-of-agent-{self}-{id(self)}.png')
 
     def initialize_for_episode(self, uav: UAV) -> None:
         self.steps = 0
