@@ -1,14 +1,34 @@
+import math
+
 import tensorflow as tf
 
 from dataclasses import dataclass, field
 import random
-
 from typing import List, Any
 
 import numpy as np
 
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.uav import UAV, UAVTask
+from src.environment.simulation_models.memory.data_packet import DataPacket
+
+
+@dataclass
+class ForwardingRewardObject:
+    time_sent: int
+    packets_sent: List[DataPacket]
+    delay_time: int = 0
+    num_of_packets_received: int = 0
+    energy_consumed: int = 0
+
+    def get_delay_penalty(self, delay: float) -> float:
+        return 1 / (1 + math.exp(-self.k * (delay - self.max_delay)))
+
+    def get_energy_penalty(self, energy: float) -> float:
+        return 1 / (1 + math.exp(-self.k * (energy - self.max_energy)))
+
+    def get_pdr_reward(self, pdr: float):
+        return self.beta * pdr
 
 
 @dataclass
@@ -49,6 +69,7 @@ class DataForwardingAgent:
     steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
     forward_targets: list = field(init=False, default_factory=list)
+    episode_experiences: list = field(init=False, default_factory=list)
     model: Any = field(init=False)
     target_model: Any = field(init=False)
     memory: list = field(init=False, default_factory=list)
@@ -65,7 +86,7 @@ class DataForwardingAgent:
     current_reward: float = 0
     wins: int = 0
     episode_return: int = 0
-    last_state: DataForwardingState = None
+    reward_object: ForwardingRewardObject = None
     current_state: DataForwardingState = None
     action: int = -1
     reward: int = 0
@@ -87,6 +108,7 @@ class DataForwardingAgent:
         self.steps = 0
         self.episode_return = 0
         self.uav = uav
+        self.episode_experiences.clear()
 
     def update_episode_return(self):
         self.episode_return += self.current_reward
@@ -102,13 +124,17 @@ class DataForwardingAgent:
         self.reward = reward
         self.episode_return += reward
 
-    def update_experience(self):
-        if self.last_state is None:
-            self.last_state = self.current_state
-            return
-        if self.reward is None:
-            return
-        experience = (self.last_state.get(), self.action, self.reward, self.current_state.get())
+    def add_experience(self):
+        # the shape of experience is (s[i], a[i], r, s[i+1])
+        # the shape of reward is (num_of_packets_sent, num_of_packets_received, time_sent, time_received)
+        experience = (self.current_state.get(), self.action, self.reward_object, None)
+        self.episode_experiences.append(experience)
+        length = len(self.episode_experiences)
+        if length > 1:
+            self.episode_experiences[length - 2][3] = self.current_state.get()
+        # self.memory.append(experience)
+
+    def remember(self, experience):
         self.memory.append(experience)
 
     def has_forward_task(self) -> bool:

@@ -57,9 +57,9 @@ class Connection:
         data_size = min(data_size, sender.memory_model.get_available_to_send())
         data_packets = sender.memory_model.fetch_data(data_size)
         data_packets, error_loss = self.get_packets_after_error(data_packets)
-        receiver.store_data(data_packets)
-        delay_time = 0
-        for packet in data_packets:
-            delay_time += time_step - packet.arrival_time
-            packet.arrival_time = time_step
+        receiver.store_data(data_packets, time_step=time_step)
+        # delay_time = 0
+        # for packet in data_packets:
+        #     delay_time += time_step - packet.arrival_time
+        #     packet.arrival_time = time_step
         return DataTransition(sender, receiver, data_packets, self.protocol, error_loss, delay_time)

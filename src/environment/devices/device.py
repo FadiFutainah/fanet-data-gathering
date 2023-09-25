@@ -57,7 +57,7 @@ class Device(PhysicalObject):
     def in_range(self, other: 'Device') -> bool:
         return self.network_model.in_range(other.position)
 
-    def store_data(self, data_packets: List[DataPacket], overwrite=False):
+    def store_data(self, data_packets: List[DataPacket], overwrite=False, time_step=0):
         self.memory_model.store_data(data_packets, overwrite)
 
     def store_data_in_memory(self, data_packets: List[DataPacket], overwrite=False):
