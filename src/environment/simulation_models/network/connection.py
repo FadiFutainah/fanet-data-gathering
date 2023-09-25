@@ -62,4 +62,4 @@ class Connection:
         # for packet in data_packets:
         #     delay_time += time_step - packet.arrival_time
         #     packet.arrival_time = time_step
-        return DataTransition(sender, receiver, data_packets, self.protocol, error_loss, delay_time)
+        return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)

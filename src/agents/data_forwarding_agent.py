@@ -1,5 +1,3 @@
-import math
-
 import tensorflow as tf
 
 from dataclasses import dataclass, field
@@ -21,15 +19,6 @@ class ForwardingRewardObject:
     num_of_packets_received: int = 0
     energy_consumed: int = 0
 
-    def get_delay_penalty(self, delay: float) -> float:
-        return 1 / (1 + math.exp(-self.k * (delay - self.max_delay)))
-
-    def get_energy_penalty(self, energy: float) -> float:
-        return 1 / (1 + math.exp(-self.k * (energy - self.max_energy)))
-
-    def get_pdr_reward(self, pdr: float):
-        return self.beta * pdr
-
 
 @dataclass
 class DataForwardingState:
@@ -38,6 +27,10 @@ class DataForwardingState:
     neighbouring_uavs: List[UAV]
     base_stations: List[BaseStation]
     neighbouring_base_stations: List[BaseStation]
+
+    @staticmethod
+    def get_empty_state():
+        return [0] * 8
 
     def get(self):
         state = []
@@ -127,7 +120,7 @@ class DataForwardingAgent:
     def add_experience(self):
         # the shape of experience is (s[i], a[i], r, s[i+1])
         # the shape of reward is (num_of_packets_sent, num_of_packets_received, time_sent, time_received)
-        experience = (self.current_state.get(), self.action, self.reward_object, None)
+        experience = [self.current_state.get(), self.action, self.reward_object, None]
         self.episode_experiences.append(experience)
         length = len(self.episode_experiences)
         if length > 1:

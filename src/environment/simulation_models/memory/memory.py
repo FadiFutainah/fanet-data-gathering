@@ -27,7 +27,7 @@ class Memory:
 
     def pop_prior_packet(self) -> DataPacket:
         data_packets = self.current_data.pop()
-        self.current_size -= data_packets.get_size()
+        self.current_size -= data_packets.size
         return data_packets
 
     def add_packet(self, data_packet: DataPacket) -> None:

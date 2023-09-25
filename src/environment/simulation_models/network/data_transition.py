@@ -19,7 +19,6 @@ class DataTransition:
     data: List[DataPacket]
     protocol: ConnectionProtocol
     data_loss: int
-    delay_time: int
     size: int = field(init=False)
 
     def __post_init__(self):

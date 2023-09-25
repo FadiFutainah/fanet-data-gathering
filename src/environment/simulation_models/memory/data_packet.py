@@ -16,3 +16,6 @@ class DataPacket:
 
     def reset_life_time(self) -> None:
         self.life_time = self.initial_life_time
+
+    def __hash__(self):
+        return hash(id(self))

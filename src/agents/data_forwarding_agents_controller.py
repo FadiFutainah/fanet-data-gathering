@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from src.agents.data_collecting_agent import DataCollectingAgent
-from src.agents.data_forwarding_agent import DataForwardingAgent, ForwardingRewardObject
+from src.agents.data_forwarding_agent import DataForwardingAgent, ForwardingRewardObject, DataForwardingState
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.device import Device
@@ -84,6 +84,9 @@ class DataForwardingAgentsController:
 
     def update_agents_rewards(self):
         for agent in self.forwarding_agents:
+            if len(agent.episode_experiences) == 0:
+                continue
+            agent.episode_experiences[len(agent.episode_experiences) - 1][3] = DataForwardingState.get_empty_state()
             for experience in agent.episode_experiences:
                 reward_object = experience[2]
                 for packet in reward_object.packets_sent:
@@ -91,10 +94,16 @@ class DataForwardingAgentsController:
                     if time_received != -1:
                         reward_object.num_of_packets_received += 1
                         reward_object.delay_time += time_received - reward_object.time_sent
-                experience[2] = reward_object.calculate_value()
-                pdr = reward_object.num_of_packets_received / len(reward_object.packets_sent)
+                # experience[2] = reward_object.calculate_value()
+                if len(reward_object.packets_sent) == 0:
+                    pdr = 0
+                else:
+                    pdr = reward_object.num_of_packets_received / len(reward_object.packets_sent)
                 # consumed_energy = agent.uav.consumed_energy
-                end_to_end_delay = reward_object.delay_time / reward_object.num_of_packets_received
+                if reward_object.num_of_packets_received == 0:
+                    end_to_end_delay = 0
+                else:
+                    end_to_end_delay = reward_object.delay_time / reward_object.num_of_packets_received
                 pdr_reward = self.get_pdr_reward(pdr)
                 # consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
                 delay_penalty = self.get_delay_penalty(end_to_end_delay)

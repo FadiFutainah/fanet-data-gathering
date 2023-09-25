@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List
 
 from src.environment.devices.device import Device
@@ -7,7 +7,7 @@ from src.environment.simulation_models.memory.data_packet import DataPacket
 
 @dataclass(order=True)
 class BaseStation(Device):
-    current_packets: Dict
+    current_packets: Dict = field(default_factory=dict, init=False)
 
     def get_packet_received_time(self, packet) -> int:
         return self.current_packets.get(packet)
