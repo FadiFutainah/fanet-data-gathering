@@ -73,7 +73,7 @@ for uav_id in range(NUM_OF_UAVS):
             f.write(f'{uav_id + 1},{point[0]},{point[1]},0,0\n')
     with open('data/generated/uavs', 'a') as f:
         f.write(
-            f'{selected_points[0][0]},{selected_points[0][1]},0,0,0,0,0,0,0,28800,10\n')
+            f'{selected_points[0][0]},{selected_points[0][1]},0,0,0,0,0,0,0,100,15\n')
     selected_points.clear()
 
 with open('data/generated/sensors', 'a') as f:

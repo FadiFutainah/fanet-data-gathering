@@ -1,2 +1,0 @@
-max_delay,max_energy,max_queue_length,beta,gamma_e,sigma_q,lambda_d,k
-10000,10000,10000,1,1,1,1,1.00E+18

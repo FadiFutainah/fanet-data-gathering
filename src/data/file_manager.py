@@ -44,8 +44,7 @@ class FileManager:
         for index, row in basic_variables_table.iterrows():
             data.append((row['width'], row['height'], row['speed rate'], row['run until']))
         for index, row in energy_model_table.iterrows():
-            energy_model = EnergyModel(e_elec=row['e_elec'], c=row['c'], delta=row['delta'], scale=row['scale'],
-                                       distance_threshold=row['distance_threshold'],
+            energy_model = EnergyModel(e_elec=row['e_elec'], distance_threshold=row['distance_threshold'],
                                        power_amplifier_for_fs=row['power_amplifier_for_fs'],
                                        power_amplifier_for_amp=row['power_amplifier_for_amp'])
             data[0] += (energy_model,)

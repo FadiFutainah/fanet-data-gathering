@@ -1,4 +1,4 @@
 bandwidth,coverage radius,data loss percentage,data loss probability,data init size
 0,0,0,0,10
-6400,30,20,1,8
-640,14,10,30,10
+500000,6500,20,1,8
+500000,6500,10,30,10

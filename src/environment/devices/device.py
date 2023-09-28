@@ -48,8 +48,7 @@ class Device(PhysicalObject):
                       time_step: int, speed: int = 0) -> DataTransition:
         data_transition = self.network_model.transfer_data(source=self, destination=device, transfer_type=transfer_type,
                                                            data_size=data_size, speed=speed, time_step=time_step)
-        energy = self.energy_model.get_data_transition_energy(
-            network_coverage_radius=self.network_model.coverage_radius, data_transition=data_transition)
+        energy = self.energy_model.get_data_transition_energy(data_transition=data_transition)
         self.consume_energy(energy)
         device.consume_energy(energy)
         return data_transition

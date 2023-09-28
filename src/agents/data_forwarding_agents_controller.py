@@ -19,6 +19,7 @@ class DataForwardingAgentsController:
     environment: Environment
     forwarding_agents: List[DataForwardingAgent]
     collecting_agents: List[DataCollectingAgent]
+
     num_of_episodes: int
     max_steps: int
     k: float
@@ -28,7 +29,6 @@ class DataForwardingAgentsController:
     # a: float
     # b: float
     active_forwarding_agents: List[DataForwardingAgent] = field(init=False, default_factory=list)
-
     # active_collecting_agents: list[DataCollectingAgent] = field(init=False, default_factory=list)
 
     def get_available_targets(self, agent) -> list[Device]:

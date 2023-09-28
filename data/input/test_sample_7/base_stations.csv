@@ -1,2 +1,4 @@
 x,y,z,x velocity,y velocity,z velocity,x acceleration,y acceleration,z acceleration,energy
-44,40,0,0,0,0,0,0,0,100000
+44,102,0,0,0,0,0,0,0,100000
+10,10,0,0,0,0,0,0,0,100000
+180,180,0,0,0,0,0,0,0,100000

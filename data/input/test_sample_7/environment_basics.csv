@@ -1,2 +1,2 @@
-height,width,speed rate,run until
-50,50,1,100
+height,width,frame rate,run until
+50000,50000,20,100

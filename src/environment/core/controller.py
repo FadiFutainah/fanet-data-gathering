@@ -23,12 +23,11 @@ class EnvironmentController:
         collecting_agents = []
         environment = file.load_environment()
         for uav in environment.uavs:
-            forwarding_agent = DataForwardingAgent(uav=uav,
+            forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, checkpoint_path='path',
                                                    action_size=len(environment.uavs) + len(environment.base_stations),
-                                                   epsilon=1, batch_size=2,
-                                                   epsilon_min=0.01, epsilon_max=1, epsilon_decay=0.995, gamma=0.95,
+                                                   epsilon=1, batch_size=2, epsilon_min=0.01, epsilon_max=1,
                                                    state_dim=len(environment.uavs) + len(environment.base_stations) + 4,
-                                                   target_update_freq=2, checkpoint_freq=1000, checkpoint_path='path')
+                                                   target_update_freq=2, checkpoint_freq=1000)
             collecting_agent = DataCollectingAgent(uav=uav)
             forwarding_agents.append(forwarding_agent)
             collecting_agents.append(collecting_agent)
