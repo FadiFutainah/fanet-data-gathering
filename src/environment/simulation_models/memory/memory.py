@@ -2,6 +2,7 @@ from copy import copy
 from dataclasses import dataclass, field
 from typing import List
 
+from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.simulation_models.memory.data_packet import DataPacket
 from src.environment.utils.priority_queue import PriorityQueue
 
@@ -12,6 +13,9 @@ class Memory:
     io_speed: int
     current_size: int = 0
     current_data: PriorityQueue = field(default_factory=PriorityQueue, init=False)
+
+    def __post_init__(self):
+        self.io_speed = multiply_by_speed_rate(self.io_speed)
 
     def move_to(self, other: 'Memory', data_size: int) -> None:
         other.store_data(self.fetch_data(data_size))

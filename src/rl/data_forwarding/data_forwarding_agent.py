@@ -40,7 +40,6 @@ class DataForwardingAgent:
     max_delay: float
     max_energy: float
     environment: Environment = None
-    current_reward: float = 0
     episode_return: int = 0
 
     def __post_init__(self):
@@ -100,24 +99,11 @@ class DataForwardingAgent:
             return base_stations
         return self.environment.get_in_range(self.uav, device_type=UAV)
 
-    def save_reward_as_a_plot(self):
-        chunk_size = 1
-        y_points = np.array([])
-        for chunk in range(len(self.episodes_rewards) // chunk_size):
-            avg = np.sum(self.episodes_rewards[chunk * chunk_size: chunk * chunk_size + chunk_size]) / chunk_size
-            y_points = np.append(y_points, avg)
-        x_points = np.arange(0, len(self.episodes_rewards) // chunk_size)
-        plt.plot(x_points, y_points)
-        plt.savefig(f'data/output/results-of-agent-{self}-{id(self)}.png')
-
     def initialize_for_episode(self, uav: UAV) -> None:
         self.uav = uav
         self.steps = 0
         self.episode_return = 0
         self.samples.clear()
-
-    def update_episode_return(self):
-        self.episode_return += self.current_reward
 
     def get_current_state(self, uavs_in_range: list, uavs: list, base_stations: list, neighbouring_base_stations: list):
         return DataForwardingState(uav=self.uav, neighbouring_uavs=uavs_in_range, uavs=uavs,
@@ -125,9 +111,6 @@ class DataForwardingAgent:
 
     def update_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-
-    def update_reward(self, reward):
-        self.episode_return += reward
 
     def get_delay_penalty(self, delay: float) -> float:
         return 1 / (1 + math.exp(-self.k * (delay - self.max_delay)))

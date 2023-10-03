@@ -1,3 +1,34 @@
+import csv
+
+# Define the input and output file names
+input_file = 'data/input/test_sample_8/way_points.csv'
+output_file = 'data/input/test_sample_8/way_points2.csv'
+
+# Open the input CSV file for reading and the output CSV file for writing
+with open(input_file, mode='r') as input_csvfile, open(output_file, mode='w', newline='') as output_csvfile:
+    # Create a CSV reader and writer objects
+    csv_reader = csv.DictReader(input_csvfile)
+    fieldnames = csv_reader.fieldnames
+
+    # Create a CSV writer with the same fieldnames as the input file
+    csv_writer = csv.DictWriter(output_csvfile, fieldnames=fieldnames)
+
+    # Write the header row to the output file
+    csv_writer.writeheader()
+
+    # Process each row in the input file and write the modified data to the output file
+    for row in csv_reader:
+        # Convert 'x' and 'y' values to integers and multiply them by 50
+        x = int(row['x']) * 10
+        y = int(row['y']) * 10
+
+        # Update the row with the multiplied values
+        row['x'] = x
+        row['y'] = y
+
+        # Write the updated row to the output file
+        csv_writer.writerow(row)
+
 # for agent in collecting_agents:
 #     self.active_collecting_agents.remove(agent)
 #     consumed_energy = agent.uav.consumed_energy

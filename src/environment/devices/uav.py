@@ -3,6 +3,7 @@ from typing import List
 
 from dataclasses import dataclass, field
 
+from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.devices.device import Device
 from src.environment.simulation_models.network.data_transition import DataTransition, TransferType
 from src.environment.utils.vector import Vector
@@ -36,6 +37,12 @@ class UAV(Device):
     def __post_init__(self):
         super().__post_init__()
         self.activate_task(UAVTask.MOVE)
+        self.speed = multiply_by_speed_rate(self.speed)
+
+    def initialize_steps_to_move(self):
+        if len(self.way_points) > 1:
+            self.steps_to_move = \
+                max(int(self.way_points[0].position.distance_from(self.way_points[1].position) // self.speed), 0)
 
     def add_way_point(self, position: Vector, collection_rate=0, active=False) -> None:
         self.way_points.append(WayPoint(position=position, collection_rate=collection_rate, active=active))

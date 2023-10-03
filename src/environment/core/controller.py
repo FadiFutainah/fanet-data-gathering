@@ -1,14 +1,15 @@
+import numpy as np
+
 from typing import List
 from dataclasses import dataclass, field
 
-import numpy as np
-from src.agents.data_collecting_agent import DataCollectingAgent
-
-from src.agents.data_forwarding_agent import DataForwardingAgent
-from src.agents.data_forwarding_agents_controller import DataForwardingAgentsController
-from src.data.logger import configure_logger
+from src.data.logger import configure_logger, call_with_measure_time
 from src.data.file_manager import FileManager
 from src.presentation.plot_view import PlotEnvironment
+
+from src.rl.data_collecting.data_collecting_agent import DataCollectingAgent
+from src.rl.data_forwarding.data_forwarding_agent import DataForwardingAgent
+from src.rl.rl_agents_controller import RLAgentController
 
 
 @dataclass
@@ -21,27 +22,30 @@ class EnvironmentController:
         file = FileManager(solution_id)
         forwarding_agents = []
         collecting_agents = []
-        environment = file.load_environment()
-        for uav in environment.uavs:
+        env = file.load_environment()
+        for uav in env.uavs:
             forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, checkpoint_path='path',
-                                                   action_size=len(environment.uavs) + len(environment.base_stations),
-                                                   epsilon=1, batch_size=2, epsilon_min=0.01, epsilon_max=1,
-                                                   state_dim=len(environment.uavs) + len(environment.base_stations) + 4,
-                                                   target_update_freq=2, checkpoint_freq=1000)
+                                                   action_size=1 + len(env.uavs) + len(env.base_stations),
+                                                   epsilon=1, state_dim=len(env.uavs) + len(env.base_stations) + 4,
+                                                   max_energy=10000, batch_size=2, epsilon_min=0.01, k=1, beta=1,
+                                                   target_update_freq=2, checkpoint_freq=1000, max_delay=10000)
             collecting_agent = DataCollectingAgent(uav=uav)
             forwarding_agents.append(forwarding_agent)
             collecting_agents.append(collecting_agent)
-            # for i, point in enumerate(uav.way_points):
-            #     if point.collection_rate != 0:
-            #         uav.assign_collect_data_task(i)
-        agents_controller = DataForwardingAgentsController(environment=environment, forwarding_agents=forwarding_agents,
-                                                           num_of_episodes=40, collecting_agents=collecting_agents,
-                                                           max_steps=100, max_delay=50, max_energy=100, k=1, beta=1)
+        agents_controller = RLAgentController(environment=env, forwarding_agents=forwarding_agents, max_steps=1000,
+                                              num_of_episodes=40, collecting_agents=collecting_agents)
         if run_type == 'plot':
-            plot_environment = PlotEnvironment(env=environment, close_on_done=False)
+            plot_environment = PlotEnvironment(env=env, scale=1, close_on_done=True)
             plot_environment.run()
         elif run_type == 'dqn-forward':
-            agents_controller.run_multi_agents()
+            agents_controller.run()
+        elif run_type == 'console':
+
+            def bla():
+                while not env.has_ended():
+                    env.step()
+
+            call_with_measure_time(bla)
         else:
             raise ValueError('unknown run type!!')
 

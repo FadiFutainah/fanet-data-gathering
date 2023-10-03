@@ -1,6 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 
+from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.simulation_models.memory.memory_model import MemoryModel
 from src.environment.simulation_models.network.data_transition import DataTransition
@@ -63,5 +64,5 @@ class Device(PhysicalObject):
         self.memory_model.store_data_in_memory(data_packets, overwrite)
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
-        self.memory_model.step(time_step_size)
+        self.memory_model.step(multiply_by_speed_rate(time_step_size))
         self.network_model.step()

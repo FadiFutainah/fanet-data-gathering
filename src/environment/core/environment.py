@@ -1,9 +1,12 @@
 from typing import List
 from copy import deepcopy
 from dataclasses import dataclass, field
+
+from src.environment.core.globals import update_speed_rate, multiply_by_speed_rate
+
+from src.environment.devices.sensor import Sensor
 from src.environment.devices.device import Device
 from src.environment.devices.uav import UAV, UAVTask
-from src.environment.devices.sensor import Sensor
 from src.environment.devices.base_station import BaseStation
 
 
@@ -20,10 +23,11 @@ class Environment:
 
     def __post_init__(self) -> None:
         self.initial_state = deepcopy(self)
+        update_speed_rate(self.speed_rate)
 
     def run_uav_task(self, uav: UAV) -> None:
         if uav.steps_to_move > 0:
-            uav.steps_to_move -= self.speed_rate
+            uav.steps_to_move = max(0, uav.steps_to_move - multiply_by_speed_rate(1))
             return
         can_move = uav.is_active(UAVTask.MOVE)
         if uav.is_active(UAVTask.FORWARD):
@@ -39,11 +43,12 @@ class Environment:
             uav.move_to_next_position()
 
     def step(self) -> None:
-        self.time_step += self.speed_rate
-        for sensor in self.sensors:
-            assert sensor.network_model.center == sensor.position, f'the network model {sensor.network_model.center} ' \
-                                                                   f'does not equal {sensor} position {sensor.position}'
-            sensor.step(current_time=self.time_step)
+        self.time_step += multiply_by_speed_rate(1)
+        # print(self.time_step)
+        # for sensor in self.sensors:
+        #     assert sensor.network_model.center == sensor.position, f'the network model {sensor.network_model.center} ' \
+        #                                                            f'does not equal {sensor} position {sensor.position}'
+        #     sensor.step(current_time=self.time_step)
         for base_station in self.base_stations:
             assert base_station.network_model.center == base_station.position, f'the network model ' \
                                                                                f'{base_station.network_model.center} ' \

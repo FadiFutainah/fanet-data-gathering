@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.simulation_models.memory.memory import Memory
 from src.environment.simulation_models.memory.data_packet import DataPacket
 

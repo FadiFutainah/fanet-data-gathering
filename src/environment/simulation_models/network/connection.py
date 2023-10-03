@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
+from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.devices.device import Device
 from src.environment.simulation_models.network.connection_protocol import ConnectionProtocol
 from src.environment.simulation_models.memory.data_packet import DataPacket
@@ -44,7 +45,7 @@ class Connection:
 
     def run(self, data_size: int, transfer_type: TransferType, time_step: int) -> DataTransition:
         sender, receiver = self.get_devices_roles(transfer_type)
-        speed = self.speed
+        speed = multiply_by_speed_rate(self.speed)
         init_data = self.get_init_data()
         if not self.is_initialized():
             self.initialization_data_sent += min(speed, init_data)

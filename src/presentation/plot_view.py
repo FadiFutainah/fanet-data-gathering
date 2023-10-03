@@ -22,6 +22,7 @@ class UAVRenderObject:
     position: Any = None
     range: Any = None
     color: str = field(init=False, default_factory=get_random_color)
+    way_points_render_objects: list = field(init=False, default_factory=list)
 
     def update(self, position: Vector, range: int) -> None:
         self.position = position
@@ -31,10 +32,11 @@ class UAVRenderObject:
 @dataclass
 class PlotEnvironment:
     env: Environment
+    scale: float
     ani: Any = field(init=False)
     uav_render_object_list: List = field(init=False)
     sensors_render_objects: Any = field(init=False)
-    way_points_render_objects: Any = field(init=False)
+    # way_points_render_objects: Any = field(init=False)
     base_stations_render_objects: Any = field(init=False)
     close_on_done: bool = False
 
@@ -47,10 +49,12 @@ class PlotEnvironment:
             self.uav_render_object_list.append(UAVRenderObject())
 
     def init_plot(self) -> None:
-        w_padding = 5 * self.env.land_width / 100
-        h_padding = 5 * self.env.land_height / 100
-        plt.xlim(-w_padding, self.env.land_width + w_padding)
-        plt.ylim(-h_padding, self.env.land_height + h_padding)
+        width = self.env.land_width * self.scale
+        height = self.env.land_height * self.scale
+        w_padding = 5 * width / 100
+        h_padding = 5 * height / 100
+        plt.xlim(-w_padding, width + w_padding)
+        plt.ylim(-h_padding, height + h_padding)
         plt.grid()
 
     @staticmethod
@@ -64,8 +68,8 @@ class PlotEnvironment:
         return 'darkgray'
 
     def draw_devices(self, devices: List[Device], shape: str, size: int, colors: List[str], alpha: float = 1):
-        xs = [device.position.x for device in devices]
-        ys = [device.position.y for device in devices]
+        xs = [device.position.x * self.scale for device in devices]
+        ys = [device.position.y * self.scale for device in devices]
         return self.ax.scatter(xs, ys, s=[size] * len(devices), c=colors, alpha=alpha, marker=shape)
 
     def draw_sensors(self):
@@ -79,19 +83,22 @@ class PlotEnvironment:
 
     def draw_uav(self, uav: UAV, index: int) -> None:
         render_object = self.uav_render_object_list[index]
-        p, = self.ax.plot(uav.position.x, uav.position.y, render_object.color + 'd', markersize=15, alpha=0.7)
+        p, = self.ax.plot(uav.position.x * self.scale, uav.position.y * self.scale, render_object.color + 'd',
+                          markersize=15, alpha=0.7)
         c = self.draw_circle(uav=uav, color=render_object.color)
         self.uav_render_object_list[index].update(position=p, range=c)
-        self.way_points_render_objects = self.draw_items(items=uav.way_points, shape=render_object.color + '--o',
-                                                         size=6)
+        render_object.way_points_render_objects = self.draw_items(items=uav.way_points,
+                                                                  shape=render_object.color + '--o',
+                                                                  size=6)
 
     def draw_items(self, items: list, shape, size: int) -> Any:
-        xs = [item.position.x for item in items]
-        ys = [item.position.y for item in items]
+        xs = [item.position.x * self.scale for item in items]
+        ys = [item.position.y * self.scale for item in items]
         return self.ax.plot(xs, ys, shape, markersize=size)
 
     def draw_circle(self, uav: UAV, color: str):
-        radius = plt.Circle((uav.position.x, uav.position.y), uav.network_model.coverage_radius, color=color, alpha=0.2)
+        radius = plt.Circle((uav.position.x * self.scale, uav.position.y * self.scale),
+                            uav.network_model.coverage_radius * self.scale, color=color, alpha=0.2)
         return self.ax.add_patch(radius)
 
     def draw_all(self) -> None:
@@ -103,11 +110,11 @@ class PlotEnvironment:
     def remove_all(self) -> None:
         self.sensors_render_objects.remove()
         self.base_stations_render_objects.remove()
-        for line in self.way_points_render_objects:
-            line.remove()
         for i in range(len(self.env.uavs)):
             self.uav_render_object_list[i].range.remove()
             self.uav_render_object_list[i].position.remove()
+            for line in self.uav_render_object_list[i].way_points_render_objects:
+                line.remove()
 
     def render(self, i) -> None:
         if self.env.time_step > 0:
