@@ -39,11 +39,6 @@ class UAV(Device):
         self.activate_task(UAVTask.MOVE)
         self.speed = multiply_by_speed_rate(self.speed)
 
-    def initialize_steps_to_move(self):
-        if len(self.way_points) > 1:
-            self.steps_to_move = \
-                max(int(self.way_points[0].position.distance_from(self.way_points[1].position) // self.speed), 0)
-
     def add_way_point(self, position: Vector, collection_rate=0, active=False) -> None:
         self.way_points.append(WayPoint(position=position, collection_rate=collection_rate, active=active))
 

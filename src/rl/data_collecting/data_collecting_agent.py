@@ -9,6 +9,8 @@ class DataCollectingAgent:
     uav: UAV
 
     def take_random_collecting_action(self):
+        if self.uav.way_points[self.uav.current_way_point].collection_rate != 0:
+            return
         collection_rate = random.choice([32, 64, 128])
         do_collect = random.choice([0, 1])
         self.uav.assign_collection_rate(self.uav.current_way_point, collection_rate)

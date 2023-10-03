@@ -1,8 +1,6 @@
-import math
 import random
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 from typing import List, Any
 from dataclasses import dataclass, field
@@ -54,6 +52,8 @@ class DataForwardingAgent:
     def get_available_actions(self) -> List[int]:
         forward_targets = self.get_available_targets()
         actions = [-1]
+        if len(forward_targets) == 0:
+            return actions
         if type(forward_targets[0]) is BaseStation:
             for base_station in forward_targets:
                 actions.append(self.environment.base_stations.index(base_station))
@@ -113,10 +113,10 @@ class DataForwardingAgent:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def get_delay_penalty(self, delay: float) -> float:
-        return 1 / (1 + math.exp(-self.k * (delay - self.max_delay)))
+        return 1 / (1 + np.exp(-self.k * (delay - self.max_delay)))
 
     def get_energy_penalty(self, energy: float) -> float:
-        return 1 / (1 + math.exp(-self.k * (energy - self.max_energy)))
+        return 1 / (1 + np.exp(-self.k * (energy - self.max_energy)))
 
     def get_pdr_reward(self, pdr: float):
         return self.beta * pdr
@@ -137,7 +137,9 @@ class DataForwardingAgent:
         self.samples.append(sample)
 
     def remember(self, sample):
-        self.memory.append(sample)
+        if not sample.has_completed():
+            return
+        self.memory.append([sample.state.get(), sample.action, sample.reward, sample.next_state.get()])
 
     def has_forward_task(self) -> bool:
         return self.uav.is_active(UAVTask.FORWARD)
@@ -145,8 +147,11 @@ class DataForwardingAgent:
     def has_receiving_task(self) -> bool:
         return self.uav.is_active(UAVTask.RECEIVE)
 
+    def has_collecting_task(self) -> bool:
+        return self.uav.is_active(UAVTask.COLLECT)
+
     def is_busy(self) -> bool:
-        return self.has_forward_task() or self.has_receiving_task() or self.uav.steps_to_move > 0
+        return self.has_forward_task() or self.has_receiving_task() or self.has_collecting_task() or self.uav.steps_to_move > 0
 
     def update_target_network(self):
         if self.steps % self.target_update_freq == 0:

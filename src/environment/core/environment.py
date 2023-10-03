@@ -28,6 +28,8 @@ class Environment:
     def run_uav_task(self, uav: UAV) -> None:
         if uav.steps_to_move > 0:
             uav.steps_to_move = max(0, uav.steps_to_move - multiply_by_speed_rate(1))
+            if uav.steps_to_move == 0:
+                uav.move_to_next_position()
             return
         can_move = uav.is_active(UAVTask.MOVE)
         if uav.is_active(UAVTask.FORWARD):
@@ -40,20 +42,13 @@ class Environment:
             uav.collect_data(self.get_in_range(uav=uav, device_type=Sensor), time_step=self.time_step)
         if can_move:
             uav.update_velocity()
-            uav.move_to_next_position()
 
     def step(self) -> None:
         self.time_step += multiply_by_speed_rate(1)
         # print(self.time_step)
         # for sensor in self.sensors:
-        #     assert sensor.network_model.center == sensor.position, f'the network model {sensor.network_model.center} ' \
-        #                                                            f'does not equal {sensor} position {sensor.position}'
         #     sensor.step(current_time=self.time_step)
         for base_station in self.base_stations:
-            assert base_station.network_model.center == base_station.position, f'the network model ' \
-                                                                               f'{base_station.network_model.center} ' \
-                                                                               f'does not equal {base_station} ' \
-                                                                               f'position {base_station.position}'
             base_station.step(current_time=self.time_step)
         for uav in self.uavs:
             uav.step(current_time=self.time_step)

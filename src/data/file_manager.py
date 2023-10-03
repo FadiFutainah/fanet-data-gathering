@@ -115,9 +115,6 @@ class FileManager:
                     found = uav
                     break
             found.add_way_point(position, collection_rate=row['collection rate'])
-        for uav in uavs:
-            uav.initialize_steps_to_move()
-
         return uavs
 
     def load_memories(self):
