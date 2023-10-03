@@ -1,9 +1,6 @@
 from typing import List
 from copy import deepcopy
 from dataclasses import dataclass, field
-
-import numpy as np
-
 from src.environment.devices.device import Device
 from src.environment.devices.uav import UAV, UAVTask
 from src.environment.devices.sensor import Sensor
@@ -40,12 +37,6 @@ class Environment:
         if can_move:
             uav.update_velocity()
             uav.move_to_next_position()
-
-    def num_of_generated_packets(self) -> int:
-        return int(sum(sensor.num_of_collected_packets for sensor in self.sensors))
-
-    def num_of_received_packets(self) -> int:
-        return int(sum(base_station.num_of_collected_packets for base_station in self.base_stations))
 
     def step(self) -> None:
         self.time_step += self.speed_rate
@@ -90,11 +81,17 @@ class Environment:
                 neighbours.append(device)
         return neighbours
 
-    def get_data_way_points_variance(self, uav: UAV):
-        data = []
-        for i, way_point in enumerate(uav.way_points):
-            data.append(0)
-            for sensor in self.sensors:
-                if way_point.position.distance_from(sensor.position) <= uav.network_model.coverage_radius:
-                    data[i] += sensor.get_current_data_size()
-        return np.var(data)
+    # def get_data_way_points_variance(self, uav: UAV):
+    #     data = []
+    #     for i, way_point in enumerate(uav.way_points):
+    #         data.append(0)
+    #         for sensor in self.sensors:
+    #             if way_point.position.distance_from(sensor.position) <= uav.network_model.coverage_radius:
+    #                 data[i] += sensor.get_current_data_size()
+    #     return np.var(data)
+    #
+    # def num_of_generated_packets(self) -> int:
+    #     return int(sum(sensor.num_of_collected_packets for sensor in self.sensors))
+    #
+    # def num_of_received_packets(self) -> int:
+    #     return int(sum(base_station.num_of_collected_packets for base_station in self.base_stations))

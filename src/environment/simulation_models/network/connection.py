@@ -25,8 +25,7 @@ class Connection:
         else:
             self.speed = new_speed
 
-    def get_packets_after_error(self, data_packets: List[DataPacket]) -> \
-            Tuple[List[DataPacket], int]:
+    def get_packets_after_error(self, data_packets: List[DataPacket]) -> Tuple[List[DataPacket], int]:
         data_size = sum(data_packer.size for data_packer in data_packets)
         error = self.protocol.calculate_data_loss(data_size)
         while len(data_packets) > 0 and error > 0:
@@ -58,8 +57,4 @@ class Connection:
         data_packets = sender.memory_model.fetch_data(data_size)
         data_packets, error_loss = self.get_packets_after_error(data_packets)
         receiver.store_data(data_packets, time_step=time_step)
-        # delay_time = 0
-        # for packet in data_packets:
-        #     delay_time += time_step - packet.arrival_time
-        #     packet.arrival_time = time_step
         return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)

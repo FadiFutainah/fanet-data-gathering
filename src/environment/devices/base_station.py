@@ -7,12 +7,7 @@ from src.environment.simulation_models.memory.data_packet import DataPacket
 
 @dataclass(order=True)
 class BaseStation(Device):
-    current_packets: Dict = field(default_factory=dict, init=False)
-
-    def get_packet_received_time(self, packet) -> int:
-        return self.current_packets.get(packet)
-
     def store_data(self, data_packets: List[DataPacket], overwrite=False, time_step=0):
-        super().store_data(data_packets, overwrite)
+        super().store_data(data_packets, overwrite, time_step)
         for packet in data_packets:
-            self.current_packets[packet] = time_step
+            packet.set_arrival_time(time_step)
