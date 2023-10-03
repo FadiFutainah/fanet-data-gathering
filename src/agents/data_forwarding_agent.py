@@ -13,47 +13,12 @@ from src.environment.simulation_models.memory.data_packet import DataPacket
 
 
 @dataclass
-class ForwardingRewardObject:
+class DataForwardingActionObject:
     time_sent: int
     packets_sent: List[DataPacket]
     delay_time: int = 0
     num_of_packets_received: int = 0
     energy_consumed: int = 0
-
-
-@dataclass
-class DataForwardingState:
-    uav: UAV
-    uavs: List[UAV]
-    neighbouring_uavs: List[UAV]
-    base_stations: List[BaseStation]
-    neighbouring_base_stations: List[BaseStation]
-
-    @staticmethod
-    def get_empty_state():
-        return [0] * 8
-
-    def get(self):
-        state = []
-        uav_positions = []
-        base_stations = []
-        for uav in self.uavs:
-            if uav in self.neighbouring_uavs:
-                uav_positions.append(uav.current_way_point)
-            else:
-                uav_positions.append(-1)
-        for base_station in self.base_stations:
-            if base_station in self.neighbouring_uavs:
-                base_stations.append(base_station.id)
-            else:
-                base_stations.append(-1)
-        state.append(self.uav.current_way_point)
-        state.extend(uav_positions)
-        state.extend(base_stations)
-        state.append(self.uav.consumed_energy)
-        state.append(self.uav.num_of_collected_packets)
-        state.append(self.uav.get_occupancy_percentage())
-        return state
 
 
 @dataclass
@@ -80,10 +45,11 @@ class DataForwardingAgent:
     current_reward: float = 0
     wins: int = 0
     episode_return: int = 0
-    reward_object: ForwardingRewardObject = None
+    reward_object: DataForwardingActionObject = None
     current_state: DataForwardingState = None
     action: int = -1
     reward: int = 0
+    waited_samples: list = field(init=False, default_factory=list)
 
     def __post_init__(self):
         self.model = self.create_model()

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from src.agents.data_collecting_agent import DataCollectingAgent
-from src.agents.data_forwarding_agent import DataForwardingAgent, ForwardingRewardObject, DataForwardingState
+from src.agents.data_forwarding_agent import DataForwardingAgent, DataForwardingActionObject, DataForwardingState
 from src.environment.core.environment import Environment
 from src.environment.devices.base_station import BaseStation
 from src.environment.devices.device import Device
@@ -19,15 +19,12 @@ class DataForwardingAgentsController:
     environment: Environment
     forwarding_agents: List[DataForwardingAgent]
     collecting_agents: List[DataCollectingAgent]
-
     num_of_episodes: int
     max_steps: int
     k: float
     max_energy: float
     beta: float
     max_delay: float
-    # a: float
-    # b: float
     active_forwarding_agents: List[DataForwardingAgent] = field(init=False, default_factory=list)
     # active_collecting_agents: list[DataCollectingAgent] = field(init=False, default_factory=list)
 
@@ -59,8 +56,8 @@ class DataForwardingAgentsController:
         assert agent.uav.in_range(target), f'{agent.uav} must be in range of the {target} {agent.action}'
         agent.uav.assign_forward_data_task(data_to_forward=agent.uav.memory_model.memory.current_size,
                                            forward_data_target=target)
-        agent.reward_object = ForwardingRewardObject(time_sent=self.environment.time_step,
-                                                     packets_sent=agent.uav.memory_model.read_data())
+        agent.reward_object = DataForwardingActionObject(time_sent=self.environment.time_step,
+                                                         packets_sent=agent.uav.memory_model.read_data())
         self.active_forwarding_agents.append(agent)
 
     def get_delay_penalty(self, delay: float) -> float:
