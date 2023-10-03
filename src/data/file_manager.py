@@ -42,7 +42,7 @@ class FileManager:
         assert len(list(energy_model_table.iterrows())) == 1, 'energy_model should not contains more than one row'
         data = []
         for index, row in basic_variables_table.iterrows():
-            data.append((row['width'], row['height'], row['speed rate'], row['run until']))
+            data.append((row['width'], row['height'], row['frame rate'], row['run until']))
         for index, row in energy_model_table.iterrows():
             energy_model = EnergyModel(e_elec=row['e_elec'], distance_threshold=row['distance_threshold'],
                                        power_amplifier_for_fs=row['power_amplifier_for_fs'],
@@ -58,15 +58,18 @@ class FileManager:
             velocity = Vector(row['x velocity'], row['y velocity'], row['z velocity'])
             position = Vector(row['x'], row['y'], row['z'])
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
-            data_collecting_rate = row['data collecting rate']
+            # data_collecting_rate = row['data collecting rate'] * 100
+            data_collecting_rate = self.memory_models[0].memory.size
             packet_life_time = row['packet life time']
             packet_size = row['packet size']
+            sampling_rate = row['sampling rate']
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
                             memory_model=self.memory_models[0], network_model=deepcopy(self.network_models[0]),
                             num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
                             packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=0,
-                            energy_model=self.energy_model)
+                            energy_model=self.energy_model, sampling_rate=sampling_rate)
             # sensor.network_model.center = sensor.position
+            sensor.collect_data(current_time=0)
             sensors.append(sensor)
         return sensors
 
@@ -112,6 +115,9 @@ class FileManager:
                     found = uav
                     break
             found.add_way_point(position, collection_rate=row['collection rate'])
+        for uav in uavs:
+            uav.initialize_steps_to_move()
+
         return uavs
 
     def load_memories(self):
