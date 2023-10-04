@@ -1,4 +1,5 @@
 import random
+
 import numpy as np
 import tensorflow as tf
 
@@ -39,10 +40,15 @@ class DataForwardingAgent:
     max_energy: float
     environment: Environment = None
     episode_return: int = 0
+    pass_action: int = field(init=False)
+
+    def __str__(self):
+        return f'{self.uav}'
 
     def __post_init__(self):
         self.model = self.create_model()
         self.target_model = tf.keras.models.clone_model(self.model)
+        self.pass_action = self.action_size - 1
 
     def inject_environment_object(self, environment: Environment) -> None:
         if self.environment is not None:
@@ -51,7 +57,7 @@ class DataForwardingAgent:
 
     def get_available_actions(self) -> List[int]:
         forward_targets = self.get_available_targets()
-        actions = [-1]
+        actions = [self.pass_action]
         if len(forward_targets) == 0:
             return actions
         if type(forward_targets[0]) is BaseStation:
@@ -65,12 +71,25 @@ class DataForwardingAgent:
     def choose_action(self, state):
         if np.random.rand() < self.epsilon:
             actions = self.get_available_actions()
-            return random.choice(actions)
+            action = random.choice(actions)
         else:
-            return np.argmax(self.model.predict(np.array(state.get()), verbose=0)[0])
+            q_values = self.model.predict(np.array([state.get()]), verbose=0)[0]
+            available_actions = self.get_available_actions()
+            q_value = -1e18
+            for action in available_actions:
+                q_value = max(q_value, q_values[action])
+            for i, value in enumerate(q_values):
+                if q_value == value:
+                    action = i
+                    break
+            print(f'\n{self}')
+            print(f'{q_values}')
+            print(f'chose action {action}')
+            print(f'chose action {action}')
+        return action
 
     def take_forwarding_action(self, action):
-        if action == -1:
+        if action == self.pass_action:
             return []
         if action < len(self.environment.base_stations):
             target = self.environment.base_stations[action]
@@ -85,7 +104,7 @@ class DataForwardingAgent:
     def create_model(self):
         num_units = 24
         model = tf.keras.Sequential()
-        model.add(tf.keras.layers.Dense(num_units, input_dim=self.state_dim, activation='relu'))
+        model.add(tf.keras.layers.Dense(num_units, input_shape=(self.state_dim,), activation='relu'))
         model.add(tf.keras.layers.Dense(num_units, activation='relu'))
         model.add(tf.keras.layers.Dense(self.action_size))
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam())
@@ -113,13 +132,25 @@ class DataForwardingAgent:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def get_delay_penalty(self, delay: float) -> float:
-        return 1 / (1 + np.exp(-self.k * (delay - self.max_delay)))
+        # return 1 / (1 + np.exp(-self.k * (delay - self.max_delay)))
+        x = self.k * (delay - self.max_delay)
+        # print(f' the delay in reward {x}')
+        x = max(x, -100)
+        x = min(x, 100)
+        return np.exp(x) / (np.exp(x) + 1)
 
     def get_energy_penalty(self, energy: float) -> float:
-        return 1 / (1 + np.exp(-self.k * (energy - self.max_energy)))
+        # return 1 / (1 + np.exp(-self.k * (energy - self.max_energy)))
+        x = self.k * (energy - self.max_energy)
+        # print(f' the energy in reward {x}')
+        x = max(x, -100)
+        x = min(x, 100)
+        return np.exp(x) / (np.exp(x) + 1)
 
     def get_pdr_reward(self, pdr: float):
-        return self.beta * pdr
+        x = self.beta * pdr
+        # print(f' the pdr in reward {x}')
+        return x
 
     def update_samples(self, force_update: bool = False):
         if len(self.samples) > 1:
@@ -159,8 +190,7 @@ class DataForwardingAgent:
 
     def save_weights(self, episode: int):
         if self.steps % self.checkpoint_freq == 0:
-            self.model.save_weights("{}/weights-{:08d}-{:08d}".format(
-                self.checkpoint_path, episode, self.steps))
+            self.model.save_weights("{}/weights-{:08d}-{:08d}".format(self.checkpoint_path, episode, self.steps))
 
     def calculate_reward(self, sample: DataForwardingSample) -> float:
         arrived_packets = 0

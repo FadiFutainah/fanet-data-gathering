@@ -1,7 +1,7 @@
 import csv
 
 # Define the input and output file names
-input_file = 'data/input/test_sample_8/way_points.csv'
+input_file = 'data/input/test_sample_10/way_points.csv'
 output_file = 'data/input/test_sample_8/way_points2.csv'
 
 # Open the input CSV file for reading and the output CSV file for writing
@@ -19,8 +19,8 @@ with open(input_file, mode='r') as input_csvfile, open(output_file, mode='w', ne
     # Process each row in the input file and write the modified data to the output file
     for row in csv_reader:
         # Convert 'x' and 'y' values to integers and multiply them by 50
-        x = int(row['x']) * 10
-        y = int(row['y']) * 10
+        x = int(row['x']) * 500
+        y = int(row['y']) * 500
 
         # Update the row with the multiplied values
         row['x'] = x
