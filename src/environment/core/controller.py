@@ -38,7 +38,7 @@ class EnvironmentController:
             plot_environment = PlotEnvironment(env=env, scale=1, close_on_done=True)
             plot_environment.run()
         elif run_type == 'dqn-forward':
-            agents_controller.run()
+            call_with_measure_time(agents_controller.run)
         elif run_type == 'console':
 
             def bla():

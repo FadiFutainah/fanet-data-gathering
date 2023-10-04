@@ -5,7 +5,7 @@ import time
 def configure_logger(write_on_file: bool = False) -> None:
     fmt = '[%(levelname)s - %(message)s]'
     if write_on_file:
-        logging.basicConfig(filename='app.log', filemode='w', format=fmt, level=logging.INFO)
+        logging.basicConfig(filename='app.log', format=fmt, level=logging.INFO)
     else:
         logging.basicConfig(format=fmt, level=logging.INFO)
 

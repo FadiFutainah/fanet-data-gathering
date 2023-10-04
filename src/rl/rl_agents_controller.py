@@ -33,8 +33,7 @@ class RLAgentController:
             total_reward = 0
             while not self.environment.has_ended() and steps <= self.max_steps:
                 steps += 1
-                print('\r> DQN: Episode {} / {}, step: {} / {}'.format(episode + 1, self.num_of_episodes, steps,
-                                                                       self.max_steps), end='')
+
                 self.environment.step()
                 for agent in self.collecting_agents:
                     agent.take_random_collecting_action()
@@ -42,6 +41,9 @@ class RLAgentController:
                     if agent.is_busy():
                         continue
                     agent.step(episode)
+                    print(f'\r> Agent: {agent} - Episode: {episode + 1} / {self.num_of_episodes} - Step: {steps} / {self.max_steps}')
+                    # print('\r> DQN: Episode {} / {}, step: {} / {}'.format(episode + 1, self.num_of_episodes, steps,
+                    #                                                        self.max_steps), end='')
             for agent in self.forwarding_agents:
                 agent.update_samples(force_update=True)
                 agent.replay()

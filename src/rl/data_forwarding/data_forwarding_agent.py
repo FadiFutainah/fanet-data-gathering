@@ -76,16 +76,11 @@ class DataForwardingAgent:
             q_values = self.model.predict(np.array([state.get()]), verbose=0)[0]
             available_actions = self.get_available_actions()
             q_value = -1e18
-            for action in available_actions:
-                q_value = max(q_value, q_values[action])
-            for i, value in enumerate(q_values):
-                if q_value == value:
-                    action = i
-                    break
-            print(f'\n{self}')
-            print(f'{q_values}')
-            print(f'chose action {action}')
-            print(f'chose action {action}')
+            action = -1e18
+            for available_action in available_actions:
+                if q_values[available_action] > q_value:
+                    q_value = q_values[available_action]
+                    action = available_action
         return action
 
     def take_forwarding_action(self, action):
