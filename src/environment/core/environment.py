@@ -32,13 +32,13 @@ class Environment:
             uav.steps_to_move = max(0, uav.steps_to_move - multiply_by_speed_rate(1))
             if uav.steps_to_move == 0:
                 uav.move_to_next_position()
-            # logging.info(f'{self.time_step}: {uav} performed {task} steps left: {uav.steps_to_move}, has {uav.tasks}')
+            logging.info(f'{self.time_step}: {uav} performed {task} steps left: {uav.steps_to_move}, has {uav.tasks}')
             return
         can_move = uav.is_active(UAVTask.MOVE)
         if uav.is_active(UAVTask.FORWARD):
             can_move = False
             uav.forward_data(time_step=self.time_step)
-            task = f' - forward from {uav} to {uav.forward_data_target}, memory: {uav.memory_model.memory.current_size} '
+            task = f' - forward from {uav} to {uav.forward_data_target}, memory: {uav.memory_model.memory.current_size}'
         if uav.is_active(UAVTask.RECEIVE):
             can_move = False
             task += f' - receive, memory: {uav.memory_model.memory.current_size}'
@@ -49,7 +49,7 @@ class Environment:
         if can_move:
             uav.update_velocity()
             task += f' update velocity to point {uav.current_way_point}'
-        # logging.info(f'{self.time_step}: {uav} performed {task}, has {uav.tasks}')
+        logging.info(f'{self.time_step}: {uav} performed {task}, has {uav.tasks}')
 
     def step(self) -> None:
         self.time_step += multiply_by_speed_rate(1)

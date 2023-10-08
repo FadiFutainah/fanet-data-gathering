@@ -17,8 +17,8 @@ class Connection:
     speed: int = field(default=0)
     initialization_data_sent: int = field(init=False, default=0)
 
-    def is_initialized(self) -> bool:
-        return self.initialization_data_sent >= self.protocol.initialization_data_size
+    def get_init_data(self) -> int:
+        return self.protocol.initialization_data_size - self.initialization_data_sent
 
     def update_speed(self, new_speed) -> None:
         if self.speed != 0:
@@ -40,14 +40,11 @@ class Connection:
         else:
             return self.device2, self.device1
 
-    def get_init_data(self) -> int:
-        return self.protocol.initialization_data_size - self.initialization_data_sent
-
     def run(self, data_size: int, transfer_type: TransferType, time_step: int) -> DataTransition:
         sender, receiver = self.get_devices_roles(transfer_type)
         speed = multiply_by_speed_rate(self.speed)
         init_data = self.get_init_data()
-        if not self.is_initialized():
+        if init_data > 0:
             self.initialization_data_sent += min(speed, init_data)
             speed = max(0, speed - init_data)
         data_size = min(data_size, speed)

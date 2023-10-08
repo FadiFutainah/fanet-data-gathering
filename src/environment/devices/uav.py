@@ -88,7 +88,7 @@ class UAV(Device):
 
     def forward_data(self, time_step: int):
         data_size_before_transition = self.get_current_data_size()
-        speed = self.forward_data_target.network_model.bandwidth // 10
+        speed = self.network_model.bandwidth
         data_transition = super().transfer_data(device=self.forward_data_target, data_size=self.data_to_forward,
                                                 transfer_type=TransferType.SEND, time_step=time_step, speed=speed)
         forwarded_data = data_size_before_transition - self.get_current_data_size()
