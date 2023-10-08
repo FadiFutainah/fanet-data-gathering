@@ -15,6 +15,9 @@ class DataForwardingState:
     base_stations: List[BaseStation]
     neighbouring_base_stations: List[BaseStation]
 
+    def __str__(self):
+        return f'{self.get()}'
+
     @staticmethod
     def get_empty_state():
         return [0] * 8

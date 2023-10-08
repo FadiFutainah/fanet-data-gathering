@@ -59,6 +59,7 @@ class UAV(Device):
         if not run_in_loop and self.current_way_point + 1 >= len(self.way_points):
             self.deactivate_task(UAVTask.MOVE)
             self.velocity = Vector(0, 0, 0)
+            self.steps_to_move = 0
             return
         self.current_way_point += 1
         self.current_way_point %= len(self.way_points)

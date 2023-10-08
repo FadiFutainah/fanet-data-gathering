@@ -14,6 +14,10 @@ class DataForwardingSample:
     next_state: DataForwardingState = None
     reward: float = None
 
+    def __str__(self):
+        return f'{self.created_time}: {self.state} + {self.action} + {len(self.data_packets)} ' \
+               f'-> {self.next_state} + {self.reward}'
+
     def has_completed(self) -> bool:
         return self.reward is not None and self.next_state is not None
 

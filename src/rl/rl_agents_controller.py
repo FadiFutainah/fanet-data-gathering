@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from dataclasses import dataclass, field
 
@@ -27,23 +28,21 @@ class RLAgentController:
     def run(self):
         for episode in range(self.num_of_episodes):
             self.environment.reset()
-            for uav, agent in zip(self.environment.uavs, self.forwarding_agents):
-                agent.initialize_for_episode(uav)
+            for uav, forwarding_agent, collecting_agent in zip(self.environment.uavs, self.forwarding_agents,
+                                                               self.collecting_agents):
+                forwarding_agent.initialize_for_episode(uav)
+                collecting_agent.uav = uav
             steps = 0
             total_reward = 0
+            logging.info(f'started {episode} >>>>>>>>>>>>>>>> ')
             while not self.environment.has_ended() and steps <= self.max_steps:
+                print(f'\r>Episode: {episode + 1} / {self.num_of_episodes}, Step: {steps} / {self.max_steps}', end='')
                 steps += 1
-
                 self.environment.step()
                 for agent in self.collecting_agents:
                     agent.take_random_collecting_action()
                 for agent in self.forwarding_agents:
-                    if agent.is_busy():
-                        continue
                     agent.step(episode)
-                    print(f'\r> Agent: {agent} - Episode: {episode + 1} / {self.num_of_episodes} - Step: {steps} / {self.max_steps}')
-                    # print('\r> DQN: Episode {} / {}, step: {} / {}'.format(episode + 1, self.num_of_episodes, steps,
-                    #                                                        self.max_steps), end='')
             for agent in self.forwarding_agents:
                 agent.update_samples(force_update=True)
                 agent.replay()
@@ -55,8 +54,8 @@ class RLAgentController:
                 agent.episodes_rewards.append(agent.episode_return)
             self.episodes_rewards.append(total_reward)
         for agent in self.forwarding_agents:
-            self.save_reward_as_a_plot(rewards=agent.episodes_rewards, name='results-of-agent-{self}-{id(self)}')
-        self.save_reward_as_a_plot(rewards=self.episodes_rewards, name=f'results-of-all-agents-{id(self)}')
+            self.save_reward_as_a_plot(rewards=agent.episodes_rewards, name=f'agent of {agent}')
+        self.save_reward_as_a_plot(rewards=self.episodes_rewards, name=f'all agents')
 
     @staticmethod
     def save_reward_as_a_plot(rewards: List, chunk_size=1, name: str = 'none'):
@@ -66,4 +65,4 @@ class RLAgentController:
             y_points = np.append(y_points, avg)
         x_points = np.arange(0, len(rewards) // chunk_size)
         plt.plot(x_points, y_points)
-        plt.savefig(f'data/output/f{name}.png')
+        plt.savefig(f'data/output/{name}.png')

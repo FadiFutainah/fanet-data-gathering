@@ -1,3 +1,4 @@
+import logging
 import random
 
 import numpy as np
@@ -127,30 +128,29 @@ class DataForwardingAgent:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def get_delay_penalty(self, delay: float) -> float:
-        # return 1 / (1 + np.exp(-self.k * (delay - self.max_delay)))
         x = self.k * (delay - self.max_delay)
-        # print(f' the delay in reward {x}')
         x = max(x, -100)
         x = min(x, 100)
         return np.exp(x) / (np.exp(x) + 1)
 
     def get_energy_penalty(self, energy: float) -> float:
-        # return 1 / (1 + np.exp(-self.k * (energy - self.max_energy)))
         x = self.k * (energy - self.max_energy)
-        # print(f' the energy in reward {x}')
         x = max(x, -100)
         x = min(x, 100)
         return np.exp(x) / (np.exp(x) + 1)
 
     def get_pdr_reward(self, pdr: float):
         x = self.beta * pdr
-        # print(f' the pdr in reward {x}')
         return x
 
     def update_samples(self, force_update: bool = False):
         if len(self.samples) > 1:
             self.samples[-2].update_next_state(self.samples[-1].state)
         for sample in self.samples:
+            if sample.action == self.pass_action:
+                sample.reward = 0
+                self.remember(sample)
+                continue
             arrived_packets = sample.get_num_of_arrived_packets()
             if force_update or arrived_packets > 0.8 * len(sample.data_packets):
                 reward = self.calculate_reward(sample)
@@ -177,7 +177,8 @@ class DataForwardingAgent:
         return self.uav.is_active(UAVTask.COLLECT)
 
     def is_busy(self) -> bool:
-        return self.has_forward_task() or self.has_receiving_task() or self.has_collecting_task() or self.uav.steps_to_move > 0
+        return self.has_forward_task() or self.has_receiving_task() or self.has_collecting_task() \
+            or self.uav.steps_to_move > 0
 
     def update_target_network(self):
         if self.steps % self.target_update_freq == 0:
@@ -209,7 +210,7 @@ class DataForwardingAgent:
         consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
         delay_penalty = self.get_delay_penalty(end_to_end_delay)
         # TODO: add consumed energy penalty to the reward equation
-        return pdr_reward - delay_penalty
+        return pdr_reward
 
     def replay(self):
         if len(self.memory) > self.batch_size:
@@ -227,6 +228,8 @@ class DataForwardingAgent:
                     tf.summary.histogram(weight_name, weight, step=self.steps)
 
     def step(self, episode: int):
+        if self.is_busy():
+            return
         self.steps += 1
         current_state = self.get_current_state(
             uavs_in_range=self.environment.get_in_range(self.uav, device_type=UAV),

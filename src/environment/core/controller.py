@@ -27,25 +27,25 @@ class EnvironmentController:
             forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, checkpoint_path='path',
                                                    action_size=1 + len(env.uavs) + len(env.base_stations),
                                                    epsilon=1, state_dim=len(env.uavs) + len(env.base_stations) + 4,
-                                                   max_energy=10000, batch_size=2, epsilon_min=0.01, k=1, beta=1,
+                                                   max_energy=10000, batch_size=2, epsilon_min=0.01, k=1, beta=10,
                                                    target_update_freq=2, checkpoint_freq=1000, max_delay=10000)
             collecting_agent = DataCollectingAgent(uav=uav)
             forwarding_agents.append(forwarding_agent)
             collecting_agents.append(collecting_agent)
-        agents_controller = RLAgentController(environment=env, forwarding_agents=forwarding_agents, max_steps=1000,
-                                              num_of_episodes=40, collecting_agents=collecting_agents)
+        agents_controller = RLAgentController(environment=env, forwarding_agents=forwarding_agents, max_steps=400,
+                                              num_of_episodes=10, collecting_agents=collecting_agents)
         if run_type == 'plot':
             plot_environment = PlotEnvironment(env=env, scale=1, close_on_done=True)
             plot_environment.run()
-        elif run_type == 'dqn-forward':
-            call_with_measure_time(agents_controller.run)
+        elif run_type == 'forward-agent':
+            agents_controller.run()
         elif run_type == 'console':
 
-            def bla():
+            def run_environment():
                 while not env.has_ended():
                     env.step()
 
-            call_with_measure_time(bla)
+            call_with_measure_time(run_environment)
         else:
             raise ValueError('unknown run type!!')
 
