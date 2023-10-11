@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -8,21 +8,17 @@ class Vector:
     x: float
     y: float
     z: float
-    array: np.ndarray = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.array = np.array([self.x, self.y, self.z])
 
     def __eq__(self, other):
         if type(self) != type(other):
             return False
-        return np.array_equal(self.array, other.array)
+        return self.x == other.x and self.y == other.y and self.z == other.z
 
     def __lt__(self, other):
         return self.x < other.x
 
     def distance_from(self, other: 'Vector') -> float:
-        return np.linalg.norm(self.array - other.array)
+        return np.sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2)
 
     def __truediv__(self, other: 'Vector') -> 'Vector':
         pass
