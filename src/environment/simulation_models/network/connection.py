@@ -55,4 +55,6 @@ class Connection:
         data_packets = sender.memory_model.fetch_data(data_size)
         data_packets, error_loss = self.get_packets_after_error(data_packets)
         receiver.store_data(data_packets, time_step=time_step)
+        # TODO: implement IOT buffer management
+        receiver.memory_model.step(time_step)
         return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)

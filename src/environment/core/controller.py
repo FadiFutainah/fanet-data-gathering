@@ -17,35 +17,31 @@ class EnvironmentController:
     agents: List = field(default_factory=list)
 
     @staticmethod
-    def run(solution_id: int, run_type: str, log_on_file=True) -> None:
+    def run(solution_id: int, num_of_episodes: int, run_type: str, log_on_file=True) -> None:
         configure_logger(write_on_file=log_on_file)
         file = FileManager(solution_id)
         forwarding_agents = []
         collecting_agents = []
         env = file.load_environment()
         for uav in env.uavs:
-            forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, checkpoint_path='path',
-                                                   action_size=1 + len(env.uavs) + len(env.base_stations),
-                                                   epsilon=1, state_dim=len(env.uavs) + len(env.base_stations) + 4,
-                                                   max_energy=10000, batch_size=2, epsilon_min=0.01, k=1, beta=10,
-                                                   target_update_freq=2, checkpoint_freq=1000, max_delay=10000)
+            forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, target_update_freq=2,
+                                                   checkpoint_path='data/model/checkpoints', checkpoint_freq=1000,
+                                                   action_size=1 + len(env.uavs) + len(env.base_stations), k=1, beta=10,
+                                                   epsilon=1, state_dim=len(env.uavs) + len(env.base_stations) + 3,
+                                                   max_energy=10000, batch_size=2, epsilon_min=0.01, max_delay=10000)
             collecting_agent = DataCollectingAgent(uav=uav)
             forwarding_agents.append(forwarding_agent)
             collecting_agents.append(collecting_agent)
         agents_controller = RLAgentController(environment=env, forwarding_agents=forwarding_agents, max_steps=400,
-                                              num_of_episodes=1, collecting_agents=collecting_agents)
+                                              num_of_episodes=num_of_episodes, collecting_agents=collecting_agents)
         if run_type == 'plot':
             plot_environment = PlotEnvironment(env=env, scale=1, close_on_done=True)
             plot_environment.run()
         elif run_type == 'forward-agent':
-            agents_controller.run()
+            agents_controller.run_forwarding_agents()
         elif run_type == 'console':
-
-            def run_environment():
-                while not env.has_ended():
-                    env.step()
-
-            call_with_measure_time(run_environment)
+            while not env.has_ended():
+                env.step()
         else:
             raise ValueError('unknown run type!!')
 

@@ -1,4 +1,3 @@
-import logging
 import random
 
 import numpy as np
@@ -69,7 +68,18 @@ class DataForwardingAgent:
                 actions.append(self.environment.uavs.index(uav) + len(self.environment.base_stations))
         return actions
 
-    def choose_action(self, state):
+    def choose_best_action(self, state):
+        q_values = self.model.predict(np.array([state.get()]), verbose=0)[0]
+        available_actions = self.get_available_actions()
+        q_value = -1e18
+        action = -1e18
+        for available_action in available_actions:
+            if q_values[available_action] > q_value:
+                q_value = q_values[available_action]
+                action = available_action
+        return action
+
+    def choose_epsilon_greedy_action(self, state):
         if np.random.rand() < self.epsilon:
             actions = self.get_available_actions()
             action = random.choice(actions)
@@ -210,7 +220,7 @@ class DataForwardingAgent:
         consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
         delay_penalty = self.get_delay_penalty(end_to_end_delay)
         # TODO: add consumed energy penalty to the reward equation
-        return pdr_reward
+        return -delay_penalty
 
     def replay(self):
         if len(self.memory) > self.batch_size:
@@ -236,7 +246,7 @@ class DataForwardingAgent:
             uavs=self.environment.uavs,
             neighbouring_base_stations=self.environment.get_in_range(self.uav, device_type=BaseStation),
             base_stations=self.environment.base_stations)
-        action = self.choose_action(current_state)
+        action = self.choose_epsilon_greedy_action(current_state)
         data_packets = self.take_forwarding_action(action)
         sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state,
                                       action=action, data_packets=data_packets)
@@ -244,4 +254,21 @@ class DataForwardingAgent:
         self.replay()
         self.update_target_network()
         self.save_weights(episode)
+        self.update_samples()
+        self.update_epsilon()
+
+    def step_for_testing(self):
+        if self.is_busy():
+            return
+        self.steps += 1
+        current_state = self.get_current_state(
+            uavs_in_range=self.environment.get_in_range(self.uav, device_type=UAV),
+            uavs=self.environment.uavs,
+            neighbouring_base_stations=self.environment.get_in_range(self.uav, device_type=BaseStation),
+            base_stations=self.environment.base_stations)
+        action = self.choose_epsilon_greedy_action(current_state)
+        data_packets = self.take_forwarding_action(action)
+        sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state,
+                                      action=action, data_packets=data_packets)
+        self.add_sample(sample)
         self.update_samples()

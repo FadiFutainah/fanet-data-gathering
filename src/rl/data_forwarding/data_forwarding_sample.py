@@ -30,6 +30,6 @@ class DataForwardingSample:
     def get_num_of_arrived_packets(self) -> int:
         num = 0
         for data_packet in self.data_packets:
-            if data_packet.arrival_time == 0:
+            if data_packet.arrival_time != 0:
                 num += 1
         return num

@@ -39,7 +39,7 @@ class DataForwardingState:
         state.append(self.uav.current_way_point)
         state.extend(uav_positions)
         state.extend(base_stations)
-        state.append(self.uav.consumed_energy)
+        # state.append(self.uav.consumed_energy)
         state.append(self.uav.num_of_collected_packets)
         state.append(self.uav.get_occupancy_percentage())
         return state

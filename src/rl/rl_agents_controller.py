@@ -1,4 +1,3 @@
-import logging
 from typing import List
 from dataclasses import dataclass, field
 
@@ -25,7 +24,7 @@ class RLAgentController:
         for agent in self.forwarding_agents:
             agent.inject_environment_object(environment=self.environment)
 
-    def run(self):
+    def run_forwarding_agents(self):
         for episode in range(self.num_of_episodes):
             self.environment.reset()
             for uav, forwarding_agent, collecting_agent in zip(self.environment.uavs, self.forwarding_agents,
@@ -34,35 +33,51 @@ class RLAgentController:
                 collecting_agent.uav = uav
             steps = 0
             total_reward = 0
-            logging.info(f'started {episode} >>>>>>>>>>>>>>>> ')
             while not self.environment.has_ended() and steps <= self.max_steps:
-                print(f'\r>Episode: {episode + 1} / {self.num_of_episodes}, Step: {steps} / {self.max_steps}', end='')
+                print(f'\r>Episode: {episode + 1} / {self.num_of_episodes}, Step: {steps} / {self.max_steps} ', end='')
                 steps += 1
-                self.environment.step()
                 for agent in self.collecting_agents:
                     agent.take_random_collecting_action()
                 for agent in self.forwarding_agents:
                     agent.step(episode)
+                self.environment.step()
             for agent in self.forwarding_agents:
                 agent.update_samples(force_update=True)
                 agent.replay()
                 agent.update_target_network()
                 agent.save_weights(episode)
-            for agent in self.forwarding_agents:
-                agent.update_epsilon()
                 total_reward += agent.episode_return
                 agent.episodes_rewards.append(agent.episode_return)
             self.episodes_rewards.append(total_reward)
-        for agent in self.forwarding_agents:
-            self.save_reward_as_a_plot(rewards=agent.episodes_rewards, name=f'agent of {agent}')
-        self.save_reward_as_a_plot(rewards=self.episodes_rewards, name=f'all agents')
+        agents_rewards = [agent.episodes_rewards for agent in self.forwarding_agents]
+        self.save_reward_as_a_plot(rewards_list=agents_rewards, name='agents rewards')
+        self.save_reward_as_a_plot(rewards_list=[self.episodes_rewards], name='agents total reward')
+
+    def test_agents_policy(self):
+        self.environment.reset()
+        for uav, forwarding_agent, collecting_agent in zip(self.environment.uavs, self.forwarding_agents,
+                                                           self.collecting_agents):
+            forwarding_agent.initialize_for_episode(uav)
+            collecting_agent.uav = uav
+        steps = 0
+        while not self.environment.has_ended() and steps <= self.max_steps:
+            steps += 1
+            for agent in self.collecting_agents:
+                agent.take_random_collecting_action()
+            for agent in self.forwarding_agents:
+                agent.step_for_testing()
+            self.environment.step()
+        agents_rewards = [agent.episodes_rewards for agent in self.forwarding_agents]
+        print(agents_rewards)
 
     @staticmethod
-    def save_reward_as_a_plot(rewards: List, chunk_size=1, name: str = 'none'):
-        y_points = np.array([])
-        for chunk in range(len(rewards) // chunk_size):
-            avg = np.sum(rewards[chunk * chunk_size: chunk * chunk_size + chunk_size]) / chunk_size
-            y_points = np.append(y_points, avg)
-        x_points = np.arange(0, len(rewards) // chunk_size)
-        plt.plot(x_points, y_points)
+    def save_reward_as_a_plot(rewards_list: List[List], chunk_size=1, name: str = 'none'):
+        for rewards in rewards_list:
+            y_points = np.array([])
+            for chunk in range(len(rewards) // chunk_size):
+                avg = np.sum(rewards[chunk * chunk_size: chunk * chunk_size + chunk_size]) / chunk_size
+                y_points = np.append(y_points, avg)
+            x_points = np.arange(0, len(rewards) // chunk_size)
+            plt.plot(x_points, y_points)
         plt.savefig(f'data/output/{name}.png')
+        plt.cla()

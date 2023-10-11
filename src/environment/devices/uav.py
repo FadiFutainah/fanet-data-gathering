@@ -122,6 +122,10 @@ class UAV(Device):
             self.num_of_collected_packets += data_transition.size
             if self.way_points[self.current_way_point].collection_rate == 0:
                 break
+        if self.get_current_collection_rate() <= 0:
+            self.way_points[self.current_way_point].active = False
+            if self.is_active(UAVTask.COLLECT):
+                self.deactivate_task(UAVTask.COLLECT)
         return data_transition_list
 
     def has_active_tasks(self) -> bool:
@@ -129,10 +133,10 @@ class UAV(Device):
             if v > 0:
                 return True
         return False
-
-    def step(self, current_time: int, time_step_size: int = 1) -> None:
-        super().step(current_time, time_step_size)
-        if self.get_current_collection_rate() <= 0:
-            self.way_points[self.current_way_point].active = False
-            if self.is_active(UAVTask.COLLECT):
-                self.deactivate_task(UAVTask.COLLECT)
+    #
+    # def step(self, current_time: int, time_step_size: int = 1) -> None:
+    #     super().step(current_time, time_step_size)
+    #     if self.get_current_collection_rate() <= 0:
+    #         self.way_points[self.current_way_point].active = False
+    #         if self.is_active(UAVTask.COLLECT):
+    #             self.deactivate_task(UAVTask.COLLECT)

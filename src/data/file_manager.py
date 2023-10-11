@@ -101,7 +101,7 @@ class FileManager:
             acceleration = Vector(row['x acceleration'], row['y acceleration'], row['z acceleration'])
             speed = row['speed']
             uav = UAV(position=position, velocity=velocity, acceleration=acceleration, id=id,
-                      memory_model=self.memory_models[2], network_model=deepcopy(self.network_models[2]),
+                      memory_model=deepcopy(self.memory_models[2]), network_model=deepcopy(self.network_models[2]),
                       energy_model=self.energy_model, num_of_collected_packets=0, way_points=[],
                       speed=speed, consumed_energy=0)
             # uav.network_model.center = uav.position
