@@ -3,7 +3,7 @@ import numpy as np
 from typing import List
 from dataclasses import dataclass, field
 
-from src.data.logger import configure_logger, call_with_measure_time
+from src.data.logger import configure_logger
 from src.data.file_manager import FileManager
 from src.presentation.plot_view import PlotEnvironment
 
