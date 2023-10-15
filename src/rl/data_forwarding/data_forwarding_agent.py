@@ -1,3 +1,4 @@
+import logging
 import random
 
 import numpy as np
@@ -41,6 +42,7 @@ class DataForwardingAgent:
     environment: Environment = None
     episode_return: int = 0
     pass_action: int = field(init=False)
+    log: List = field(init=False, default_factory=list)
 
     def __str__(self):
         return f'{self.uav}'
@@ -196,7 +198,7 @@ class DataForwardingAgent:
 
     def save_weights(self, episode: int):
         if self.steps % self.checkpoint_freq == 0:
-            self.model.save_weights("{}/weights-{:08d}-{:08d}".format(self.checkpoint_path, episode, self.steps))
+            self.model.save_weights('{}/weights-{:08d}-{:08d}'.format(self.checkpoint_path, episode, self.steps))
 
     def calculate_reward(self, sample: DataForwardingSample) -> float:
         arrived_packets = 0
@@ -220,7 +222,7 @@ class DataForwardingAgent:
         consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
         delay_penalty = self.get_delay_penalty(end_to_end_delay)
         # TODO: add consumed energy penalty to the reward equation
-        return -delay_penalty
+        return pdr_reward
 
     def replay(self):
         if len(self.memory) > self.batch_size:
@@ -251,6 +253,7 @@ class DataForwardingAgent:
         sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state,
                                       action=action, data_packets=data_packets)
         self.add_sample(sample)
+        self.log.append(sample)
         self.replay()
         self.update_target_network()
         self.save_weights(episode)
@@ -272,3 +275,9 @@ class DataForwardingAgent:
                                       action=action, data_packets=data_packets)
         self.add_sample(sample)
         self.update_samples()
+
+    def print_log(self):
+        for log in self.log:
+            if log is DataForwardingSample:
+                log = f'agent {self.uav.id}: {log}'
+            logging.info(log)

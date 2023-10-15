@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from dataclasses import dataclass, field
 
@@ -30,7 +31,8 @@ class RLAgentController:
             for uav, forwarding_agent, collecting_agent in zip(self.environment.uavs, self.forwarding_agents,
                                                                self.collecting_agents):
                 forwarding_agent.initialize_for_episode(uav)
-                collecting_agent.uav = uav
+                collecting_agent.initialize_for_episode(uav)
+                forwarding_agent.log.append(f'episode: {episode + 1} >>>>>>>>>>>>>>>>>> ')
             steps = 0
             total_reward = 0
             while not self.environment.has_ended() and steps <= self.max_steps:
@@ -52,6 +54,8 @@ class RLAgentController:
         agents_rewards = [agent.episodes_rewards for agent in self.forwarding_agents]
         self.save_reward_as_a_plot(rewards_list=agents_rewards, name='agents rewards')
         self.save_reward_as_a_plot(rewards_list=[self.episodes_rewards], name='agents total reward')
+        for agent in self.forwarding_agents:
+            agent.print_log()
 
     def test_agents_policy(self):
         self.environment.reset()
