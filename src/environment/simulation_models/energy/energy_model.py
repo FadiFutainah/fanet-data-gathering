@@ -19,4 +19,6 @@ class EnergyModel:
             e_t = k * (self.e_elec + self.power_amplifier_for_amp * (distance ** 4))
         e_r = k * self.e_elec
         energy = e_t + e_r
+        energy /= 1e4
+        energy = int(energy)
         return energy

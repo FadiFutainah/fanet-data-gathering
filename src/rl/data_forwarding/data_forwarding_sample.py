@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Any
 
 from src.environment.simulation_models.memory.data_packet import DataPacket
 from src.rl.data_forwarding.data_forwarding_state import DataForwardingState
@@ -8,10 +8,10 @@ from src.rl.data_forwarding.data_forwarding_state import DataForwardingState
 @dataclass
 class DataForwardingSample:
     created_time: int
-    state: DataForwardingState
+    state: Any
     action: int
     data_packets: List[DataPacket]
-    next_state: DataForwardingState = None
+    next_state: Any = None
     reward: float = None
 
     def __str__(self):

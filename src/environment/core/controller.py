@@ -27,7 +27,7 @@ class EnvironmentController:
             forwarding_agent = DataForwardingAgent(uav=uav, epsilon_decay=0.995, gamma=0.95, target_update_freq=2,
                                                    checkpoint_path='data/model/checkpoints', checkpoint_freq=1000,
                                                    action_size=1 + len(env.uavs) + len(env.base_stations), k=1, beta=10,
-                                                   epsilon=1, state_dim=len(env.uavs) + len(env.base_stations) + 3,
+                                                   epsilon=1, state_dim=len(env.uavs) * 2 + len(env.base_stations) + 2,
                                                    max_energy=10000, batch_size=2, epsilon_min=0.01, max_delay=10000)
             collecting_agent = DataCollectingAgent(uav=uav)
             forwarding_agents.append(forwarding_agent)

@@ -71,6 +71,8 @@ class RLAgentController:
             for agent in self.forwarding_agents:
                 agent.step_for_testing()
             self.environment.step()
+        for agent in self.forwarding_agents:
+            agent.update_policy_samples(force_update=True)
         agents_rewards = [agent.episodes_rewards for agent in self.forwarding_agents]
         print(agents_rewards)
 

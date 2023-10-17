@@ -43,6 +43,7 @@ class DataForwardingAgent:
     episode_return: int = 0
     pass_action: int = field(init=False)
     log: List = field(init=False, default_factory=list)
+    policy_samples: List = field(init=False, default_factory=list)
 
     def __str__(self):
         return f'{self.uav}'
@@ -86,7 +87,7 @@ class DataForwardingAgent:
             actions = self.get_available_actions()
             action = random.choice(actions)
         else:
-            q_values = self.model.predict(np.array([state.get()]), verbose=0)[0]
+            q_values = self.model.predict(np.array([state]), verbose=0)[0]
             available_actions = self.get_available_actions()
             q_value = -1e18
             action = -1e18
@@ -152,8 +153,8 @@ class DataForwardingAgent:
         return np.exp(x) / (np.exp(x) + 1)
 
     def get_pdr_reward(self, pdr: float):
-        x = self.beta * pdr
-        return x
+        reward = self.beta * pdr
+        return reward
 
     def update_samples(self, force_update: bool = False):
         if len(self.samples) > 1:
@@ -177,7 +178,8 @@ class DataForwardingAgent:
     def remember(self, sample):
         if not sample.has_completed():
             return
-        self.memory.append([sample.state.get(), sample.action, sample.reward, sample.next_state.get()])
+        self.log.append(sample)
+        self.memory.append([sample.state, sample.action, sample.reward, sample.next_state])
 
     def has_forward_task(self) -> bool:
         return self.uav.is_active(UAVTask.FORWARD)
@@ -248,12 +250,11 @@ class DataForwardingAgent:
             uavs=self.environment.uavs,
             neighbouring_base_stations=self.environment.get_in_range(self.uav, device_type=BaseStation),
             base_stations=self.environment.base_stations)
-        action = self.choose_epsilon_greedy_action(current_state)
+        action = self.choose_epsilon_greedy_action(current_state.get())
         data_packets = self.take_forwarding_action(action)
-        sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state,
+        sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state.get(),
                                       action=action, data_packets=data_packets)
         self.add_sample(sample)
-        self.log.append(sample)
         self.replay()
         self.update_target_network()
         self.save_weights(episode)
@@ -269,12 +270,24 @@ class DataForwardingAgent:
             uavs=self.environment.uavs,
             neighbouring_base_stations=self.environment.get_in_range(self.uav, device_type=BaseStation),
             base_stations=self.environment.base_stations)
-        action = self.choose_epsilon_greedy_action(current_state)
+        action = self.choose_best_action(current_state)
         data_packets = self.take_forwarding_action(action)
         sample = DataForwardingSample(created_time=self.environment.time_step, state=current_state,
                                       action=action, data_packets=data_packets)
-        self.add_sample(sample)
-        self.update_samples()
+        self.policy_samples.append(sample)
+        self.update_policy_samples()
+
+    def update_policy_samples(self, force_update: bool = False) -> None:
+        for sample in self.policy_samples:
+            if sample.action == self.pass_action:
+                sample.reward = 0
+                continue
+            arrived_packets = sample.get_num_of_arrived_packets()
+            if force_update or arrived_packets > 0.8 * len(sample.data_packets):
+                reward = self.calculate_reward(sample)
+                self.episode_return += reward
+                sample.update_reward(reward)
+        self.policy_samples = [sample for sample in self.policy_samples if not sample.has_completed()]
 
     def print_log(self):
         for log in self.log:
