@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.utils.vector import Vector
 
 

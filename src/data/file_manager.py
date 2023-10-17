@@ -66,7 +66,7 @@ class FileManager:
             sensor = Sensor(position=position, velocity=velocity, acceleration=acceleration, id=id,
                             memory_model=self.memory_models[0], network_model=deepcopy(self.network_models[0]),
                             num_of_collected_packets=0, data_collecting_rate=data_collecting_rate,
-                            packet_size=packet_size, packet_life_time=packet_life_time, consumed_energy=0,
+                            packet_size=packet_size, packet_time_to_live=packet_life_time, consumed_energy=0,
                             energy_model=self.energy_model, sampling_rate=sampling_rate)
             # sensor.network_model.center = sensor.position
             sensor.collect_data(current_time=0)

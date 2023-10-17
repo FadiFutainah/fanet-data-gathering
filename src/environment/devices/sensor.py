@@ -10,14 +10,14 @@ class Sensor(Device):
     data_collecting_rate: int
     """ number of collected packets in one timestep """
     packet_size: int
-    packet_life_time: int
+    packet_time_to_live: int
     data_loss: int = field(init=False, default=0)
     """ number of lost packets due to overwrite the sensor data """
     sampling_rate: int = 1
 
     def collect_data(self, current_time: int) -> None:
         num_of_packets = multiply_by_speed_rate(self.data_collecting_rate) // self.packet_size
-        data_packet = DataPacket(life_time=self.packet_life_time, size=self.packet_size, arrival_time=current_time)
+        data_packet = DataPacket(time_to_live=self.packet_time_to_live, size=self.packet_size)
         data_packets = [data_packet] * int(num_of_packets)
         self.data_loss += max(0, self.data_collecting_rate - self.get_current_data_size())
         self.num_of_collected_packets += self.data_collecting_rate

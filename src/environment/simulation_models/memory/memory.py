@@ -36,7 +36,6 @@ class Memory:
 
     def add_packet(self, data_packet: DataPacket) -> None:
         self.current_size += data_packet.size
-        data_packet.reset_life_time()
         self.current_data.push(data_packet)
 
     def pop_all_data(self) -> List[DataPacket]:
@@ -70,10 +69,10 @@ class Memory:
             self.add_packet(data_packet)
 
     def remove_outdated_packets(self) -> None:
-        while len(self.current_data) > 0 and self.current_data[0].life_time <= 0:
+        while len(self.current_data) > 0 and not self.current_data[0].is_alive():
             self.pop_prior_packet()
 
-    def decrease_packets_life_time(self, time_step_size: int = 1) -> None:
+    def decrease_packets_life_time(self) -> None:
         for packets in self.current_data:
-            packets.life_time -= time_step_size
+            packets.hop()
         self.remove_outdated_packets()
