@@ -64,5 +64,5 @@ class Device(PhysicalObject):
         self.memory_model.store_data_in_memory(data_packets, overwrite)
 
     def step(self, current_time: int, time_step_size: int = 1) -> None:
-        self.memory_model.step(multiply_by_speed_rate(time_step_size))
+        self.memory_model.step()
         self.network_model.step()

@@ -1,24 +1,24 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
 class DataPacket:
     size: int
-    life_time: int
+    time_to_live: int
+    travelled_hops: int = 0
     arrival_time: int = 0
-    initial_life_time: int = field(init=False)
-
-    def __post_init__(self):
-        self.initial_life_time = self.life_time
 
     def __lt__(self, other):
-        return self.arrival_time > other.arrival_time
-
-    def reset_life_time(self) -> None:
-        self.life_time = self.initial_life_time
-
-    def set_arrival_time(self, time_step: int) -> None:
-        self.arrival_time = time_step
+        return self.time_to_live > other.time_to_live
 
     def __hash__(self):
         return hash(id(self))
+
+    def hop(self) -> None:
+        self.travelled_hops += 1
+
+    def set_arrival_time(self, time: int) -> None:
+        self.arrival_time = time
+
+    def is_alive(self):
+        return self.travelled_hops < self.time_to_live

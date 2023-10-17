@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Dict, List
+from dataclasses import dataclass
+from typing import List
 
 from src.environment.devices.device import Device
 from src.environment.simulation_models.memory.data_packet import DataPacket

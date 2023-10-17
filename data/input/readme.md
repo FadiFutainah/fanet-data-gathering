@@ -30,7 +30,7 @@ dqn data:
 
 sensors:
 - sample rate:  10 s.
-- packet life time: s.
+- packet time to live: s.
 - packet size: Byte.
 - 
 

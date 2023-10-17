@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import List
 
-from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.simulation_models.memory.memory import Memory
 from src.environment.simulation_models.memory.data_packet import DataPacket
 
@@ -41,10 +40,8 @@ class MemoryModel:
     def store_data_in_memory(self, data_packets: List[DataPacket], overwrite: bool = False) -> None:
         self.memory.store_data(data_packets, overwrite)
 
-    def step(self, time):
+    def step(self):
         self.move_to_memory()
-        self.sending_buffer.decrease_packets_life_time(time)
-        self.receiving_buffer.decrease_packets_life_time(time)
 
     def read_data(self) -> List[DataPacket]:
         return self.memory.read_data()
