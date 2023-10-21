@@ -59,5 +59,5 @@ class Connection:
         for packet in data_packets:
             packet.hop()
         receiver.memory_model.step()
-        # receiver.memory_model.memory.remove_outdated_packets()
+        receiver.memory_model.memory.remove_outdated_packets()
         return DataTransition(sender, receiver, data_packets, self.protocol, error_loss)
