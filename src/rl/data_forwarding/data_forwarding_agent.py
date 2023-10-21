@@ -224,7 +224,7 @@ class DataForwardingAgent:
         consumed_energy_penalty = self.get_energy_penalty(consumed_energy)
         delay_penalty = self.get_delay_penalty(end_to_end_delay)
         # TODO: add consumed energy penalty to the reward equation
-        return pdr_reward - delay_penalty
+        return pdr_reward - delay_penalty - consumed_energy_penalty
 
     def replay(self):
         if len(self.memory) > self.batch_size:

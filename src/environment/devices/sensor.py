@@ -1,3 +1,5 @@
+from copy import copy
+
 from dataclasses import dataclass, field
 
 from src.environment.core.globals import multiply_by_speed_rate
@@ -15,10 +17,13 @@ class Sensor(Device):
     """ number of lost packets due to overwrite the sensor data """
     sampling_rate: int = 1
 
-    def collect_data(self, current_time: int) -> None:
+    def collect_data(self) -> None:
         num_of_packets = multiply_by_speed_rate(self.data_collecting_rate) // self.packet_size
         data_packet = DataPacket(time_to_live=self.packet_time_to_live, size=self.packet_size)
-        data_packets = [data_packet] * int(num_of_packets)
+        # data_packets = [data_packet] * int(num_of_packets)
+        data_packets = []
+        for _ in range(int(num_of_packets)):
+            data_packets.append(copy(data_packet))
         self.data_loss += max(0, self.data_collecting_rate - self.get_current_data_size())
         self.num_of_collected_packets += self.data_collecting_rate
         super().store_data_in_memory(data_packets, overwrite=True)
@@ -26,4 +31,4 @@ class Sensor(Device):
     def step(self, current_time: int, time_step_size: int = 1) -> None:
         super().step(current_time, time_step_size)
         if current_time % self.sampling_rate == 0:
-            self.collect_data(current_time)
+            self.collect_data()

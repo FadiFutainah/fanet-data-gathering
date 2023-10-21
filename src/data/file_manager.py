@@ -69,7 +69,7 @@ class FileManager:
                             packet_size=packet_size, packet_time_to_live=packet_life_time, consumed_energy=0,
                             energy_model=self.energy_model, sampling_rate=sampling_rate)
             # sensor.network_model.center = sensor.position
-            sensor.collect_data(current_time=0)
+            sensor.collect_data()
             sensors.append(sensor)
         return sensors
 

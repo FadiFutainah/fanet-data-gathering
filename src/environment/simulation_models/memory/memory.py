@@ -71,8 +71,3 @@ class Memory:
     def remove_outdated_packets(self) -> None:
         while len(self.current_data) > 0 and not self.current_data[0].is_alive():
             self.pop_prior_packet()
-
-    def decrease_packets_life_time(self) -> None:
-        for packets in self.current_data:
-            packets.hop()
-        self.remove_outdated_packets()
