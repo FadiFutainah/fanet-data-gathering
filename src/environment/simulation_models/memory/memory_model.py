@@ -42,6 +42,7 @@ class MemoryModel:
 
     def step(self):
         self.move_to_memory()
+        self.memory.remove_outdated_packets()
 
     def read_data(self) -> List[DataPacket]:
         return self.memory.read_data()

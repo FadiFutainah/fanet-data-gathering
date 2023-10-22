@@ -19,7 +19,7 @@ class Sensor(Device):
 
     def collect_data(self) -> None:
         num_of_packets = multiply_by_speed_rate(self.data_collecting_rate) // self.packet_size
-        data_packet = DataPacket(time_to_live=self.packet_time_to_live, size=self.packet_size)
+        data_packet = DataPacket(life_time=self.packet_time_to_live, size=self.packet_size)
         # data_packets = [data_packet] * int(num_of_packets)
         data_packets = []
         for _ in range(int(num_of_packets)):

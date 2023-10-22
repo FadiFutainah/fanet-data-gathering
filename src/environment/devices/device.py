@@ -1,7 +1,6 @@
 from typing import List
 from dataclasses import dataclass
 
-from src.environment.core.globals import multiply_by_speed_rate
 from src.environment.simulation_models.energy.energy_model import EnergyModel
 from src.environment.simulation_models.memory.memory_model import MemoryModel
 from src.environment.simulation_models.network.data_transition import DataTransition
