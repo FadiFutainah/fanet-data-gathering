@@ -44,6 +44,7 @@ class DataForwardingAgent:
     pass_action: int = field(init=False)
     log: List = field(init=False, default_factory=list)
     policy_samples: List = field(init=False, default_factory=list)
+    enable_logging: bool = False
 
     def __str__(self):
         return f'{self.uav}'
@@ -178,7 +179,8 @@ class DataForwardingAgent:
     def remember(self, sample):
         if not sample.has_completed():
             return
-        self.log.append(sample)
+        if self.enable_logging:
+            self.log.append(sample)
         self.memory.append([sample.state, sample.action, sample.reward, sample.next_state])
 
     def has_forward_task(self) -> bool:

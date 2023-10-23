@@ -19,10 +19,12 @@ class RLAgentController:
     max_steps: int
     steps: int = field(init=False, default=0)
     episodes_rewards: List = field(init=False, default_factory=list)
+    enable_logging: bool = False
 
     def __post_init__(self):
         for agent in self.forwarding_agents:
             agent.inject_environment_object(environment=self.environment)
+            agent.enable_logging = self.enable_logging
 
     def run_forwarding_agents(self):
         for episode in range(self.num_of_episodes):
@@ -31,7 +33,8 @@ class RLAgentController:
                                                                self.collecting_agents):
                 forwarding_agent.initialize_for_episode(uav)
                 collecting_agent.initialize_for_episode(uav)
-                forwarding_agent.log.append(f'episode: {episode + 1} >>>>>>>>>>>>>>>>>> ')
+                if self.enable_logging:
+                    forwarding_agent.log.append(f'episode: {episode + 1} >>>>>>>>>>>>>>>>>> ')
             steps = 0
             total_reward = 0
             while not self.environment.has_ended() and steps <= self.max_steps:
