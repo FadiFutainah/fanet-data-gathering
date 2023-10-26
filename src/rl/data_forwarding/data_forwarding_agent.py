@@ -292,6 +292,8 @@ class DataForwardingAgent:
         self.policy_samples = [sample for sample in self.policy_samples if not sample.has_completed()]
 
     def print_log(self):
+        if not self.enable_logging:
+            return
         for log in self.log:
             if log is DataForwardingSample:
                 log = f'agent {self.uav.id}: {log}'

@@ -33,12 +33,12 @@ class EnvironmentController:
             forwarding_agents.append(forwarding_agent)
             collecting_agents.append(collecting_agent)
         agents_controller = RLAgentController(environment=env, forwarding_agents=forwarding_agents, max_steps=400,
-                                              num_of_episodes=num_of_episodes, collecting_agents=collecting_agents)
+                                              collecting_agents=collecting_agents)
         if run_type == 'plot':
             plot_environment = PlotEnvironment(env=env, scale=1, close_on_done=True)
             plot_environment.run()
         elif run_type == 'forward-agent':
-            agents_controller.run_forwarding_agents()
+            agents_controller.run_forwarding_agents(num_of_episodes=num_of_episodes)
         elif run_type == 'console':
             while not env.has_ended():
                 env.step()
